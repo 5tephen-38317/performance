@@ -70,6 +70,8 @@ button:hover{background:#202e4d}
 .danger{background:#2a1820}
 .keypad{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:10px}
 .keypad button{min-height:40px;padding:7px}
+.keypad .backspace{background:#2a2338;border-color:#4b4168;font-weight:700}
+.keypad .backspace:hover{background:#382d4e}
 .section{margin-top:16px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 label{display:block;font-size:12px;color:#9da9c7;margin-bottom:6px}
@@ -105,7 +107,7 @@ select{
       <div class="logo">Cos<span>mos</span></div>
       <div class="subtitle">Graph → Music · 그래프를 소리로 번역하는 수학 음악 실험실</div>
     </div>
-    <div class="status"><span class="badge">Cosmos v1.0</span></div>
+    <div class="status"><span class="badge">Cosmos v1.1</span></div>
   </div>
 
   <div class="grid">
@@ -144,6 +146,7 @@ select{
           <button data-v="pi">π</button><button data-v="0">0</button>
           <button data-v="sin(">sin(</button><button data-v="cos(">cos(</button>
           <button data-v="tan(">tan(</button><button data-v="sqrt(">√(</button><button data-v="abs(">abs(</button>
+          <button class="backspace" id="backspace" title="커서 앞의 한 글자 삭제">⌫ 지우기</button>
         </div>
         <div id="message"></div>
       </div>
@@ -351,8 +354,20 @@ function draw(){
     if(Math.abs(y)>1e-9)ctx.fillText(fmt(y),6,py-4);
   }
   ctx.strokeStyle="#596783";ctx.lineWidth=1.4;
-  if(xmin<=0&&xmax>=0){ctx.beginPath();ctx.moveTo(sx(0),0);ctx.lineTo(sx(0),h);ctx.stroke()}
-  if(ymin<=0&&ymax>=0){ctx.beginPath();ctx.moveTo(0,sy(0));ctx.lineTo(w,sy(0));ctx.stroke()}
+  const originX = (xmin<=0&&xmax>=0) ? sx(0) : null;
+  const originY = (ymin<=0&&ymax>=0) ? sy(0) : null;
+  if(originX!==null){ctx.beginPath();ctx.moveTo(originX,0);ctx.lineTo(originX,h);ctx.stroke()}
+  if(originY!==null){ctx.beginPath();ctx.moveTo(0,originY);ctx.lineTo(w,originY);ctx.stroke()}
+  // 원점 표시
+  if(originX!==null && originY!==null){
+    ctx.save();
+    ctx.fillStyle="#ffffff";
+    ctx.beginPath();ctx.arc(originX,originY,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#aeb9d5";
+    ctx.font="bold 12px system-ui";
+    ctx.fillText("O (0, 0)", originX+8, originY-9);
+    ctx.restore();
+  }
 
   let f;
   try{f=parseExpression(expr.value)}catch(e){msg.textContent=e.message;return}
@@ -445,7 +460,7 @@ document.getElementById("right").addEventListener("click",()=>changeView(1,.12,0
 document.getElementById("up").addEventListener("click",()=>changeView(1,0,.12));
 document.getElementById("down").addEventListener("click",()=>changeView(1,0,-.12));
 
-document.querySelectorAll("#keypad button").forEach(b=>{
+document.querySelectorAll("#keypad button[data-v]").forEach(b=>{
  b.addEventListener("click",()=>{
    const v=b.dataset.v;
    const start=expr.selectionStart??expr.value.length;
@@ -454,6 +469,20 @@ document.querySelectorAll("#keypad button").forEach(b=>{
    expr.focus();
    const pos=start+v.length;expr.setSelectionRange(pos,pos);draw();
  });
+});
+
+document.getElementById("backspace").addEventListener("click",()=>{
+  const start=expr.selectionStart??expr.value.length;
+  const end=expr.selectionEnd??expr.value.length;
+  if(start!==end){
+    expr.value=expr.value.slice(0,start)+expr.value.slice(end);
+    expr.setSelectionRange(start,start);
+  }else if(start>0){
+    expr.value=expr.value.slice(0,start-1)+expr.value.slice(start);
+    expr.setSelectionRange(start-1,start-1);
+  }
+  expr.focus();
+  draw();
 });
 
 canvas.addEventListener("wheel",e=>{
@@ -486,76 +515,79 @@ const scales={
 };
 
 function makeNotes(){
-  let valid=samples.filter(p=>Number.isFinite(p.y)&&Math.abs(p.y)<1e6);
+  const valid=samples.filter(p=>Number.isFinite(p.y)&&Math.abs(p.y)<1e6);
   if(valid.length<10)throw Error("음악으로 변환할 수 있는 그래프가 없습니다.");
-  const target=48;
-  const step=Math.max(1,Math.floor(valid.length/target));
-  valid=valid.filter((_,i)=>i%step===0).slice(0,target);
   const vals=valid.map(p=>p.y);
   let lo=Math.min(...vals),hi=Math.max(...vals);
   if(Math.abs(hi-lo)<1e-8){lo-=1;hi+=1}
   const scale=scales[document.getElementById("scale").value];
-  return valid.map((p,i)=>{
-    const norm=Math.max(0,Math.min(1,(p.y-lo)/(hi-lo)));
-    const idx=Math.round(norm*(scale.length-1));
-    const midi=48+scale[idx];
-    return {midi,dur:1,raw:p.y,x:p.x,y:p.y};
-  });
+  return {valid,lo,hi,scale};
 }
 function midiFreq(m){return 440*Math.pow(2,(m-69)/12)}
+function graphMidi(y,lo,hi,scale){
+  const norm=Math.max(0,Math.min(1,(y-lo)/(hi-lo)));
+  const idx=Math.round(norm*(scale.length-1));
+  return 48+scale[idx];
+}
 
 async function playMusic(){
   stopMusic();
-  let notes;
-  try{notes=makeNotes()}catch(e){msg.textContent=e.message;return}
+  let data;
+  try{data=makeNotes()}catch(e){msg.textContent=e.message;return}
   if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
   if(audioCtx.state==="suspended")await audioCtx.resume();
+
   playing=true;
   const bpm=Number(document.getElementById("tempo").value);
-  const sec=60/bpm;
-  const start=audioCtx.currentTime+.08;
-  notes.forEach((n,i)=>{
-    const t=start+i*sec;
-    const osc=audioCtx.createOscillator();
-    const gain=audioCtx.createGain();
-    osc.type="sine";
-    osc.frequency.value=midiFreq(n.midi);
-    gain.gain.setValueAtTime(0,t);
-    gain.gain.linearRampToValueAtTime(.16,t+.025);
-    gain.gain.exponentialRampToValueAtTime(.001,t+sec*.82);
-    osc.connect(gain);gain.connect(audioCtx.destination);
-    osc.start(t);osc.stop(t+sec*.88);
-    activeOsc.push(osc);
-  });
-  const total=notes.length*sec;
+  // 한 번의 연속 음이 그래프 전체를 왼쪽에서 오른쪽으로 따라가도록 구성
+  const total=8*(100/bpm);
+  const start=audioCtx.currentTime+0.05;
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  osc.type="sine";
+  gain.gain.setValueAtTime(0,start);
+  gain.gain.linearRampToValueAtTime(0.13,start+0.12);
+  osc.connect(gain);gain.connect(audioCtx.destination);
+  osc.start(start);
+  activeOsc=[osc];
+
   const started=performance.now();
+  let lastFreq=0;
   function tick(now){
     if(!playing)return;
     const pct=Math.min(1,Math.max(0,(now-started)/1000/total));
-    const idx=Math.min(notes.length-1,Math.floor(pct*notes.length));
-    if(notes[idx]){
-      // 재생 점의 x좌표는 현재 화면의 왼쪽 끝 → 오른쪽 끝으로 정확히 이동
-      const cursorX=xmin+pct*(xmax-xmin);
-      let cursorY=notes[idx].y;
-      if(samples.length){
-        const targetIndex=Math.min(samples.length-1,Math.max(0,Math.round(pct*(samples.length-1))));
-        const candidate=samples[targetIndex];
-        if(candidate && Number.isFinite(candidate.y)) cursorY=candidate.y;
-      }
-      playbackPoint={x:cursorX,y:cursorY};
-      document.getElementById("now").textContent=
-        "♪ MIDI "+notes[idx].midi+" · 그래프 y = "+fmt(cursorY);
+    const targetIndex=Math.min(data.valid.length-1,Math.max(0,Math.round(pct*(data.valid.length-1))));
+    const candidate=data.valid[targetIndex];
+    const y=Number.isFinite(candidate.y)?candidate.y:0;
+    const midi=graphMidi(y,data.lo,data.hi,data.scale);
+    const freq=midiFreq(midi);
+    if(Math.abs(freq-lastFreq)>0.1){
+      const audioNow=audioCtx.currentTime;
+      osc.frequency.cancelScheduledValues(audioNow);
+      osc.frequency.setTargetAtTime(freq,audioNow,0.025);
+      lastFreq=freq;
     }
+
+    // 점은 실제 그래프 곡선을 따라 왼쪽 → 오른쪽으로 이동
+    playbackPoint={x:candidate.x,y:candidate.y};
+    document.getElementById("now").textContent=
+      "♪ MIDI "+midi+" · 그래프 y = "+fmt(candidate.y);
     draw();
     document.getElementById("bar").style.width=(pct*100)+"%";
+
     if(pct<1){
       raf=requestAnimationFrame(tick);
     }else{
+      const audioNow=audioCtx.currentTime;
+      gain.gain.cancelScheduledValues(audioNow);
+      gain.gain.setTargetAtTime(0,audioNow,0.08);
+      try{osc.stop(audioNow+0.3)}catch(e){}
       playing=false;
       playbackPoint=null;
       draw();
       document.getElementById("now").textContent="재생 완료";
       document.getElementById("bar").style.width="0%";
+      activeOsc=[];
     }
   }
   raf=requestAnimationFrame(tick);
