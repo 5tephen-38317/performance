@@ -107,7 +107,7 @@ select{
       <div class="logo">Cos<span>mos</span></div>
       <div class="subtitle">Graph → Music · 그래프를 소리로 번역하는 수학 음악 실험실</div>
     </div>
-    <div class="status"><span class="badge">Cosmos v1.1</span></div>
+    <div class="status"><span class="badge">Cosmos v1.2</span></div>
   </div>
 
   <div class="grid">
@@ -515,7 +515,12 @@ const scales={
 };
 
 function makeNotes(){
-  const valid=samples.filter(p=>Number.isFinite(p.y)&&Math.abs(p.y)<1e6);
+  // 현재 화면에 실제로 보이는 그래프 부분만 음악 재생에 사용
+  // y가 화면 위/아래로 벗어난 구간은 점과 소리 모두 재생에서 제외
+  const valid=samples.filter(p=>
+    Number.isFinite(p.x)&&Number.isFinite(p.y)&&
+    p.x>=xmin&&p.x<=xmax&&p.y>=ymin&&p.y<=ymax
+  );
   if(valid.length<10)throw Error("음악으로 변환할 수 있는 그래프가 없습니다.");
   const vals=valid.map(p=>p.y);
   let lo=Math.min(...vals),hi=Math.max(...vals);
@@ -539,7 +544,7 @@ async function playMusic(){
 
   playing=true;
   const bpm=Number(document.getElementById("tempo").value);
-  // 한 번의 연속 음이 그래프 전체를 왼쪽에서 오른쪽으로 따라가도록 구성
+  // 현재 화면에 보이는 그래프 구간만 왼쪽 → 오른쪽으로 재생
   const total=8*(100/bpm);
   const start=audioCtx.currentTime+0.05;
   const osc=audioCtx.createOscillator();
