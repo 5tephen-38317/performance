@@ -28,7 +28,8 @@ body{
 .logo span{color:#8da2ff}
 .subtitle{color:#9da9c7;font-size:14px;margin-top:5px}
 .status{font-size:12px;color:#9da9c7}
-.grid{display:grid;grid-template-columns:1.55fr .75fr;gap:16px}
+.grid{display:grid;grid-template-columns:1fr;gap:16px}
+.lowerGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .card{
   background:#121a2e;
   border:1px solid #263354;
@@ -91,7 +92,7 @@ select{
 #bar{height:100%;width:0;background:#8496ff;transition:width .05s linear}
 .small{font-size:11px;color:#7886a8}
 @media(max-width:850px){
- .grid{grid-template-columns:1fr}
+ .lowerGrid{grid-template-columns:1fr}
  canvas{height:390px}
  .header{align-items:start;flex-direction:column}
 }
@@ -109,30 +110,9 @@ select{
 
   <div class="grid">
     <section class="card">
-      <h2>① 함수 입력</h2>
-      <input id="expr" value="sin(x)" autocomplete="off" spellcheck="false"
-             aria-label="함수 입력">
-      <div class="controls">
-        <button class="primary" id="draw">그래프 그리기</button>
-        <button id="resetView">화면 초기화</button>
-        <button id="clear">지우기</button>
-      </div>
-      <div class="keypad" id="keypad">
-        <button data-v="x">x</button><button data-v="(">(</button><button data-v=")">)</button>
-        <button data-v="+">+</button><button data-v="-">−</button>
-        <button data-v="7">7</button><button data-v="8">8</button><button data-v="9">9</button>
-        <button data-v="*">×</button><button data-v="/">÷</button>
-        <button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button>
-        <button data-v="^">^</button><button data-v=".">.</button>
-        <button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button>
-        <button data-v="pi">π</button><button data-v="0">0</button>
-        <button data-v="sin(">sin(</button><button data-v="cos(">cos(</button>
-        <button data-v="tan(">tan(</button><button data-v="sqrt(">√(</button><button data-v="abs(">abs(</button>
-      </div>
-      <div id="message"></div>
-
+      <h2>① 함수 그래프</h2>
       <div class="graphWrap">
-        <canvas id="graph" width="1000" height="600"></canvas>
+        <canvas id="graph" width="1200" height="600"></canvas>
       </div>
 
       <div class="controls">
@@ -143,15 +123,41 @@ select{
         <button id="up">↑ 이동</button>
         <button id="down">↓ 이동</button>
       </div>
+
+      <div class="section">
+        <h2>② 함수 입력</h2>
+        <input id="expr" value="sin(x)" autocomplete="off" spellcheck="false"
+               aria-label="함수 입력">
+        <div class="controls">
+          <button class="primary" id="draw">그래프 그리기</button>
+          <button id="resetView">화면 초기화</button>
+          <button id="clear">지우기</button>
+        </div>
+        <div class="keypad" id="keypad">
+          <button data-v="x">x</button><button data-v="(">(</button><button data-v=")">)</button>
+          <button data-v="+">+</button><button data-v="-">−</button>
+          <button data-v="7">7</button><button data-v="8">8</button><button data-v="9">9</button>
+          <button data-v="*">×</button><button data-v="/">÷</button>
+          <button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button>
+          <button data-v="^">^</button><button data-v=".">.</button>
+          <button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button>
+          <button data-v="pi">π</button><button data-v="0">0</button>
+          <button data-v="sin(">sin(</button><button data-v="cos(">cos(</button>
+          <button data-v="tan(">tan(</button><button data-v="sqrt(">√(</button><button data-v="abs(">abs(</button>
+        </div>
+        <div id="message"></div>
+      </div>
+
       <div class="help">
         그래프 영역에서 마우스 휠로 확대/축소할 수 있고, 드래그로 화면을 이동할 수 있습니다.
+        음악 재생 중에는 <b>그래프의 왼쪽 끝에서 오른쪽 끝까지 점이 이동</b>하며 현재 재생되는 음을 표시합니다.
         함수는 키보드로 직접 입력하거나 아래 수학 키패드로 입력할 수 있습니다.
       </div>
     </section>
 
-    <aside>
+    <div class="lowerGrid">
       <section class="card">
-        <h2>② 그래프 분석</h2>
+        <h2>③ 그래프 분석</h2>
         <div class="feature"><span>정의역</span><span class="value" id="domain">−10 ≤ x ≤ 10</span></div>
         <div class="feature"><span>최솟값</span><span class="value" id="minY">—</span></div>
         <div class="feature"><span>최댓값</span><span class="value" id="maxY">—</span></div>
@@ -160,7 +166,7 @@ select{
       </section>
 
       <section class="card musicBox">
-        <h2>③ Graph → Music</h2>
+        <h2>④ Graph → Music</h2>
         <div class="row">
           <div>
             <label>음계</label>
@@ -198,19 +204,17 @@ select{
           그래프의 변화량 → 음정 변화의 크기
         </div>
       </section>
-
-      <section class="card musicBox">
-        <h2>Cosmos의 핵심</h2>
-        <div class="help">
-          같은 수식이라도 그래프의 형태가 달라지면 다른 음악이 만들어집니다.
-          즉, 수학적 함수를 단순히 계산하는 것이 아니라
-          <b>그래프의 구조를 음악적 데이터로 변환</b>합니다.
-        </div>
-      </section>
-    </aside>
+    </div>
   </div>
-</div>
 
+  <section class="card musicBox">
+    <h2>Cosmos의 핵심</h2>
+    <div class="help">
+      같은 수식이라도 그래프의 형태가 달라지면 다른 음악이 만들어집니다.
+      즉, 수학적 함수를 단순히 계산하는 것이 아니라
+      <b>그래프의 구조를 음악적 데이터로 변환</b>합니다.
+    </div>
+  </section>
 <script>
 (function(){
 "use strict";
@@ -226,6 +230,7 @@ let dragging=false,lastX=0,lastY=0;
 let samples=[];
 let audioCtx=null, activeOsc=[];
 let playing=false, raf=null;
+let playbackPoint=null;
 
 const funcs={
  sin:Math.sin, cos:Math.cos, tan:Math.tan,
@@ -376,6 +381,27 @@ function draw(){
   }
   ctx.strokeStyle="#91a4ff";ctx.lineWidth=3;ctx.lineJoin="round";ctx.stroke();
 
+  // 음악 재생 위치: 화면의 왼쪽 끝에서 오른쪽 끝까지 이동하는 점
+  if(playbackPoint && Number.isFinite(playbackPoint.x) && Number.isFinite(playbackPoint.y)){
+    const px=sx(playbackPoint.x), py=sy(playbackPoint.y);
+    if(px>=-12 && px<=w+12 && py>=-12 && py<=h+12){
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(px,py,12,0,Math.PI*2);
+      ctx.fillStyle="rgba(255,207,92,.18)";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(px,py,7,0,Math.PI*2);
+      ctx.fillStyle="#ffffff";
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(px,py,4,0,Math.PI*2);
+      ctx.fillStyle="#ffcf5c";
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
   document.getElementById("domain").textContent=fmt(xmin)+" ≤ x ≤ "+fmt(xmax);
   document.getElementById("minY").textContent=count?fmt(min):"—";
   document.getElementById("maxY").textContent=count?fmt(max):"—";
@@ -473,7 +499,7 @@ function makeNotes(){
     const norm=Math.max(0,Math.min(1,(p.y-lo)/(hi-lo)));
     const idx=Math.round(norm*(scale.length-1));
     const midi=48+scale[idx];
-    return {midi,dur:1,raw:p.y,x:p.x};
+    return {midi,dur:1,raw:p.y,x:p.x,y:p.y};
   });
 }
 function midiFreq(m){return 440*Math.pow(2,(m-69)/12)}
@@ -505,21 +531,43 @@ async function playMusic(){
   const started=performance.now();
   function tick(now){
     if(!playing)return;
-    const pct=Math.min(1,(now-started)/1000/total);
-    document.getElementById("bar").style.width=(pct*100)+"%";
+    const pct=Math.min(1,Math.max(0,(now-started)/1000/total));
     const idx=Math.min(notes.length-1,Math.floor(pct*notes.length));
-    if(notes[idx])document.getElementById("now").textContent=
-      "♪ MIDI "+notes[idx].midi+" · 그래프 y = "+fmt(notes[idx].raw);
-    if(pct<1)raf=requestAnimationFrame(tick);
-    else{playing=false;document.getElementById("now").textContent="재생 완료";document.getElementById("bar").style.width="0%"}
+    if(notes[idx]){
+      // 재생 점의 x좌표는 현재 화면의 왼쪽 끝 → 오른쪽 끝으로 정확히 이동
+      const cursorX=xmin+pct*(xmax-xmin);
+      let cursorY=notes[idx].y;
+      if(samples.length){
+        const targetIndex=Math.min(samples.length-1,Math.max(0,Math.round(pct*(samples.length-1))));
+        const candidate=samples[targetIndex];
+        if(candidate && Number.isFinite(candidate.y)) cursorY=candidate.y;
+      }
+      playbackPoint={x:cursorX,y:cursorY};
+      document.getElementById("now").textContent=
+        "♪ MIDI "+notes[idx].midi+" · 그래프 y = "+fmt(cursorY);
+    }
+    draw();
+    document.getElementById("bar").style.width=(pct*100)+"%";
+    if(pct<1){
+      raf=requestAnimationFrame(tick);
+    }else{
+      playing=false;
+      playbackPoint=null;
+      draw();
+      document.getElementById("now").textContent="재생 완료";
+      document.getElementById("bar").style.width="0%";
+    }
   }
   raf=requestAnimationFrame(tick);
 }
 function stopMusic(){
   playing=false;
   if(raf)cancelAnimationFrame(raf);
+  raf=null;
   activeOsc.forEach(o=>{try{o.stop()}catch(e){}});
   activeOsc=[];
+  playbackPoint=null;
+  draw();
   document.getElementById("bar").style.width="0%";
   document.getElementById("now").textContent="정지됨";
 }
