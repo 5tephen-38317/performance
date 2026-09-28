@@ -16,14 +16,21 @@ HTML = r"""
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+
 *{
     box-sizing:border-box;
 }
 
 body{
     margin:0;
-    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,
-    "Segoe UI",sans-serif;
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
     background:#0b1020;
     color:#edf2ff;
 }
@@ -69,7 +76,7 @@ body{
 
 .grid{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 360px;
+    grid-template-columns:minmax(0,1fr) 380px;
     gap:16px;
 }
 
@@ -143,9 +150,20 @@ button.danger{
     border-color:#633344;
 }
 
-input[type=text]{
+button.success{
+    background:#1b463a;
+    border-color:#2e705c;
+}
+
+button:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+}
+
+input[type=text],
+input[type=search]{
     width:100%;
-    padding:12px;
+    padding:11px 12px;
     border-radius:10px;
     border:1px solid #33436c;
     background:#0b1122;
@@ -153,7 +171,8 @@ input[type=text]{
     outline:none;
 }
 
-input[type=text]:focus{
+input[type=text]:focus,
+input[type=search]:focus{
     border-color:#8da2ff;
 }
 
@@ -203,7 +222,9 @@ label{
 
 .layerItem.selected{
     border-color:#7184ee;
-    box-shadow:0 0 0 1px #7184ee inset;
+    box-shadow:
+        0 0 0 1px #7184ee inset,
+        0 0 14px rgba(113,132,238,.12);
 }
 
 .layerTop{
@@ -219,8 +240,11 @@ label{
     flex:none;
 }
 
-.layerName{
+.layerNameInput{
     flex:1;
+    min-width:0;
+    padding:5px 7px !important;
+    min-height:30px;
     font-size:13px;
     font-weight:700;
 }
@@ -228,12 +252,13 @@ label{
 .layerType{
     font-size:10px;
     color:#7e8baa;
+    flex:none;
 }
 
 .layerActions{
     display:flex;
     align-items:center;
-    gap:6px;
+    gap:8px;
     margin-top:8px;
 }
 
@@ -246,6 +271,20 @@ label{
 .visibility{
     font-size:12px;
     color:#aeb9d5;
+    flex:none;
+}
+
+.volumeBox{
+    flex:1;
+    min-width:0;
+}
+
+.volumeHeader{
+    display:flex;
+    justify-content:space-between;
+    font-size:10px;
+    color:#7e8baa;
+    margin-bottom:4px;
 }
 
 .layerVolume{
@@ -284,6 +323,7 @@ label{
     border:1px solid #253453;
     font-size:12px;
     color:#aeb9d5;
+    line-height:1.7;
 }
 
 #message{
@@ -315,6 +355,7 @@ label{
     height:100%;
     width:0;
     background:#8496ff;
+    transition:width .05s linear;
 }
 
 .layerCount{
@@ -323,14 +364,68 @@ label{
     margin-top:6px;
 }
 
-.transformGrid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
+.libraryList{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    margin-top:10px;
 }
 
-.transformGrid button{
-    width:100%;
+.songItem{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:9px;
+    border:1px solid #283653;
+    border-radius:10px;
+    background:#0e1629;
+}
+
+.songInfo{
+    flex:1;
+    min-width:0;
+}
+
+.songTitle{
+    font-size:12px;
+    font-weight:700;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.songDate{
+    font-size:10px;
+    color:#73809e;
+    margin-top:3px;
+}
+
+.songActions{
+    display:flex;
+    gap:5px;
+    flex:none;
+}
+
+.songActions button{
+    min-height:28px;
+    padding:5px 7px;
+    font-size:10px;
+}
+
+.libraryMeta{
+    font-size:11px;
+    color:#8290b0;
+    margin-top:7px;
+}
+
+.notice{
+    padding:9px;
+    border-radius:9px;
+    background:#111d35;
+    border:1px solid #29395d;
+    color:#91a0c5;
+    font-size:11px;
+    line-height:1.5;
 }
 
 hr{
@@ -339,7 +434,24 @@ hr{
     margin:15px 0;
 }
 
+.editNotice{
+    display:none;
+    margin-top:8px;
+    padding:9px;
+    border-radius:10px;
+    background:#1d2441;
+    border:1px solid #44528a;
+    color:#b9c5ff;
+    font-size:11px;
+    line-height:1.55;
+}
+
+.editNotice.active{
+    display:block;
+}
+
 @media(max-width:950px){
+
     .grid{
         grid-template-columns:1fr;
     }
@@ -347,9 +459,11 @@ hr{
     canvas{
         height:460px;
     }
+
 }
 
 @media(max-width:600px){
+
     #cosmos{
         padding:10px;
     }
@@ -362,7 +476,9 @@ hr{
     .row3{
         grid-template-columns:1fr;
     }
+
 }
+
 </style>
 </head>
 
@@ -370,329 +486,615 @@ hr{
 
 <div id="cosmos">
 
-    <div class="header">
-        <div>
-            <div class="logo">Cos<span>mos</span></div>
-            <div class="subtitle">
-                Graph → Music · 여러 그래프를 겹쳐 하나의 음악으로 번역하는 수학 음악 실험실
-            </div>
+<div class="header">
+
+    <div>
+
+        <div class="logo">
+            Cos<span>mos</span>
         </div>
 
-        <div>
-            <span class="badge">Cosmos v2.0</span>
+        <div class="subtitle">
+            Graph → Music · 여러 그래프를 겹쳐 하나의 음악으로 번역하는 수학 음악 실험실
         </div>
+
+    </div>
+
+    <div>
+        <span class="badge">
+            Cosmos v3.0
+        </span>
+    </div>
+
+</div>
+
+
+<div class="grid">
+
+
+<!-- =========================================================
+     GRAPH PANEL
+========================================================= -->
+
+<section class="card">
+
+    <h2>① Graph Canvas</h2>
+
+    <div class="graphWrap">
+
+        <canvas
+            id="graph"
+            width="1200"
+            height="650">
+        </canvas>
+
     </div>
 
 
-    <div class="grid">
+    <div class="controls">
 
-        <!-- ================= GRAPH ================= -->
+        <button id="zoomIn">
+            ＋ 확대
+        </button>
 
-        <section class="card">
+        <button id="zoomOut">
+            － 축소
+        </button>
 
-            <h2>① Graph Canvas</h2>
+        <button id="left">
+            ← 이동
+        </button>
 
-            <div class="graphWrap">
-                <canvas id="graph" width="1200" height="650"></canvas>
-            </div>
+        <button id="right">
+            → 이동
+        </button>
 
-            <div class="controls">
+        <button id="up">
+            ↑ 이동
+        </button>
 
-                <button id="zoomIn">＋ 확대</button>
-                <button id="zoomOut">－ 축소</button>
+        <button id="down">
+            ↓ 이동
+        </button>
 
-                <button id="left">← 이동</button>
-                <button id="right">→ 이동</button>
-                <button id="up">↑ 이동</button>
-                <button id="down">↓ 이동</button>
+        <button id="resetView">
+            화면 초기화
+        </button>
 
-                <button id="resetView">화면 초기화</button>
+    </div>
 
-            </div>
 
+    <!-- WORK MODE -->
 
-            <!-- MODE -->
+    <div class="section">
 
-            <div class="section">
+        <h2>② 작업 모드</h2>
 
-                <h2>② 작업 모드</h2>
+        <div class="modeBar">
 
-                <div class="modeBar">
+            <button
+                id="navigateMode"
+                class="active">
+                이동
+            </button>
 
-                    <button id="navigateMode" class="active">
-                        이동
-                    </button>
+            <button id="sketchMode">
+                손그림
+            </button>
 
-                    <button id="sketchMode">
-                        손그림
-                    </button>
+            <button id="editMode">
+                Edit
+            </button>
 
-                    <button id="editMode">
-                        Edit
-                    </button>
+        </div>
 
-                </div>
+        <div
+            id="editNotice"
+            class="editNotice">
 
-                <div class="help" style="margin-top:8px">
+            Edit 모드에서는 그래프를 클릭하여 선택한 뒤
+            그래프 안쪽을 드래그하면 이동할 수 있습니다.
+            모서리의 핸들을 드래그하면 크기를 바꿀 수 있고,
+            위쪽 회전 핸들을 드래그하면 자유롭게 회전할 수 있습니다.
 
-                    <b>이동</b> : 그래프 화면 이동<br>
-                    <b>손그림</b> : 선택된 레이어에 직접 곡선 그리기<br>
-                    <b>Edit</b> : 선택된 그래프 이동·확대·축소·회전
+        </div>
 
-                </div>
+        <div
+            class="help"
+            style="margin-top:8px">
 
-            </div>
-
-
-            <!-- FUNCTION -->
-
-            <div class="section">
-
-                <h2>③ 선택된 레이어에 함수 입력</h2>
-
-                <input
-                    id="expr"
-                    type="text"
-                    value="sin(x)"
-                    autocomplete="off"
-                    spellcheck="false"
-                >
-
-                <div class="controls">
-
-                    <button id="draw" class="primary">
-                        함수 그래프 생성
-                    </button>
-
-                    <button id="clearLayer">
-                        선택 레이어 지우기
-                    </button>
-
-                </div>
-
-                <div id="message"></div>
-
-            </div>
-
-
-            <!-- EDIT -->
-
-            <div class="section">
-
-                <h2>④ Edit</h2>
-
-                <div class="transformGrid">
-
-                    <button id="scaleUp">
-                        🔍 확대
-                    </button>
-
-                    <button id="scaleDown">
-                        🔎 축소
-                    </button>
-
-                    <button id="rotateLeft">
-                        ↶ 15°
-                    </button>
-
-                    <button id="rotateRight">
-                        ↷ 15°
-                    </button>
-
-                    <button id="resetTransform">
-                        변환 초기화
-                    </button>
-
-                    <button id="centerLayer">
-                        가운데 정렬
-                    </button>
-
-                </div>
-
-                <div class="help" style="margin-top:8px">
-                    Edit 모드에서 그래프를 드래그하면 이동합니다.
-                    마우스 휠을 움직이면 확대·축소됩니다.
-                    회전 버튼으로 그래프를 회전할 수 있습니다.
-                </div>
-
-            </div>
-
-
-            <!-- ANALYSIS -->
-
-            <div class="section">
-
-                <h2>⑤ 그래프 분석</h2>
-
-                <div class="info">
-                    <div>정의역 : <span id="domain">—</span></div>
-                    <div>최솟값 : <span id="minY">—</span></div>
-                    <div>최댓값 : <span id="maxY">—</span></div>
-                    <div>평균 높이 : <span id="avgY">—</span></div>
-                    <div>레이어 : <span id="selectedLayerInfo">—</span></div>
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= SIDE PANEL ================= -->
-
-        <div>
-
-            <!-- LAYERS -->
-
-            <section class="card">
-
-                <h2>Graph Layers</h2>
-
-                <div class="layerList" id="layerList"></div>
-
-                <div class="controls">
-
-                    <button id="addFunctionLayer" class="primary">
-                        ＋ 함수 레이어
-                    </button>
-
-                    <button id="addSketchLayer">
-                        ＋ 손그림 레이어
-                    </button>
-
-                    <button id="deleteLayer" class="danger">
-                        선택 레이어 삭제
-                    </button>
-
-                </div>
-
-                <div class="layerCount" id="layerCount">
-                    0개 레이어
-                </div>
-
-                <div class="help" style="margin-top:10px">
-                    👁 표시된 레이어만 음악에 포함됩니다.
-                    여러 레이어를 동시에 표시하면 각각의 그래프가
-                    독립적인 음높이로 동시에 재생됩니다.
-                </div>
-
-            </section>
-
-
-            <!-- MUSIC -->
-
-            <section class="card musicBox">
-
-                <h2>Graph → Music</h2>
-
-                <div class="row">
-
-                    <div>
-
-                        <label>음악 길이</label>
-
-                        <select id="duration">
-
-                            <option value="10">10초</option>
-                            <option value="20">20초</option>
-                            <option value="30">30초</option>
-
-                            <option value="60">1분</option>
-                            <option value="120">2분</option>
-                            <option value="180">3분</option>
-                            <option value="240">4분</option>
-                            <option value="300">5분</option>
-
-                        </select>
-
-                    </div>
-
-
-                    <div>
-
-                        <label>음계</label>
-
-                        <select id="scale">
-
-                            <option value="major">C Major</option>
-                            <option value="minor">A Minor</option>
-                            <option value="pentatonic">Pentatonic</option>
-                            <option value="chromatic">Chromatic</option>
-
-                        </select>
-
-                    </div>
-
-                </div>
-
-
-                <div class="section">
-
-                    <label>스타일</label>
-
-                    <select id="style">
-
-                        <option value="pop">Pop</option>
-                        <option value="kpop">K-pop</option>
-                        <option value="jpop">J-pop</option>
-                        <option value="lofi">Lo-fi</option>
-                        <option value="edm">EDM</option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="controls">
-
-                    <button id="play" class="primary">
-                        ▶ 그래프 전체로 음악 만들기
-                    </button>
-
-                    <button id="stop">
-                        ■ 정지
-                    </button>
-
-                </div>
-
-
-                <div class="now" id="now">
-                    표시된 모든 그래프가 동시에 음악으로 변환됩니다.
-                </div>
-
-                <div class="progress">
-                    <div id="bar"></div>
-                </div>
-
-            </section>
-
-
-            <!-- PRINCIPLE -->
-
-            <section class="card musicBox">
-
-                <h2>Cosmos 변환 원리</h2>
-
-                <div class="help">
-
-                    <b>각 레이어</b> = 하나의 독립적인 음악 선율<br><br>
-
-                    x축 → 음악의 시간<br>
-                    y축 → 음높이<br>
-                    그래프 상승 → 높은 음<br>
-                    그래프 하강 → 낮은 음<br>
-                    그래프의 전체 길이 → 음악 전체 길이<br><br>
-
-                    따라서 여러 그래프를 겹치면
-                    여러 개의 독립적인 선율이 동시에 울리면서
-                    하나의 음악 구조를 만들 수 있습니다.
-
-                </div>
-
-            </section>
+            <b>이동</b> : 그래프 화면 이동 / 휠로 화면 확대·축소<br>
+            <b>손그림</b> : 선택된 레이어에 직접 곡선 그리기<br>
+            <b>Edit</b> : 그래프를 도형처럼 선택·이동·확대·축소·회전
 
         </div>
 
     </div>
+
+
+    <!-- FUNCTION -->
+
+    <div class="section">
+
+        <h2>③ 선택된 레이어에 함수 입력</h2>
+
+        <input
+            id="expr"
+            type="text"
+            value="sin(x)"
+            autocomplete="off"
+            spellcheck="false"
+        >
+
+        <div class="controls">
+
+            <button
+                id="draw"
+                class="primary">
+                함수 그래프 생성
+            </button>
+
+            <button id="clearLayer">
+                선택 레이어 지우기
+            </button>
+
+        </div>
+
+        <div id="message"></div>
+
+    </div>
+
+
+    <!-- ANALYSIS -->
+
+    <div class="section">
+
+        <h2>④ 그래프 분석</h2>
+
+        <div class="info">
+
+            <div>
+                정의역 :
+                <span id="domain">—</span>
+            </div>
+
+            <div>
+                최솟값 :
+                <span id="minY">—</span>
+            </div>
+
+            <div>
+                최댓값 :
+                <span id="maxY">—</span>
+            </div>
+
+            <div>
+                평균 높이 :
+                <span id="avgY">—</span>
+            </div>
+
+            <div>
+                선택 레이어 :
+                <span id="selectedLayerInfo">—</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     SIDE PANEL
+========================================================= -->
+
+<div>
+
+
+<!-- =========================================================
+     LIBRARY
+========================================================= -->
+
+<section class="card">
+
+    <h2>Library</h2>
+
+    <label>
+        현재 라이브러리
+    </label>
+
+    <select id="librarySelect"></select>
+
+
+    <div class="controls">
+
+        <button
+            id="newLibrary"
+            class="primary">
+            ＋ 새 Library
+        </button>
+
+        <button id="renameLibrary">
+            이름 변경
+        </button>
+
+        <button
+            id="deleteLibrary"
+            class="danger">
+            삭제
+        </button>
+
+    </div>
+
+
+    <div class="section">
+
+        <label>
+            현재 곡 이름
+        </label>
+
+        <input
+            id="songName"
+            type="text"
+            value="Untitled Cosmos"
+            autocomplete="off"
+        >
+
+        <div class="controls">
+
+            <button
+                id="newSong"
+                class="success">
+                ＋ 새 곡
+            </button>
+
+            <button
+                id="saveSong"
+                class="primary">
+                곡 저장
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div
+        class="libraryMeta"
+        id="libraryMeta">
+        0개 곡
+    </div>
+
+    <div
+        class="libraryList"
+        id="songList">
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     LAYERS
+========================================================= -->
+
+<section class="card musicBox">
+
+    <h2>Graph Layers</h2>
+
+    <div
+        class="layerList"
+        id="layerList">
+    </div>
+
+
+    <div class="controls">
+
+        <button
+            id="addFunctionLayer"
+            class="primary">
+            ＋ 함수 레이어
+        </button>
+
+        <button id="addSketchLayer">
+            ＋ 손그림 레이어
+        </button>
+
+        <button
+            id="deleteLayer"
+            class="danger">
+            선택 레이어 삭제
+        </button>
+
+    </div>
+
+
+    <div
+        class="layerCount"
+        id="layerCount">
+        0개 레이어
+    </div>
+
+
+    <div
+        class="help"
+        style="margin-top:10px">
+
+        <b>선택</b>은 항상 한 레이어만 유지됩니다.<br>
+        👁 표시 상태와 선택 상태는 서로 독립적입니다.<br>
+        표시된 레이어만 음악에 포함됩니다.
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     MUSIC
+========================================================= -->
+
+<section class="card musicBox">
+
+    <h2>Graph → Music</h2>
+
+
+    <div class="row">
+
+        <div>
+
+            <label>
+                음악 길이
+            </label>
+
+            <select id="duration">
+
+                <option value="10">10초</option>
+                <option value="20">20초</option>
+                <option value="30">30초</option>
+
+                <option value="60">1분</option>
+                <option value="120">2분</option>
+                <option value="180">3분</option>
+                <option value="240">4분</option>
+                <option value="300">5분</option>
+
+            </select>
+
+        </div>
+
+
+        <div>
+
+            <label>
+                음계
+            </label>
+
+            <select id="scale">
+
+                <option value="major">
+                    C Major
+                </option>
+
+                <option value="minor">
+                    A Minor
+                </option>
+
+                <option value="pentatonic">
+                    Pentatonic
+                </option>
+
+                <option value="chromatic">
+                    Chromatic
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+
+    <div class="section">
+
+        <label>
+            음악 스타일 / 장르
+        </label>
+
+        <select id="style">
+
+            <optgroup label="Pop">
+
+                <option value="pop">
+                    Pop
+                </option>
+
+                <option value="kpop">
+                    K-pop
+                </option>
+
+                <option value="jpop">
+                    J-pop
+                </option>
+
+                <option value="citypop">
+                    City Pop
+                </option>
+
+                <option value="rnb">
+                    R&B
+                </option>
+
+            </optgroup>
+
+
+            <optgroup label="Electronic">
+
+                <option value="edm">
+                    EDM
+                </option>
+
+                <option value="house">
+                    House
+                </option>
+
+                <option value="techno">
+                    Techno
+                </option>
+
+                <option value="trance">
+                    Trance
+                </option>
+
+                <option value="futurebass">
+                    Future Bass
+                </option>
+
+                <option value="dnb">
+                    Drum & Bass
+                </option>
+
+                <option value="synthwave">
+                    Synthwave
+                </option>
+
+            </optgroup>
+
+
+            <optgroup label="Hip-Hop">
+
+                <option value="hiphop">
+                    Hip-Hop
+                </option>
+
+                <option value="trap">
+                    Trap
+                </option>
+
+                <option value="boombap">
+                    Boom Bap
+                </option>
+
+                <option value="phonk">
+                    Phonk
+                </option>
+
+                <option value="funk">
+                    Funk
+                </option>
+
+            </optgroup>
+
+
+            <optgroup label="Band & Jazz">
+
+                <option value="rock">
+                    Rock
+                </option>
+
+                <option value="jazz">
+                    Jazz
+                </option>
+
+                <option value="blues">
+                    Blues
+                </option>
+
+            </optgroup>
+
+
+            <optgroup label="Classical & Atmosphere">
+
+                <option value="classic">
+                    Classic
+                </option>
+
+                <option value="ambient">
+                    Ambient
+                </option>
+
+                <option value="cinematic">
+                    Cinematic
+                </option>
+
+                <option value="lofi">
+                    Lo-fi
+                </option>
+
+            </optgroup>
+
+        </select>
+
+    </div>
+
+
+    <div class="controls">
+
+        <button
+            id="play"
+            class="primary">
+            ▶ 그래프 전체로 음악 만들기
+        </button>
+
+        <button id="stop">
+            ■ 정지
+        </button>
+
+        <button
+            id="downloadWav"
+            class="success">
+            ↓ WAV 저장
+        </button>
+
+    </div>
+
+
+    <div
+        class="now"
+        id="now">
+
+        표시된 모든 그래프가 동시에 음악으로 변환됩니다.
+
+    </div>
+
+    <div class="progress">
+
+        <div id="bar"></div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     PRINCIPLE
+========================================================= -->
+
+<section class="card musicBox">
+
+    <h2>Cosmos 변환 원리</h2>
+
+    <div class="help">
+
+        <b>각 레이어</b> = 하나의 독립적인 음악 선율<br><br>
+
+        x축 → 음악의 시간<br>
+        y축 → 음높이<br>
+        그래프 상승 → 높은 음<br>
+        그래프 하강 → 낮은 음<br>
+        그래프의 전체 길이 → 음악 전체 길이<br><br>
+
+        여러 그래프를 겹치면
+        서로 다른 함수의 변화가
+        여러 개의 독립적인 선율로 동시에 표현됩니다.
+
+    </div>
+
+</section>
+
+
+</div>
+
+</div>
 
 </div>
 
@@ -705,36 +1107,156 @@ hr{
 
 
 /* =========================================================
-   기본 설정
+   기본 DOM
 ========================================================= */
 
-const canvas = document.getElementById("graph");
-const ctx = canvas.getContext("2d");
+const canvas =
+    document.getElementById("graph");
 
-const expr = document.getElementById("expr");
-const msg = document.getElementById("message");
+const ctx =
+    canvas.getContext("2d");
+
+const expr =
+    document.getElementById("expr");
+
+const msg =
+    document.getElementById("message");
+
+const editNotice =
+    document.getElementById("editNotice");
+
+
+/* =========================================================
+   그래프 화면
+========================================================= */
 
 let xmin = -10;
 let xmax = 10;
+
 let ymin = -6;
 let ymax = 6;
 
+
+function W(){
+    return canvas.getBoundingClientRect().width;
+}
+
+
+function H(){
+    return canvas.getBoundingClientRect().height;
+}
+
+
+function sx(x){
+
+    return (
+        (x-xmin) /
+        (xmax-xmin)
+    ) * W();
+
+}
+
+
+function sy(y){
+
+    return (
+        H() -
+        (y-ymin) /
+        (ymax-ymin) *
+        H()
+    );
+
+}
+
+
+function invx(px){
+
+    return xmin +
+        px/W() *
+        (xmax-xmin);
+
+}
+
+
+function invy(py){
+
+    return ymin +
+        (H()-py)/H() *
+        (ymax-ymin);
+
+}
+
+
+/* =========================================================
+   상태
+========================================================= */
+
 let mode = "navigate";
 
-let dragging = false;
+let draggingView = false;
+
 let lastX = 0;
 let lastY = 0;
+
+let layerIdCounter = 2;
+
+let selectedLayerId = 1;
+
+
+/* =========================================================
+   오디오
+========================================================= */
 
 let audioCtx = null;
 
 let playing = false;
+
 let raf = null;
+
 let playbackStart = 0;
+
 let playbackDuration = 10;
 
 let audioVoices = [];
 
-let layerIdCounter = 1;
+
+/* =========================================================
+   Edit 상태
+========================================================= */
+
+let editAction = null;
+
+let editPointerId = null;
+
+let editStartX = 0;
+
+let editStartY = 0;
+
+let editStartTx = 0;
+
+let editStartTy = 0;
+
+let editStartScale = 1;
+
+let editStartDistance = 1;
+
+let editStartRotation = 0;
+
+let editStartAngle = 0;
+
+
+/* =========================================================
+   Library 상태
+========================================================= */
+
+const LIBRARY_KEY =
+    "cosmos_v3_libraries";
+
+let libraries = [];
+
+let currentLibraryId = "";
+
+let currentSongId = null;
 
 
 /* =========================================================
@@ -742,6 +1264,7 @@ let layerIdCounter = 1;
 ========================================================= */
 
 const layerColors = [
+
     "#91a4ff",
     "#ff8fab",
     "#7ee7c4",
@@ -750,52 +1273,82 @@ const layerColors = [
     "#67d8ff",
     "#ff9f68",
     "#b8f27c"
+
 ];
 
 
 /* =========================================================
-   레이어 구조
+   레이어
 ========================================================= */
 
 let layers = [
 
     {
-        id: 1,
-        name: "Graph 1",
-        type: "function",
-        expression: "sin(x)",
-        visible: true,
-        volume: 0.14,
-        color: layerColors[0],
-        points: [],
-        transform: {
-            tx: 0,
-            ty: 0,
-            scale: 1,
-            rotation: 0
+
+        id:1,
+
+        name:"Graph 1",
+
+        type:"function",
+
+        expression:"sin(x)",
+
+        visible:true,
+
+        volume:0.55,
+
+        color:layerColors[0],
+
+        points:[],
+
+        transform:{
+
+            tx:0,
+
+            ty:0,
+
+            scale:1,
+
+            rotation:0
+
         }
+
     },
 
+
     {
-        id: 2,
-        name: "Graph 2",
-        type: "function",
-        expression: "0.5*cos(2*x)",
-        visible: true,
-        volume: 0.10,
-        color: layerColors[1],
-        points: [],
-        transform: {
-            tx: 0,
-            ty: 0,
-            scale: 1,
-            rotation: 0
+
+        id:2,
+
+        name:"Graph 2",
+
+        type:"function",
+
+        expression:"0.5*cos(2*x)",
+
+        visible:true,
+
+        volume:0.40,
+
+        color:layerColors[1],
+
+        points:[],
+
+        transform:{
+
+            tx:0,
+
+            ty:0,
+
+            scale:1,
+
+            rotation:0
+
         }
+
     }
 
 ];
-
-let selectedLayerId = 1;
 
 
 /* =========================================================
@@ -804,21 +1357,27 @@ let selectedLayerId = 1;
 
 const funcs = {
 
-    sin: Math.sin,
-    cos: Math.cos,
-    tan: Math.tan,
+    sin:Math.sin,
 
-    sqrt: Math.sqrt,
-    abs: Math.abs,
+    cos:Math.cos,
 
-    log: Math.log,
-    ln: Math.log,
+    tan:Math.tan,
 
-    exp: Math.exp,
+    sqrt:Math.sqrt,
 
-    asin: Math.asin,
-    acos: Math.acos,
-    atan: Math.atan
+    abs:Math.abs,
+
+    log:Math.log,
+
+    ln:Math.log,
+
+    exp:Math.exp,
+
+    asin:Math.asin,
+
+    acos:Math.acos,
+
+    atan:Math.atan
 
 };
 
@@ -836,13 +1395,17 @@ function tokenize(s){
     while(i < s.length){
 
         if(/\s/.test(s[i])){
+
             i++;
+
             continue;
+
         }
+
 
         if(/[0-9.]/.test(s[i])){
 
-            let j = i + 1;
+            let j = i+1;
 
             while(
                 j < s.length &&
@@ -851,7 +1414,10 @@ function tokenize(s){
                 j++;
             }
 
-            const n = Number(s.slice(i,j));
+            const n =
+                Number(
+                    s.slice(i,j)
+                );
 
             if(!Number.isFinite(n)){
                 throw Error("숫자를 확인하세요.");
@@ -862,133 +1428,185 @@ function tokenize(s){
                 v:n
             });
 
-            i = j;
+            i=j;
+
             continue;
+
         }
 
 
         if(/[A-Za-z_]/.test(s[i])){
 
-            let j = i + 1;
+            let j=i+1;
 
             while(
-                j < s.length &&
+                j<s.length &&
                 /[A-Za-z_]/.test(s[j])
             ){
                 j++;
             }
 
             tokens.push({
+
                 t:"id",
-                v:s.slice(i,j).toLowerCase()
+
+                v:
+                    s
+                    .slice(i,j)
+                    .toLowerCase()
+
             });
 
-            i = j;
+            i=j;
+
             continue;
+
         }
 
 
         if("+-*/^(),".includes(s[i])){
 
             tokens.push({
+
                 t:s[i],
+
                 v:s[i]
+
             });
 
             i++;
+
             continue;
+
         }
 
-        throw Error("지원하지 않는 문자가 있습니다: " + s[i]);
+
+        throw Error(
+            "지원하지 않는 문자가 있습니다: " +
+            s[i]
+        );
+
     }
 
     return tokens;
+
 }
 
 
 function parseExpression(s){
 
-    const ts = tokenize(s);
+    const ts =
+        tokenize(s);
 
-    let p = 0;
+    let p=0;
 
 
     function primary(){
 
-        const z = ts[p];
+        const z=ts[p];
 
         if(!z){
-            throw Error("수식이 완성되지 않았습니다.");
+            throw Error(
+                "수식이 완성되지 않았습니다."
+            );
         }
 
 
-        if(z.t === "num"){
+        if(z.t==="num"){
 
             p++;
 
-            return () => z.v;
+            return ()=>z.v;
 
         }
 
 
-        if(z.t === "id"){
+        if(z.t==="id"){
 
             p++;
 
-            if(z.v === "x"){
-                return x => x;
+
+            if(z.v==="x"){
+                return x=>x;
             }
 
-            if(z.v === "pi"){
-                return () => Math.PI;
+
+            if(z.v==="pi"){
+                return ()=>Math.PI;
             }
 
-            if(z.v === "e"){
-                return () => Math.E;
+
+            if(z.v==="e"){
+                return ()=>Math.E;
             }
 
 
             if(funcs[z.v]){
 
-                if(!ts[p] || ts[p].t !== "("){
-                    throw Error(z.v + " 뒤에 괄호가 필요합니다.");
+                if(
+                    !ts[p] ||
+                    ts[p].t!=="("
+                ){
+                    throw Error(
+                        z.v +
+                        " 뒤에 괄호가 필요합니다."
+                    );
                 }
 
                 p++;
 
-                const a = addsub();
+                const a =
+                    addsub();
 
-                if(!ts[p] || ts[p].t !== ")"){
-                    throw Error("괄호를 닫아주세요.");
+                if(
+                    !ts[p] ||
+                    ts[p].t!==")"
+                ){
+                    throw Error(
+                        "괄호를 닫아주세요."
+                    );
                 }
 
                 p++;
 
-                return x => funcs[z.v](a(x));
+                return x =>
+                    funcs[z.v](a(x));
+
             }
 
 
-            throw Error("알 수 없는 함수/변수: " + z.v);
+            throw Error(
+                "알 수 없는 함수/변수: " +
+                z.v
+            );
+
         }
 
 
-        if(z.t === "("){
+        if(z.t==="("){
 
             p++;
 
-            const a = addsub();
+            const a =
+                addsub();
 
-            if(!ts[p] || ts[p].t !== ")"){
-                throw Error("괄호를 닫아주세요.");
+            if(
+                !ts[p] ||
+                ts[p].t!==")"
+            ){
+                throw Error(
+                    "괄호를 닫아주세요."
+                );
             }
 
             p++;
 
             return a;
+
         }
 
 
-        if(z.t === "+"){
+        if(z.t==="+"){
 
             p++;
 
@@ -997,205 +1615,197 @@ function parseExpression(s){
         }
 
 
-        if(z.t === "-"){
+        if(z.t==="-"){
 
             p++;
 
-            const a = primary();
+            const a =
+                primary();
 
-            return x => -a(x);
+            return x=>-a(x);
 
         }
 
 
-        throw Error("수식을 확인하세요.");
+        throw Error(
+            "수식을 확인하세요."
+        );
+
     }
 
 
     function power(){
 
-        let a = primary();
+        let a =
+            primary();
 
-        if(ts[p] && ts[p].t === "^"){
+        if(
+            ts[p] &&
+            ts[p].t==="^"
+        ){
 
             p++;
 
-            const b = power();
+            const b =
+                power();
 
-            const aa = a;
+            const aa =
+                a;
 
-            return x => Math.pow(
-                aa(x),
-                b(x)
-            );
+            return x =>
+                Math.pow(
+                    aa(x),
+                    b(x)
+                );
 
         }
 
         return a;
+
     }
 
 
     function muldiv(){
 
-        let a = power();
+        let a =
+            power();
 
         while(
             ts[p] &&
             (
-                ts[p].t === "*" ||
-                ts[p].t === "/"
+                ts[p].t==="*" ||
+                ts[p].t==="/"
             )
         ){
 
-            const op = ts[p++].t;
-            const b = power();
+            const op =
+                ts[p++].t;
 
-            const aa = a;
+            const b =
+                power();
 
-            if(op === "*"){
-                a = x => aa(x) * b(x);
+            const aa =
+                a;
+
+            if(op==="*"){
+
+                a =
+                    x =>
+                        aa(x) *
+                        b(x);
+
             }else{
-                a = x => aa(x) / b(x);
+
+                a =
+                    x =>
+                        aa(x) /
+                        b(x);
+
             }
 
         }
 
         return a;
+
     }
 
 
     function addsub(){
 
-        let a = muldiv();
+        let a =
+            muldiv();
 
         while(
             ts[p] &&
             (
-                ts[p].t === "+" ||
-                ts[p].t === "-"
+                ts[p].t==="+" ||
+                ts[p].t==="-"
             )
         ){
 
-            const op = ts[p++].t;
-            const b = muldiv();
+            const op =
+                ts[p++].t;
 
-            const aa = a;
+            const b =
+                muldiv();
 
-            if(op === "+"){
-                a = x => aa(x) + b(x);
+            const aa =
+                a;
+
+            if(op==="+"){
+
+                a =
+                    x =>
+                        aa(x)+b(x);
+
             }else{
-                a = x => aa(x) - b(x);
+
+                a =
+                    x =>
+                        aa(x)-b(x);
+
             }
 
         }
 
         return a;
+
     }
 
 
-    const f = addsub();
+    const f =
+        addsub();
 
-    if(p !== ts.length){
-        throw Error("수식을 확인하세요.");
+    if(
+        p!==ts.length
+    ){
+        throw Error(
+            "수식을 확인하세요."
+        );
     }
 
     return f;
+
 }
 
 
 /* =========================================================
-   좌표 변환
+   중심
 ========================================================= */
 
-function W(){
-    return canvas.getBoundingClientRect().width;
-}
+function getCenter(points){
 
-function H(){
-    return canvas.getBoundingClientRect().height;
-}
+    if(!points.length){
 
-function sx(x){
-    return (
-        (x - xmin) /
-        (xmax - xmin)
-    ) * W();
-}
+        return {
+            x:0,
+            y:0
+        };
 
-function sy(y){
-    return (
-        H() -
-        (y - ymin) /
-        (ymax - ymin) *
-        H()
-    );
-}
-
-function invx(px){
-    return xmin +
-        px / W() *
-        (xmax - xmin);
-}
-
-function invy(py){
-    return ymin +
-        (H() - py) /
-        H() *
-        (ymax - ymin);
-}
+    }
 
 
-/* =========================================================
-   변환
-========================================================= */
+    let ax=0;
+    let ay=0;
 
-function transformPoint(point, transform){
+    points.forEach(p=>{
 
-    const cx = point.cx;
-    const cy = point.cy;
+        ax+=p.x;
+        ay+=p.y;
 
-    const x0 = point.x - cx;
-    const y0 = point.y - cy;
+    });
 
-    const cos = Math.cos(transform.rotation);
-    const sin = Math.sin(transform.rotation);
-
-    const x1 =
-        (x0 * cos - y0 * sin) *
-        transform.scale;
-
-    const y1 =
-        (x0 * sin + y0 * cos) *
-        transform.scale;
 
     return {
 
         x:
-            cx +
-            x1 +
-            transform.tx,
+            ax/points.length,
 
         y:
-            cy +
-            y1 +
-            transform.ty
+            ay/points.length
 
     };
-}
 
-
-function transformedPoints(layer){
-
-    if(!layer.points.length){
-        return [];
-    }
-
-    return layer.points.map(p =>
-        transformPoint(
-            p,
-            layer.transform
-        )
-    );
 }
 
 
@@ -1205,13 +1815,21 @@ function transformedPoints(layer){
 
 function generateFunctionPoints(expression){
 
-    const f = parseExpression(expression);
+    const f =
+        parseExpression(
+            expression
+        );
 
-    const result = [];
+    const result=[];
 
-    const N = 1200;
+    const N=1200;
 
-    for(let i=0;i<=N;i++){
+
+    for(
+        let i=0;
+        i<=N;
+        i++
+    ){
 
         const x =
             xmin +
@@ -1221,68 +1839,161 @@ function generateFunctionPoints(expression){
         let y;
 
         try{
-            y = f(x);
+
+            y=f(x);
+
         }catch(e){
-            y = NaN;
+
+            y=NaN;
+
         }
+
 
         if(
             Number.isFinite(y) &&
-            Math.abs(y) < 100000
+            Math.abs(y)<100000
         ){
 
             result.push({
+
                 x:x,
+
                 y:y,
+
                 cx:x,
+
                 cy:y
+
             });
 
         }
 
     }
 
+
     return result;
+
 }
 
 
 /* =========================================================
-   중심 계산
+   변환
 ========================================================= */
 
-function getCenter(points){
+function transformPoint(
+    point,
+    transform
+){
 
-    if(!points.length){
-        return {
-            x:0,
-            y:0
-        };
-    }
+    const x0 =
+        point.x-point.cx;
 
-    let sxv = 0;
-    let syv = 0;
+    const y0 =
+        point.y-point.cy;
 
-    points.forEach(p=>{
-        sxv += p.x;
-        syv += p.y;
-    });
+    const c =
+        Math.cos(
+            transform.rotation
+        );
+
+    const s =
+        Math.sin(
+            transform.rotation
+        );
+
+
+    const x1 =
+        (
+            x0*c -
+            y0*s
+        ) *
+        transform.scale;
+
+
+    const y1 =
+        (
+            x0*s +
+            y0*c
+        ) *
+        transform.scale;
+
 
     return {
-        x:sxv/points.length,
-        y:syv/points.length
+
+        x:
+            point.cx +
+            x1 +
+            transform.tx,
+
+        y:
+            point.cy +
+            y1 +
+            transform.ty
+
     };
+
+}
+
+
+function transformedPoints(layer){
+
+    if(
+        !layer ||
+        !layer.points ||
+        !layer.points.length
+    ){
+        return [];
+    }
+
+
+    return layer.points.map(
+        p =>
+            transformPoint(
+                p,
+                layer.transform
+            )
+    );
+
 }
 
 
 /* =========================================================
-   레이어 선택
+   선택 레이어
 ========================================================= */
 
 function selectedLayer(){
 
     return layers.find(
-        l => l.id === selectedLayerId
-    );
+        l =>
+            l.id ===
+            selectedLayerId
+    ) || null;
+
+}
+
+
+function selectLayer(id){
+
+    const exists =
+        layers.some(
+            l => l.id === id
+        );
+
+    if(!exists){
+        return;
+    }
+
+    selectedLayerId=id;
+
+    const l=
+        selectedLayer();
+
+    expr.value =
+        l.expression || "";
+
+    renderLayers();
+
+    draw();
 
 }
 
@@ -1294,86 +2005,268 @@ function selectedLayer(){
 function renderLayers(){
 
     const box =
-        document.getElementById("layerList");
+        document.getElementById(
+            "layerList"
+        );
 
-    box.innerHTML = "";
+    box.innerHTML="";
 
 
     layers.forEach(layer=>{
 
         const item =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         item.className =
             "layerItem" +
             (
-                layer.id === selectedLayerId
+                layer.id===selectedLayerId
                 ? " selected"
                 : ""
             );
 
 
         const top =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         top.className =
             "layerTop";
 
 
-        const color =
-            document.createElement("span");
+        const dot =
+            document.createElement(
+                "span"
+            );
 
-        color.className =
+        dot.className =
             "layerColor";
 
-        color.style.background =
+        dot.style.background =
             layer.color;
 
 
-        const name =
-            document.createElement("span");
+        const nameInput =
+            document.createElement(
+                "input"
+            );
 
-        name.className =
-            "layerName";
+        nameInput.type="text";
 
-        name.textContent =
+        nameInput.value =
             layer.name;
+
+        nameInput.className =
+            "layerNameInput";
 
 
         const type =
-            document.createElement("span");
+            document.createElement(
+                "span"
+            );
 
         type.className =
             "layerType";
 
         type.textContent =
-            layer.type === "function"
+            layer.type==="function"
             ? "FUNCTION"
             : "SKETCH";
 
 
-        top.appendChild(color);
-        top.appendChild(name);
+        top.appendChild(dot);
+
+        top.appendChild(
+            nameInput
+        );
+
         top.appendChild(type);
 
 
         const actions =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         actions.className =
             "layerActions";
 
 
         const visibility =
-            document.createElement("button");
+            document.createElement(
+                "button"
+            );
+
+        visibility.className =
+            "visibility";
 
         visibility.textContent =
             layer.visible
             ? "👁 표시"
             : "○ 숨김";
 
-        visibility.className =
-            "visibility";
+
+        const volumeBox =
+            document.createElement(
+                "div"
+            );
+
+        volumeBox.className =
+            "volumeBox";
+
+
+        const volumeHeader =
+            document.createElement(
+                "div"
+            );
+
+        volumeHeader.className =
+            "volumeHeader";
+
+
+        const volumeText =
+            document.createElement(
+                "span"
+            );
+
+        volumeText.textContent =
+            "음량";
+
+
+        const volumeValue =
+            document.createElement(
+                "span"
+            );
+
+        volumeValue.textContent =
+            Math.round(
+                layer.volume*100
+            ) + "%";
+
+
+        volumeHeader.appendChild(
+            volumeText
+        );
+
+        volumeHeader.appendChild(
+            volumeValue
+        );
+
+
+        const volume =
+            document.createElement(
+                "input"
+            );
+
+        volume.type="range";
+
+        volume.min="0";
+
+        volume.max="1";
+
+        volume.step="0.01";
+
+        volume.value =
+            layer.volume;
+
+        volume.className =
+            "layerVolume";
+
+
+        volumeBox.appendChild(
+            volumeHeader
+        );
+
+        volumeBox.appendChild(
+            volume
+        );
+
+
+        actions.appendChild(
+            visibility
+        );
+
+        actions.appendChild(
+            volumeBox
+        );
+
+
+        item.appendChild(top);
+
+        item.appendChild(actions);
+
+
+        /*
+           선택은 layerItem 자체에서만 처리.
+           내부 입력/버튼은 selection 이벤트가
+           부모로 전파되지 않도록 막는다.
+        */
+
+        item.addEventListener(
+            "click",
+            ()=>{
+                selectLayer(layer.id);
+            }
+        );
+
+
+        item.addEventListener(
+            "pointerdown",
+            e=>{
+
+                if(
+                    e.target ===
+                    nameInput ||
+                    e.target ===
+                    visibility ||
+                    e.target ===
+                    volume
+                ){
+                    e.stopPropagation();
+                }
+
+            }
+        );
+
+
+        nameInput.addEventListener(
+            "click",
+            e=>{
+                e.stopPropagation();
+            }
+        );
+
+
+        nameInput.addEventListener(
+            "pointerdown",
+            e=>{
+                e.stopPropagation();
+            }
+        );
+
+
+        nameInput.addEventListener(
+            "change",
+            e=>{
+
+                const newName =
+                    e.target.value.trim();
+
+                layer.name =
+                    newName ||
+                    "Graph " +
+                    layer.id;
+
+                e.target.value =
+                    layer.name;
+
+                updateSelectedInfo();
+
+            }
+        );
 
 
         visibility.addEventListener(
@@ -1386,65 +2279,56 @@ function renderLayers(){
                     !layer.visible;
 
                 renderLayers();
+
                 draw();
 
             }
         );
 
 
-        const volume =
-            document.createElement("input");
-
-        volume.type = "range";
-        volume.min = "0";
-        volume.max = "0.3";
-        volume.step = "0.01";
-        volume.value = layer.volume;
-
-        volume.className =
-            "layerVolume";
+        visibility.addEventListener(
+            "pointerdown",
+            e=>{
+                e.stopPropagation();
+            }
+        );
 
 
         volume.addEventListener(
             "click",
-            e=>e.stopPropagation()
+            e=>{
+
+                e.stopPropagation();
+
+            }
+        );
+
+
+        volume.addEventListener(
+            "pointerdown",
+            e=>{
+
+                e.stopPropagation();
+
+            }
         );
 
 
         volume.addEventListener(
             "input",
             e=>{
+
+                e.stopPropagation();
+
                 layer.volume =
-                    Number(e.target.value);
-            }
-        );
+                    Number(
+                        e.target.value
+                    );
 
-
-        actions.appendChild(
-            visibility
-        );
-
-        actions.appendChild(
-            volume
-        );
-
-
-        item.appendChild(top);
-        item.appendChild(actions);
-
-
-        item.addEventListener(
-            "click",
-            ()=>{
-
-                selectedLayerId =
-                    layer.id;
-
-                expr.value =
-                    layer.expression || "";
-
-                renderLayers();
-                draw();
+                volumeValue.textContent =
+                    Math.round(
+                        layer.volume*100
+                    ) + "%";
 
             }
         );
@@ -1460,99 +2344,142 @@ function renderLayers(){
     ).textContent =
         layers.length +
         "개 레이어 · " +
-        layers.filter(l=>l.visible).length +
+        layers.filter(
+            l=>l.visible
+        ).length +
         "개 재생";
 
 
-    const selected =
-        selectedLayer();
-
-    if(selected){
-
-        document.getElementById(
-            "selectedLayerInfo"
-        ).textContent =
-            selected.name +
-            " · " +
-            (
-                selected.type === "function"
-                ? "함수"
-                : "손그림"
-            );
-
-    }
+    updateSelectedInfo();
 
 }
 
 
 /* =========================================================
-   함수 그래프 생성 버튼
+   선택 레이어 정보
+========================================================= */
+
+function updateSelectedInfo(){
+
+    const selected =
+        selectedLayer();
+
+    const box =
+        document.getElementById(
+            "selectedLayerInfo"
+        );
+
+
+    if(!selected){
+
+        box.textContent =
+            "선택 없음";
+
+        return;
+
+    }
+
+
+    box.textContent =
+        selected.name +
+        " · " +
+        (
+            selected.type ===
+            "function"
+            ? "함수"
+            : "손그림"
+        );
+
+}
+
+
+/* =========================================================
+   함수 그래프 생성
 ========================================================= */
 
 document
 .getElementById("draw")
-.addEventListener("click",()=>{
+.addEventListener(
+    "click",
+    ()=>{
 
-    const layer =
-        selectedLayer();
+        const layer =
+            selectedLayer();
 
-    if(!layer)return;
-
-
-    try{
-
-        const points =
-            generateFunctionPoints(
-                expr.value
-            );
-
-        if(points.length < 10){
-            throw Error(
-                "그래프를 충분히 생성할 수 없습니다."
-            );
+        if(!layer){
+            return;
         }
 
 
-        const center =
-            getCenter(points);
+        try{
+
+            const points =
+                generateFunctionPoints(
+                    expr.value.trim()
+                );
 
 
-        points.forEach(p=>{
+            if(points.length<10){
 
-            p.cx = center.x;
-            p.cy = center.y;
+                throw Error(
+                    "그래프를 충분히 생성할 수 없습니다."
+                );
 
-        });
-
-
-        layer.type = "function";
-        layer.expression =
-            expr.value;
-
-        layer.points =
-            points;
-
-        layer.transform = {
-            tx:0,
-            ty:0,
-            scale:1,
-            rotation:0
-        };
+            }
 
 
-        msg.textContent = "";
+            const center =
+                getCenter(points);
 
-        renderLayers();
-        draw();
 
-    }catch(e){
+            points.forEach(p=>{
 
-        msg.textContent =
-            e.message;
+                p.cx =
+                    center.x;
+
+                p.cy =
+                    center.y;
+
+            });
+
+
+            layer.type =
+                "function";
+
+            layer.expression =
+                expr.value.trim();
+
+            layer.points =
+                points;
+
+            layer.transform={
+
+                tx:0,
+
+                ty:0,
+
+                scale:1,
+
+                rotation:0
+
+            };
+
+
+            msg.textContent="";
+
+            renderLayers();
+
+            draw();
+
+        }catch(e){
+
+            msg.textContent =
+                e.message;
+
+        }
 
     }
-
-});
+);
 
 
 /* =========================================================
@@ -1563,33 +2490,39 @@ function addLayer(type){
 
     layerIdCounter++;
 
+
     const index =
-        layers.length %
+        (
+            layers.length
+        ) %
         layerColors.length;
 
 
-    const layer = {
+    const layer={
 
-        id:layerIdCounter,
+        id:
+            layerIdCounter,
 
         name:
-            type === "function"
-            ? "Function " + layerIdCounter
-            : "Sketch " + layerIdCounter,
+            type==="function"
+            ? "Function " +
+                layerIdCounter
+            : "Sketch " +
+                layerIdCounter,
 
         type:type,
 
         expression:
-            type === "function"
+            type==="function"
             ? "sin(x)"
             : "",
 
         visible:true,
 
         volume:
-            type === "function"
-            ? 0.12
-            : 0.10,
+            type==="function"
+            ? 0.45
+            : 0.35,
 
         color:
             layerColors[index],
@@ -1597,16 +2530,23 @@ function addLayer(type){
         points:[],
 
         transform:{
+
             tx:0,
+
             ty:0,
+
             scale:1,
+
             rotation:0
+
         }
 
     };
 
 
-    if(type === "function"){
+    if(
+        type==="function"
+    ){
 
         try{
 
@@ -1618,12 +2558,20 @@ function addLayer(type){
             const center =
                 getCenter(points);
 
+
             points.forEach(p=>{
-                p.cx=center.x;
-                p.cy=center.y;
+
+                p.cx =
+                    center.x;
+
+                p.cy =
+                    center.y;
+
             });
 
-            layer.points=points;
+
+            layer.points =
+                points;
 
         }catch(e){}
 
@@ -1638,25 +2586,35 @@ function addLayer(type){
     expr.value =
         layer.expression;
 
+
     renderLayers();
+
     draw();
 
 }
 
 
 document
-.getElementById("addFunctionLayer")
+.getElementById(
+    "addFunctionLayer"
+)
 .addEventListener(
     "click",
-    ()=>addLayer("function")
+    ()=>{
+        addLayer("function");
+    }
 );
 
 
 document
-.getElementById("addSketchLayer")
+.getElementById(
+    "addSketchLayer"
+)
 .addEventListener(
     "click",
-    ()=>addLayer("sketch")
+    ()=>{
+        addLayer("sketch");
+    }
 );
 
 
@@ -1665,12 +2623,16 @@ document
 ========================================================= */
 
 document
-.getElementById("deleteLayer")
+.getElementById(
+    "deleteLayer"
+)
 .addEventListener(
     "click",
     ()=>{
 
-        if(layers.length <= 1){
+        if(
+            layers.length<=1
+        ){
 
             msg.textContent =
                 "최소 한 개의 레이어는 필요합니다.";
@@ -1682,13 +2644,17 @@ document
 
         const index =
             layers.findIndex(
-                l => l.id === selectedLayerId
+                l =>
+                    l.id ===
+                    selectedLayerId
             );
 
 
         layers =
             layers.filter(
-                l => l.id !== selectedLayerId
+                l =>
+                    l.id !==
+                    selectedLayerId
             );
 
 
@@ -1696,15 +2662,18 @@ document
             layers[
                 Math.max(
                     0,
-                    index - 1
+                    index-1
                 )
             ].id;
 
 
         expr.value =
-            selectedLayer().expression || "";
+            selectedLayer()
+            ?.expression || "";
+
 
         renderLayers();
+
         draw();
 
     }
@@ -1715,13 +2684,17 @@ document
    손그림
 ========================================================= */
 
-let sketchPoints = [];
+let sketchPoints=[];
+
 
 canvas.addEventListener(
     "pointerdown",
     e=>{
 
-        if(mode !== "sketch"){
+        if(
+            mode !==
+            "sketch"
+        ){
             return;
         }
 
@@ -1734,7 +2707,7 @@ canvas.addEventListener(
         }
 
 
-        sketchPoints = [];
+        sketchPoints=[];
 
 
         const rect =
@@ -1747,6 +2720,7 @@ canvas.addEventListener(
                 rect.left
             );
 
+
         const y =
             invy(
                 e.clientY -
@@ -1755,8 +2729,11 @@ canvas.addEventListener(
 
 
         sketchPoints.push({
+
             x:x,
+
             y:y
+
         });
 
 
@@ -1772,11 +2749,17 @@ canvas.addEventListener(
     "pointermove",
     e=>{
 
-        if(mode !== "sketch"){
+        if(
+            mode !==
+            "sketch"
+        ){
             return;
         }
 
-        if(!sketchPoints.length){
+
+        if(
+            !sketchPoints.length
+        ){
             return;
         }
 
@@ -1791,6 +2774,7 @@ canvas.addEventListener(
                 rect.left
             );
 
+
         const y =
             invy(
                 e.clientY -
@@ -1799,8 +2783,11 @@ canvas.addEventListener(
 
 
         sketchPoints.push({
+
             x:x,
+
             y:y
+
         });
 
 
@@ -1814,15 +2801,24 @@ canvas.addEventListener(
     "pointerup",
     e=>{
 
-        if(mode !== "sketch"){
+        if(
+            mode !==
+            "sketch"
+        ){
             return;
         }
 
 
-        if(sketchPoints.length < 5){
+        if(
+            sketchPoints.length<5
+        ){
+
             sketchPoints=[];
+
             draw();
+
             return;
+
         }
 
 
@@ -1844,35 +2840,40 @@ canvas.addEventListener(
 
         const center =
             getCenter(
-                simplified.map(p=>({
-                    x:p.x,
-                    y:p.y
-                }))
+                simplified
             );
 
 
         layer.type =
             "sketch";
 
-        layer.expression = "";
+        layer.expression="";
+
 
         layer.points =
-            simplified.map(p=>({
+            simplified.map(
+                p=>({
 
-                x:p.x,
-                y:p.y,
+                    x:p.x,
 
-                cx:center.x,
-                cy:center.y
+                    y:p.y,
 
-            }));
+                    cx:center.x,
+
+                    cy:center.y
+
+                })
+            );
 
 
-        layer.transform = {
+        layer.transform={
 
             tx:0,
+
             ty:0,
+
             scale:1,
+
             rotation:0
 
         };
@@ -1880,16 +2881,22 @@ canvas.addEventListener(
 
         sketchPoints=[];
 
+
         renderLayers();
+
         draw();
 
     }
 );
 
 
-function simplifyPoints(points, step){
+function simplifyPoints(
+    points,
+    step
+){
 
     const result=[];
+
 
     for(
         let i=0;
@@ -1898,11 +2905,17 @@ function simplifyPoints(points, step){
     ){
 
         result.push({
-            x:points[i].x,
-            y:points[i].y
+
+            x:
+                points[i].x,
+
+            y:
+                points[i].y
+
         });
 
     }
+
 
     return result;
 
@@ -1917,17 +2930,35 @@ function drawSketchPreview(){
 
     draw();
 
-    if(sketchPoints.length < 2){
+
+    if(
+        sketchPoints.length<2
+    ){
+        return;
+    }
+
+
+    const layer =
+        selectedLayer();
+
+
+    if(!layer){
         return;
     }
 
 
     ctx.save();
 
+
     ctx.strokeStyle =
-        selectedLayer().color;
+        layer.color;
 
     ctx.lineWidth=4;
+
+    ctx.lineCap="round";
+
+    ctx.lineJoin="round";
+
 
     ctx.beginPath();
 
@@ -1935,13 +2966,27 @@ function drawSketchPreview(){
     sketchPoints.forEach(
         (p,i)=>{
 
-            const px=sx(p.x);
-            const py=sy(p.y);
+            const px =
+                sx(p.x);
+
+            const py =
+                sy(p.y);
+
 
             if(i===0){
-                ctx.moveTo(px,py);
+
+                ctx.moveTo(
+                    px,
+                    py
+                );
+
             }else{
-                ctx.lineTo(px,py);
+
+                ctx.lineTo(
+                    px,
+                    py
+                );
+
             }
 
         }
@@ -1956,40 +3001,650 @@ function drawSketchPreview(){
 
 
 /* =========================================================
-   Edit 모드
+   Edit 도구
+========================================================= */
+
+function getEditData(layer){
+
+    if(
+        !layer ||
+        !layer.points.length
+    ){
+        return null;
+    }
+
+
+    const points =
+        transformedPoints(
+            layer
+        );
+
+
+    if(
+        points.length<2
+    ){
+        return null;
+    }
+
+
+    const screenPoints =
+        points.map(
+            p=>({
+
+                x:sx(p.x),
+
+                y:sy(p.y)
+
+            })
+        );
+
+
+    let minX=Infinity;
+
+    let maxX=-Infinity;
+
+    let minY=Infinity;
+
+    let maxY=-Infinity;
+
+
+    screenPoints.forEach(p=>{
+
+        minX=Math.min(
+            minX,
+            p.x
+        );
+
+        maxX=Math.max(
+            maxX,
+            p.x
+        );
+
+        minY=Math.min(
+            minY,
+            p.y
+        );
+
+        maxY=Math.max(
+            maxY,
+            p.y
+        );
+
+    });
+
+
+    const center =
+        getCenter(points);
+
+
+    const cx =
+        sx(center.x);
+
+    const cy =
+        sy(center.y);
+
+
+    return {
+
+        points:screenPoints,
+
+        minX:minX,
+
+        maxX:maxX,
+
+        minY:minY,
+
+        maxY:maxY,
+
+        centerX:cx,
+
+        centerY:cy
+
+    };
+
+}
+
+
+function getEditHandles(layer){
+
+    const data =
+        getEditData(layer);
+
+
+    if(!data){
+        return null;
+    }
+
+
+    const size=8;
+
+
+    const corners=[
+
+        {
+            type:"scale",
+            x:data.minX,
+            y:data.minY
+        },
+
+        {
+            type:"scale",
+            x:data.maxX,
+            y:data.minY
+        },
+
+        {
+            type:"scale",
+            x:data.minX,
+            y:data.maxY
+        },
+
+        {
+            type:"scale",
+            x:data.maxX,
+            y:data.maxY
+        },
+
+        {
+            type:"rotate",
+            x:
+                (
+                    data.minX+
+                    data.maxX
+                )/2,
+
+            y:
+                data.minY-36
+        }
+
+    ];
+
+
+    return {
+        corners:corners,
+        size:size
+    };
+
+}
+
+
+function distance(
+    x1,
+    y1,
+    x2,
+    y2
+){
+
+    return Math.hypot(
+        x1-x2,
+        y1-y2
+    );
+
+}
+
+
+function distanceToSegment(
+    px,
+    py,
+    ax,
+    ay,
+    bx,
+    by
+){
+
+    const dx =
+        bx-ax;
+
+    const dy =
+        by-ay;
+
+
+    const len2 =
+        dx*dx+
+        dy*dy;
+
+
+    if(
+        len2===0
+    ){
+
+        return distance(
+            px,
+            py,
+            ax,
+            ay
+        );
+
+    }
+
+
+    let t =
+        (
+            (
+                px-ax
+            )*dx+
+            (
+                py-ay
+            )*dy
+        ) /
+        len2;
+
+
+    t =
+        Math.max(
+            0,
+            Math.min(
+                1,
+                t
+            )
+        );
+
+
+    const x =
+        ax+t*dx;
+
+    const y =
+        ay+t*dy;
+
+
+    return distance(
+        px,
+        py,
+        x,
+        y
+    );
+
+}
+
+
+function pointNearLayer(
+    layer,
+    px,
+    py
+){
+
+    const data =
+        getEditData(layer);
+
+
+    if(!data){
+        return false;
+    }
+
+
+    for(
+        let i=1;
+        i<data.points.length;
+        i++
+    ){
+
+        const a =
+            data.points[i-1];
+
+        const b =
+            data.points[i];
+
+
+        if(
+            distanceToSegment(
+                px,
+                py,
+                a.x,
+                a.y,
+                b.x,
+                b.y
+            ) <= 12
+        ){
+            return true;
+        }
+
+    }
+
+
+    return false;
+
+}
+
+
+function pointInsideBox(
+    data,
+    px,
+    py
+){
+
+    return (
+        px>=data.minX-8 &&
+        px<=data.maxX+8 &&
+        py>=data.minY-8 &&
+        py<=data.maxY+8
+    );
+
+}
+
+
+function nearHandle(
+    handle,
+    px,
+    py,
+    radius=14
+){
+
+    return (
+        distance(
+            px,
+            py,
+            handle.x,
+            handle.y
+        ) <= radius
+    );
+
+}
+
+
+/* =========================================================
+   Edit Pointer Down
 ========================================================= */
 
 canvas.addEventListener(
     "pointerdown",
     e=>{
 
-        if(mode !== "edit"){
+        if(
+            mode !==
+            "edit"
+        ){
             return;
         }
 
 
-        dragging=true;
+        const rect =
+            canvas.getBoundingClientRect();
 
-        lastX=e.clientX;
-        lastY=e.clientY;
 
-        canvas.setPointerCapture(
-            e.pointerId
-        );
+        const px =
+            e.clientX -
+            rect.left;
+
+        const py =
+            e.clientY -
+            rect.top;
+
+
+        const current =
+            selectedLayer();
+
+
+        /*
+           1. 선택된 그래프의 핸들을 먼저 검사
+        */
+
+        if(current){
+
+            const handles =
+                getEditHandles(
+                    current
+                );
+
+
+            if(handles){
+
+                const rotateHandle =
+                    handles.corners.find(
+                        h =>
+                            h.type==="rotate"
+                    );
+
+
+                if(
+                    rotateHandle &&
+                    nearHandle(
+                        rotateHandle,
+                        px,
+                        py,
+                        16
+                    )
+                ){
+
+                    editAction =
+                        "rotate";
+
+                    editPointerId =
+                        e.pointerId;
+
+                    const data =
+                        getEditData(
+                            current
+                        );
+
+
+                    editStartX =
+                        px;
+
+                    editStartY =
+                        py;
+
+                    editStartRotation =
+                        current.transform.rotation;
+
+                    editStartAngle =
+                        Math.atan2(
+                            py-data.centerY,
+                            px-data.centerX
+                        );
+
+
+                    canvas.setPointerCapture(
+                        e.pointerId
+                    );
+
+                    return;
+
+                }
+
+
+                const scaleHandle =
+                    handles.corners.find(
+                        h =>
+                            h.type==="scale" &&
+                            nearHandle(
+                                h,
+                                px,
+                                py,
+                                15
+                            )
+                    );
+
+
+                if(scaleHandle){
+
+                    editAction =
+                        "scale";
+
+                    editPointerId =
+                        e.pointerId;
+
+                    const data =
+                        getEditData(
+                            current
+                        );
+
+
+                    editStartScale =
+                        current.transform.scale;
+
+                    editStartDistance =
+                        distance(
+                            px,
+                            py,
+                            data.centerX,
+                            data.centerY
+                        );
+
+
+                    editStartX=px;
+
+                    editStartY=py;
+
+
+                    canvas.setPointerCapture(
+                        e.pointerId
+                    );
+
+                    return;
+
+                }
+
+            }
+
+        }
+
+
+        /*
+           2. 그래프 선을 클릭했는지 검사
+           뒤에 그려진 레이어부터 검사
+        */
+
+        let hitLayer=null;
+
+
+        for(
+            let i=
+                layers.length-1;
+            i>=0;
+            i--
+        ){
+
+            const layer =
+                layers[i];
+
+
+            if(
+                !layer.visible ||
+                layer.points.length<2
+            ){
+                continue;
+            }
+
+
+            if(
+                pointNearLayer(
+                    layer,
+                    px,
+                    py
+                )
+            ){
+
+                hitLayer =
+                    layer;
+
+                break;
+
+            }
+
+        }
+
+
+        if(hitLayer){
+
+            selectLayer(
+                hitLayer.id
+            );
+
+
+            editAction =
+                "move";
+
+            editPointerId =
+                e.pointerId;
+
+
+            editStartX =
+                px;
+
+            editStartY =
+                py;
+
+
+            editStartTx =
+                hitLayer.transform.tx;
+
+            editStartTy =
+                hitLayer.transform.ty;
+
+
+            canvas.setPointerCapture(
+                e.pointerId
+            );
+
+            return;
+
+        }
+
+
+        /*
+           3. 선택된 그래프 내부를 클릭해도 이동
+        */
+
+        if(current){
+
+            const data =
+                getEditData(
+                    current
+                );
+
+
+            if(
+                data &&
+                pointInsideBox(
+                    data,
+                    px,
+                    py
+                )
+            ){
+
+                editAction =
+                    "move";
+
+                editPointerId =
+                    e.pointerId;
+
+
+                editStartX=px;
+
+                editStartY=py;
+
+
+                editStartTx =
+                    current.transform.tx;
+
+                editStartTy =
+                    current.transform.ty;
+
+
+                canvas.setPointerCapture(
+                    e.pointerId
+                );
+
+            }
+
+        }
 
     }
 );
 
+
+/* =========================================================
+   Edit Pointer Move
+========================================================= */
 
 canvas.addEventListener(
     "pointermove",
     e=>{
 
-        if(mode !== "edit"){
-            return;
-        }
-
-        if(!dragging){
+        if(
+            mode !==
+            "edit"
+        ){
             return;
         }
 
@@ -1998,30 +3653,135 @@ canvas.addEventListener(
             selectedLayer();
 
 
-        if(!layer || !layer.points.length){
+        if(
+            !layer ||
+            !editAction
+        ){
             return;
         }
 
 
-        const dx =
-            e.clientX-lastX;
-
-        const dy =
-            e.clientY-lastY;
+        const rect =
+            canvas.getBoundingClientRect();
 
 
-        layer.transform.tx +=
-            dx/W() *
-            (xmax-xmin);
+        const px =
+            e.clientX -
+            rect.left;
+
+        const py =
+            e.clientY -
+            rect.top;
 
 
-        layer.transform.ty -=
-            dy/H() *
-            (ymax-ymin);
+        if(
+            editAction ===
+            "move"
+        ){
+
+            const dx =
+                px -
+                editStartX;
+
+            const dy =
+                py -
+                editStartY;
 
 
-        lastX=e.clientX;
-        lastY=e.clientY;
+            layer.transform.tx =
+                editStartTx +
+                dx/W() *
+                (xmax-xmin);
+
+
+            layer.transform.ty =
+                editStartTy -
+                dy/H() *
+                (ymax-ymin);
+
+
+        }else if(
+            editAction ===
+            "scale"
+        ){
+
+            const data =
+                getEditData(
+                    layer
+                );
+
+
+            if(!data){
+                return;
+            }
+
+
+            const currentDistance =
+                distance(
+                    px,
+                    py,
+                    data.centerX,
+                    data.centerY
+                );
+
+
+            if(
+                editStartDistance>0
+            ){
+
+                layer.transform.scale =
+                    editStartScale *
+                    (
+                        currentDistance /
+                        editStartDistance
+                    );
+
+
+                layer.transform.scale =
+                    Math.max(
+                        0.15,
+                        Math.min(
+                            5,
+                            layer.transform.scale
+                        )
+                    );
+
+            }
+
+
+        }else if(
+            editAction ===
+            "rotate"
+        ){
+
+            const data =
+                getEditData(
+                    layer
+                );
+
+
+            if(!data){
+                return;
+            }
+
+
+            const angle =
+                Math.atan2(
+                    py-data.centerY,
+                    px-data.centerX
+                );
+
+
+            const delta =
+                angle -
+                editStartAngle;
+
+
+            layer.transform.rotation =
+                editStartRotation +
+                delta;
+
+        }
 
 
         draw();
@@ -2030,269 +3790,220 @@ canvas.addEventListener(
 );
 
 
+/* =========================================================
+   Edit Pointer Up
+========================================================= */
+
+function endEdit(){
+
+    editAction=null;
+
+    editPointerId=null;
+
+}
+
+
 canvas.addEventListener(
     "pointerup",
-    ()=>{
-        dragging=false;
-    }
+    endEdit
 );
 
 
 canvas.addEventListener(
     "pointercancel",
-    ()=>{
-        dragging=false;
-    }
+    endEdit
 );
 
 
 /* =========================================================
-   Edit 휠
+   Edit Hover Cursor
 ========================================================= */
 
 canvas.addEventListener(
-    "wheel",
+    "pointermove",
     e=>{
 
-        if(mode !== "edit"){
+        if(
+            mode!=="edit"
+        ){
             return;
         }
 
 
-        e.preventDefault();
+        if(editAction){
+            return;
+        }
 
 
-        const layer =
+        const rect =
+            canvas.getBoundingClientRect();
+
+
+        const px =
+            e.clientX -
+            rect.left;
+
+        const py =
+            e.clientY -
+            rect.top;
+
+
+        const current =
             selectedLayer();
 
 
-        if(!layer){
-            return;
-        }
+        if(current){
+
+            const handles =
+                getEditHandles(
+                    current
+                );
 
 
-        if(e.shiftKey){
+            if(handles){
 
-            layer.transform.rotation +=
-                e.deltaY < 0
-                ? 0.08
-                : -0.08;
-
-        }else{
-
-            layer.transform.scale *=
-                e.deltaY < 0
-                ? 1.08
-                : 0.92;
-
-            layer.transform.scale =
-                Math.max(
-                    0.15,
-                    Math.min(
-                        5,
-                        layer.transform.scale
+                if(
+                    handles.corners.some(
+                        h =>
+                            nearHandle(
+                                h,
+                                px,
+                                py,
+                                15
+                            )
                     )
-                );
+                ){
+
+                    const rotate =
+                        handles.corners.find(
+                            h =>
+                                h.type ===
+                                "rotate" &&
+                                nearHandle(
+                                    h,
+                                    px,
+                                    py,
+                                    15
+                                )
+                        );
+
+
+                    canvas.style.cursor =
+                        rotate
+                        ? "crosshair"
+                        : "nwse-resize";
+
+                    return;
+
+                }
+
+            }
 
         }
 
 
-        draw();
-
-    },
-    {passive:false}
-);
-
-
-/* =========================================================
-   Edit 버튼
-========================================================= */
-
-document
-.getElementById("scaleUp")
-.addEventListener(
-    "click",
-    ()=>{
-
-        const l=selectedLayer();
-
-        if(l){
-            l.transform.scale =
-                Math.min(
-                    5,
-                    l.transform.scale*1.12
-                );
-
-            draw();
-        }
-
-    }
-);
-
-
-document
-.getElementById("scaleDown")
-.addEventListener(
-    "click",
-    ()=>{
-
-        const l=selectedLayer();
-
-        if(l){
-            l.transform.scale =
-                Math.max(
-                    0.15,
-                    l.transform.scale*0.88
-                );
-
-            draw();
-        }
-
-    }
-);
-
-
-document
-.getElementById("rotateLeft")
-.addEventListener(
-    "click",
-    ()=>{
-
-        const l=selectedLayer();
-
-        if(l){
-
-            l.transform.rotation -=
-                Math.PI/12;
-
-            draw();
-
-        }
-
-    }
-);
-
-
-document
-.getElementById("rotateRight")
-.addEventListener(
-    "click",
-    ()=>{
-
-        const l=selectedLayer();
-
-        if(l){
-
-            l.transform.rotation +=
-                Math.PI/12;
-
-            draw();
-
-        }
-
-    }
-);
-
-
-document
-.getElementById("resetTransform")
-.addEventListener(
-    "click",
-    ()=>{
-
-        const l=selectedLayer();
-
-        if(l){
-
-            l.transform={
-                tx:0,
-                ty:0,
-                scale:1,
-                rotation:0
-            };
-
-            draw();
-
-        }
-
-    }
-);
-
-
-document
-.getElementById("centerLayer")
-.addEventListener(
-    "click",
-    ()=>{
-
-        const l=selectedLayer();
-
-        if(l){
-
-            l.transform.tx=0;
-            l.transform.ty=0;
-
-            draw();
-
-        }
+        canvas.style.cursor =
+            "default";
 
     }
 );
 
 
 /* =========================================================
-   모드 버튼
+   모드
 ========================================================= */
 
 function setMode(newMode){
 
-    mode=newMode;
+    mode =
+        newMode;
+
 
     document
-    .getElementById("navigateMode")
+    .getElementById(
+        "navigateMode"
+    )
     .classList.toggle(
         "active",
         mode==="navigate"
     );
 
+
     document
-    .getElementById("sketchMode")
+    .getElementById(
+        "sketchMode"
+    )
     .classList.toggle(
         "active",
         mode==="sketch"
     );
 
+
     document
-    .getElementById("editMode")
+    .getElementById(
+        "editMode"
+    )
     .classList.toggle(
         "active",
         mode==="edit"
     );
 
+
+    editNotice.classList.toggle(
+        "active",
+        mode==="edit"
+    );
+
+
+    editAction=null;
+
+
+    if(
+        mode!=="edit"
+    ){
+        canvas.style.cursor =
+            "default";
+    }
+
+
+    draw();
+
 }
 
 
 document
-.getElementById("navigateMode")
+.getElementById(
+    "navigateMode"
+)
 .addEventListener(
     "click",
-    ()=>setMode("navigate")
+    ()=>{
+        setMode("navigate");
+    }
 );
 
 
 document
-.getElementById("sketchMode")
+.getElementById(
+    "sketchMode"
+)
 .addEventListener(
     "click",
-    ()=>setMode("sketch")
+    ()=>{
+        setMode("sketch");
+    }
 );
 
 
 document
-.getElementById("editMode")
+.getElementById(
+    "editMode"
+)
 .addEventListener(
     "click",
-    ()=>setMode("edit")
+    ()=>{
+        setMode("edit");
+    }
 );
 
 
@@ -2301,7 +4012,9 @@ document
 ========================================================= */
 
 document
-.getElementById("clearLayer")
+.getElementById(
+    "clearLayer"
+)
 .addEventListener(
     "click",
     ()=>{
@@ -2309,18 +4022,22 @@ document
         const l =
             selectedLayer();
 
-        if(!l)return;
+        if(!l){
+            return;
+        }
 
 
         l.points=[];
+
         l.expression="";
 
 
         expr.value="";
 
 
-        draw();
         renderLayers();
+
+        draw();
 
     }
 );
@@ -2337,26 +4054,50 @@ function changeView(
 ){
 
     const cx =
-        (xmin+xmax)/2 +
-        dx*(xmax-xmin);
+        (
+            xmin+xmax
+        )/2 +
+        dx *
+        (
+            xmax-xmin
+        );
+
 
     const cy =
-        (ymin+ymax)/2 +
-        dy*(ymax-ymin);
+        (
+            ymin+ymax
+        )/2 +
+        dy *
+        (
+            ymax-ymin
+        );
 
 
     const xr =
-        (xmax-xmin)*factor;
+        (
+            xmax-xmin
+        ) *
+        factor;
+
 
     const yr =
-        (ymax-ymin)*factor;
+        (
+            ymax-ymin
+        ) *
+        factor;
 
 
-    xmin=cx-xr/2;
-    xmax=cx+xr/2;
+    xmin =
+        cx-xr/2;
 
-    ymin=cy-yr/2;
-    ymax=cy+yr/2;
+    xmax =
+        cx+xr/2;
+
+    ymin =
+        cy-yr/2;
+
+    ymax =
+        cy+yr/2;
 
 
     draw();
@@ -2365,62 +4106,107 @@ function changeView(
 
 
 document
-.getElementById("zoomIn")
+.getElementById(
+    "zoomIn"
+)
 .addEventListener(
     "click",
-    ()=>changeView(.75)
+    ()=>{
+        changeView(.75);
+    }
 );
 
 
 document
-.getElementById("zoomOut")
+.getElementById(
+    "zoomOut"
+)
 .addEventListener(
     "click",
-    ()=>changeView(1.35)
+    ()=>{
+        changeView(1.35);
+    }
 );
 
 
 document
-.getElementById("left")
+.getElementById(
+    "left"
+)
 .addEventListener(
     "click",
-    ()=>changeView(1,-.12,0)
+    ()=>{
+        changeView(
+            1,
+            -.12,
+            0
+        );
+    }
 );
 
 
 document
-.getElementById("right")
+.getElementById(
+    "right"
+)
 .addEventListener(
     "click",
-    ()=>changeView(1,.12,0)
+    ()=>{
+        changeView(
+            1,
+            .12,
+            0
+        );
+    }
 );
 
 
 document
-.getElementById("up")
+.getElementById(
+    "up"
+)
 .addEventListener(
     "click",
-    ()=>changeView(1,0,.12)
+    ()=>{
+        changeView(
+            1,
+            0,
+            .12
+        );
+    }
 );
 
 
 document
-.getElementById("down")
+.getElementById(
+    "down"
+)
 .addEventListener(
     "click",
-    ()=>changeView(1,0,-.12)
+    ()=>{
+        changeView(
+            1,
+            0,
+            -.12
+        );
+    }
 );
 
 
 document
-.getElementById("resetView")
+.getElementById(
+    "resetView"
+)
 .addEventListener(
     "click",
     ()=>{
 
         xmin=-10;
+
         xmax=10;
+
         ymin=-6;
+
         ymax=6;
 
         draw();
@@ -2430,22 +4216,26 @@ document
 
 
 /* =========================================================
-   화면 이동 모드 드래그
+   화면 드래그
 ========================================================= */
 
 canvas.addEventListener(
     "pointerdown",
     e=>{
 
-        if(mode !== "navigate"){
+        if(
+            mode!=="navigate"
+        ){
             return;
         }
 
 
-        dragging=true;
+        draggingView=true;
 
         lastX=e.clientX;
+
         lastY=e.clientY;
+
 
         canvas.setPointerCapture(
             e.pointerId
@@ -2459,11 +4249,10 @@ canvas.addEventListener(
     "pointermove",
     e=>{
 
-        if(mode !== "navigate"){
-            return;
-        }
-
-        if(!dragging){
+        if(
+            mode!=="navigate" ||
+            !draggingView
+        ){
             return;
         }
 
@@ -2496,8 +4285,11 @@ canvas.addEventListener(
             dy/H()*yr;
 
 
-        lastX=e.clientX;
-        lastY=e.clientY;
+        lastX=
+            e.clientX;
+
+        lastY=
+            e.clientY;
 
 
         draw();
@@ -2509,20 +4301,30 @@ canvas.addEventListener(
 canvas.addEventListener(
     "pointerup",
     ()=>{
-        dragging=false;
+        draggingView=false;
+    }
+);
+
+
+canvas.addEventListener(
+    "pointercancel",
+    ()=>{
+        draggingView=false;
     }
 );
 
 
 /* =========================================================
-   확대/축소
+   휠 확대
 ========================================================= */
 
 canvas.addEventListener(
     "wheel",
     e=>{
 
-        if(mode !== "navigate"){
+        if(
+            mode!=="navigate"
+        ){
             return;
         }
 
@@ -2531,36 +4333,57 @@ canvas.addEventListener(
 
 
         const factor =
-            e.deltaY < 0
+            e.deltaY<0
             ? .8
             : 1.25;
 
 
         const mx =
-            invx(e.offsetX);
+            invx(
+                e.offsetX
+            );
+
 
         const my =
-            invy(e.offsetY);
+            invy(
+                e.offsetY
+            );
 
 
         xmin =
-            mx+(xmin-mx)*factor;
+            mx +
+            (
+                xmin-mx
+            )*factor;
+
 
         xmax =
-            mx+(xmax-mx)*factor;
+            mx +
+            (
+                xmax-mx
+            )*factor;
 
 
         ymin =
-            my+(ymin-my)*factor;
+            my +
+            (
+                ymin-my
+            )*factor;
+
 
         ymax =
-            my+(ymax-my)*factor;
+            my +
+            (
+                ymax-my
+            )*factor;
 
 
         draw();
 
     },
-    {passive:false}
+    {
+        passive:false
+    }
 );
 
 
@@ -2570,9 +4393,11 @@ canvas.addEventListener(
 
 function niceStep(range){
 
-    const raw=range/10;
+    const raw =
+        range/10;
 
-    const p=
+
+    const p =
         Math.pow(
             10,
             Math.floor(
@@ -2580,7 +4405,10 @@ function niceStep(range){
             )
         );
 
-    const n=raw/p;
+
+    const n =
+        raw/p;
+
 
     return (
         n<1.5
@@ -2597,17 +4425,27 @@ function niceStep(range){
 
 function fmt(v){
 
-    if(!Number.isFinite(v)){
+    if(
+        !Number.isFinite(v)
+    ){
         return "—";
     }
 
-    if(Math.abs(v)<1e-9){
+
+    if(
+        Math.abs(v)<1e-9
+    ){
         return "0";
     }
 
-    if(Math.abs(v)>=100){
-        return Math.round(v).toString();
+
+    if(
+        Math.abs(v)>=100
+    ){
+        return Math.round(v)
+            .toString();
     }
+
 
     return Number(
         v.toFixed(2)
@@ -2618,8 +4456,11 @@ function fmt(v){
 
 function draw(){
 
-    const w=W();
-    const h=H();
+    const w =
+        W();
+
+    const h =
+        H();
 
 
     ctx.clearRect(
@@ -2630,7 +4471,9 @@ function draw(){
     );
 
 
-    ctx.fillStyle="#080d19";
+    ctx.fillStyle =
+        "#080d19";
+
 
     ctx.fillRect(
         0,
@@ -2647,6 +4490,7 @@ function draw(){
             xmax-xmin
         );
 
+
     const ys =
         niceStep(
             ymax-ymin
@@ -2655,31 +4499,47 @@ function draw(){
 
     ctx.lineWidth=1;
 
-    ctx.strokeStyle="#18243d";
+    ctx.strokeStyle =
+        "#18243d";
 
-    ctx.fillStyle="#64718e";
+    ctx.fillStyle =
+        "#64718e";
 
-    ctx.font="11px system-ui";
+    ctx.font =
+        "11px system-ui";
 
 
     for(
-        let x=Math.ceil(xmin/xs)*xs;
+        let x =
+            Math.ceil(
+                xmin/xs
+            )*xs;
         x<=xmax;
         x+=xs
     ){
 
-        const px=sx(x);
+        const px =
+            sx(x);
+
 
         ctx.beginPath();
 
-        ctx.moveTo(px,0);
+        ctx.moveTo(
+            px,
+            0
+        );
 
-        ctx.lineTo(px,h);
+        ctx.lineTo(
+            px,
+            h
+        );
 
         ctx.stroke();
 
 
-        if(Math.abs(x)>1e-9){
+        if(
+            Math.abs(x)>1e-9
+        ){
 
             ctx.fillText(
                 fmt(x),
@@ -2693,23 +4553,36 @@ function draw(){
 
 
     for(
-        let y=Math.ceil(ymin/ys)*ys;
+        let y =
+            Math.ceil(
+                ymin/ys
+            )*ys;
         y<=ymax;
         y+=ys
     ){
 
-        const py=sy(y);
+        const py =
+            sy(y);
+
 
         ctx.beginPath();
 
-        ctx.moveTo(0,py);
+        ctx.moveTo(
+            0,
+            py
+        );
 
-        ctx.lineTo(w,py);
+        ctx.lineTo(
+            w,
+            py
+        );
 
         ctx.stroke();
 
 
-        if(Math.abs(y)>1e-9){
+        if(
+            Math.abs(y)>1e-9
+        ){
 
             ctx.fillText(
                 fmt(y),
@@ -2724,9 +4597,11 @@ function draw(){
 
     /* axes */
 
-    ctx.strokeStyle="#596783";
+    ctx.strokeStyle =
+        "#596783";
 
-    ctx.lineWidth=1.4;
+    ctx.lineWidth =
+        1.4;
 
 
     if(
@@ -2734,13 +4609,21 @@ function draw(){
         xmax>=0
     ){
 
-        const px=sx(0);
+        const px =
+            sx(0);
+
 
         ctx.beginPath();
 
-        ctx.moveTo(px,0);
+        ctx.moveTo(
+            px,
+            0
+        );
 
-        ctx.lineTo(px,h);
+        ctx.lineTo(
+            px,
+            h
+        );
 
         ctx.stroke();
 
@@ -2752,13 +4635,21 @@ function draw(){
         ymax>=0
     ){
 
-        const py=sy(0);
+        const py =
+            sy(0);
+
 
         ctx.beginPath();
 
-        ctx.moveTo(0,py);
+        ctx.moveTo(
+            0,
+            py
+        );
 
-        ctx.lineTo(w,py);
+        ctx.lineTo(
+            w,
+            py
+        );
 
         ctx.stroke();
 
@@ -2769,59 +4660,89 @@ function draw(){
 
     layers.forEach(layer=>{
 
-        if(!layer.visible){
+        if(
+            !layer.visible
+        ){
             return;
         }
 
 
         const points =
-            transformedPoints(layer);
+            transformedPoints(
+                layer
+            );
 
 
-        if(points.length < 2){
+        if(
+            points.length<2
+        ){
             return;
         }
 
 
         ctx.save();
 
+
         ctx.strokeStyle =
             layer.color;
 
+
         ctx.lineWidth =
-            layer.id === selectedLayerId
+            layer.id===
+            selectedLayerId
             ? 3.5
             : 2.4;
 
-        ctx.lineJoin="round";
 
-        ctx.lineCap="round";
+        ctx.lineJoin =
+            "round";
+
+        ctx.lineCap =
+            "round";
 
 
         ctx.beginPath();
 
 
-        points.forEach(
-            (p,i)=>{
+        let hasStarted=false;
 
-                const px=sx(p.x);
-                const py=sy(p.y);
+
+        points.forEach(
+            p=>{
+
+                const px =
+                    sx(p.x);
+
+                const py =
+                    sy(p.y);
 
 
                 if(
-                    px < -100 ||
-                    px > w+100 ||
-                    py < -100 ||
-                    py > h+100
+                    px<-100 ||
+                    px>w+100 ||
+                    py<-100 ||
+                    py>h+100
                 ){
                     return;
                 }
 
 
-                if(i===0){
-                    ctx.moveTo(px,py);
+                if(!hasStarted){
+
+                    ctx.moveTo(
+                        px,
+                        py
+                    );
+
+                    hasStarted=true;
+
                 }else{
-                    ctx.lineTo(px,py);
+
+                    ctx.lineTo(
+                        px,
+                        py
+                    );
+
                 }
 
             }
@@ -2831,50 +4752,13 @@ function draw(){
         ctx.stroke();
 
 
-        /* selected layer center */
-
-        if(
-            layer.id ===
-            selectedLayerId
-        ){
-
-            const center =
-                getCenter(points);
-
-
-            const px=sx(center.x);
-            const py=sy(center.y);
-
-
-            ctx.fillStyle =
-                layer.color;
-
-            ctx.globalAlpha=.18;
-
-            ctx.beginPath();
-
-            ctx.arc(
-                px,
-                py,
-                15,
-                0,
-                Math.PI*2
-            );
-
-            ctx.fill();
-
-            ctx.globalAlpha=1;
-
-        }
-
-
         ctx.restore();
 
     });
 
 
     /* =====================================================
-       여러 레이어 재생 위치
+       재생 위치
     ===================================================== */
 
     if(
@@ -2883,9 +4767,10 @@ function draw(){
     ){
 
         const elapsed =
-            (performance.now() -
-             playbackStart)
-            / 1000;
+            (
+                performance.now() -
+                playbackStart
+            )/1000;
 
 
         const progress =
@@ -2893,7 +4778,7 @@ function draw(){
                 0,
                 Math.min(
                     1,
-                    elapsed /
+                    elapsed/
                     playbackDuration
                 )
             );
@@ -2903,14 +4788,16 @@ function draw(){
 
             if(
                 !layer.visible ||
-                layer.points.length < 2
+                layer.points.length<2
             ){
                 return;
             }
 
 
             const points =
-                transformedPoints(layer);
+                transformedPoints(
+                    layer
+                );
 
 
             const index =
@@ -2918,7 +4805,9 @@ function draw(){
                     points.length-1,
                     Math.floor(
                         progress *
-                        (points.length-1)
+                        (
+                            points.length-1
+                        )
                     )
                 );
 
@@ -2932,8 +4821,11 @@ function draw(){
             }
 
 
-            const px=sx(p.x);
-            const py=sy(p.y);
+            const px =
+                sx(p.x);
+
+            const py =
+                sy(p.y);
 
 
             ctx.save();
@@ -2956,7 +4848,6 @@ function draw(){
 
             ctx.fill();
 
-
             ctx.globalAlpha=1;
 
 
@@ -2970,7 +4861,8 @@ function draw(){
                 Math.PI*2
             );
 
-            ctx.fillStyle="#ffffff";
+            ctx.fillStyle =
+                "#ffffff";
 
             ctx.fill();
 
@@ -2999,6 +4891,128 @@ function draw(){
 
 
     /* =====================================================
+       Edit 선택 박스
+    ===================================================== */
+
+    if(
+        mode==="edit"
+    ){
+
+        const selected =
+            selectedLayer();
+
+
+        if(
+            selected &&
+            selected.visible &&
+            selected.points.length>=2
+        ){
+
+            const data =
+                getEditData(
+                    selected
+                );
+
+
+            if(data){
+
+                ctx.save();
+
+
+                ctx.strokeStyle =
+                    "#b9c5ff";
+
+                ctx.lineWidth=1.5;
+
+                ctx.setLineDash([
+                    6,
+                    5
+                ]);
+
+
+                ctx.strokeRect(
+                    data.minX-5,
+                    data.minY-5,
+                    data.maxX-data.minX+10,
+                    data.maxY-data.minY+10
+                );
+
+
+                ctx.setLineDash([]);
+
+
+                /*
+                   회전 연결선
+                */
+
+                ctx.beginPath();
+
+                ctx.moveTo(
+                    (
+                        data.minX+
+                        data.maxX
+                    )/2,
+                    data.minY-5
+                );
+
+                ctx.lineTo(
+                    (
+                        data.minX+
+                        data.maxX
+                    )/2,
+                    data.minY-36
+                );
+
+                ctx.stroke();
+
+
+                const handles =
+                    getEditHandles(
+                        selected
+                    );
+
+
+                handles.corners.forEach(
+                    h=>{
+
+                        ctx.beginPath();
+
+                        ctx.arc(
+                            h.x,
+                            h.y,
+                            h.type==="rotate"
+                            ? 7
+                            : 6,
+                            0,
+                            Math.PI*2
+                        );
+
+                        ctx.fillStyle =
+                            h.type==="rotate"
+                            ? "#8da2ff"
+                            : "#ffffff";
+
+                        ctx.fill();
+
+                        ctx.strokeStyle =
+                            "#5369bd";
+
+                        ctx.stroke();
+
+                    }
+                );
+
+
+                ctx.restore();
+
+            }
+
+        }
+
+    }
+
+
+    /* =====================================================
        분석
     ===================================================== */
 
@@ -3012,12 +5026,16 @@ function draw(){
     ){
 
         const points =
-            transformedPoints(l);
+            transformedPoints(
+                l
+            );
 
 
         const ys =
             points
-            .map(p=>p.y)
+            .map(
+                p=>p.y
+            )
             .filter(
                 Number.isFinite
             );
@@ -3026,10 +5044,16 @@ function draw(){
         if(ys.length){
 
             const min =
-                Math.min(...ys);
+                Math.min(
+                    ...ys
+                );
+
 
             const max =
-                Math.max(...ys);
+                Math.max(
+                    ...ys
+                );
+
 
             const avg =
                 ys.reduce(
@@ -3103,6 +5127,207 @@ const scales={
 
 
 /* =========================================================
+   스타일
+========================================================= */
+
+const styles={
+
+    pop:{
+        waveform:"triangle",
+        attack:.025,
+        release:.15,
+        baseGain:1,
+        subGain:.02
+    },
+
+    kpop:{
+        waveform:"sawtooth",
+        attack:.012,
+        release:.10,
+        baseGain:.78,
+        subGain:.04
+    },
+
+    jpop:{
+        waveform:"triangle",
+        attack:.018,
+        release:.12,
+        baseGain:.9,
+        subGain:.03
+    },
+
+    citypop:{
+        waveform:"triangle",
+        attack:.035,
+        release:.18,
+        baseGain:.85,
+        subGain:.04
+    },
+
+    rnb:{
+        waveform:"sine",
+        attack:.04,
+        release:.22,
+        baseGain:.9,
+        subGain:.06
+    },
+
+    edm:{
+        waveform:"square",
+        attack:.008,
+        release:.07,
+        baseGain:.55,
+        subGain:.12
+    },
+
+    house:{
+        waveform:"sawtooth",
+        attack:.012,
+        release:.11,
+        baseGain:.62,
+        subGain:.12
+    },
+
+    techno:{
+        waveform:"square",
+        attack:.006,
+        release:.08,
+        baseGain:.58,
+        subGain:.13
+    },
+
+    trance:{
+        waveform:"sawtooth",
+        attack:.02,
+        release:.15,
+        baseGain:.68,
+        subGain:.08
+    },
+
+    futurebass:{
+        waveform:"sawtooth",
+        attack:.03,
+        release:.24,
+        baseGain:.72,
+        subGain:.12
+    },
+
+    dnb:{
+        waveform:"square",
+        attack:.006,
+        release:.07,
+        baseGain:.60,
+        subGain:.15
+    },
+
+    synthwave:{
+        waveform:"sawtooth",
+        attack:.035,
+        release:.20,
+        baseGain:.72,
+        subGain:.10
+    },
+
+    hiphop:{
+        waveform:"triangle",
+        attack:.02,
+        release:.13,
+        baseGain:.83,
+        subGain:.07
+    },
+
+    trap:{
+        waveform:"sawtooth",
+        attack:.008,
+        release:.11,
+        baseGain:.68,
+        subGain:.13
+    },
+
+    boombap:{
+        waveform:"triangle",
+        attack:.018,
+        release:.16,
+        baseGain:.78,
+        subGain:.07
+    },
+
+    phonk:{
+        waveform:"sawtooth",
+        attack:.006,
+        release:.13,
+        baseGain:.72,
+        subGain:.18
+    },
+
+    funk:{
+        waveform:"square",
+        attack:.009,
+        release:.09,
+        baseGain:.82,
+        subGain:.06
+    },
+
+    rock:{
+        waveform:"sawtooth",
+        attack:.014,
+        release:.12,
+        baseGain:.72,
+        subGain:.10
+    },
+
+    jazz:{
+        waveform:"triangle",
+        attack:.045,
+        release:.24,
+        baseGain:.78,
+        subGain:.04
+    },
+
+    blues:{
+        waveform:"sine",
+        attack:.04,
+        release:.23,
+        baseGain:.80,
+        subGain:.05
+    },
+
+    classic:{
+        waveform:"sine",
+        attack:.08,
+        release:.42,
+        baseGain:.72,
+        subGain:.025
+    },
+
+    ambient:{
+        waveform:"sine",
+        attack:.22,
+        release:.55,
+        baseGain:.52,
+        subGain:.04
+    },
+
+    cinematic:{
+        waveform:"triangle",
+        attack:.12,
+        release:.48,
+        baseGain:.62,
+        subGain:.07
+    },
+
+    lofi:{
+        waveform:"sine",
+        attack:.055,
+        release:.22,
+        baseGain:.62,
+        subGain:.07
+    }
+
+};
+
+
+/* =========================================================
    y → MIDI
 ========================================================= */
 
@@ -3117,7 +5342,7 @@ function graphMidi(
         !Number.isFinite(y) ||
         !Number.isFinite(lo) ||
         !Number.isFinite(hi) ||
-        hi <= lo
+        hi<=lo
     ){
         return 60;
     }
@@ -3135,8 +5360,10 @@ function graphMidi(
 
     const index =
         Math.round(
-            norm *
-            (scale.length-1)
+            norm*
+            (
+                scale.length-1
+            )
         );
 
 
@@ -3159,98 +5386,184 @@ function midiFreq(m){
     return 440 *
         Math.pow(
             2,
-            (m-69)/12
+            (
+                m-69
+            )/12
         );
 
 }
 
 
 /* =========================================================
-   스타일
-========================================================= */
-
-const styles={
-
-    pop:{
-        waveform:"triangle",
-        attack:.025,
-        release:.12,
-        baseGain:1
-    },
-
-    kpop:{
-        waveform:"sawtooth",
-        attack:.015,
-        release:.08,
-        baseGain:.8
-    },
-
-    jpop:{
-        waveform:"triangle",
-        attack:.02,
-        release:.1,
-        baseGain:.9
-    },
-
-    lofi:{
-        waveform:"sine",
-        attack:.05,
-        release:.2,
-        baseGain:.65
-    },
-
-    edm:{
-        waveform:"square",
-        attack:.01,
-        release:.06,
-        baseGain:.55
-    }
-
-};
-
-
-/* =========================================================
-   그래프별 음 데이터
+   그래프 음 데이터
 ========================================================= */
 
 function prepareLayerAudio(layer){
 
     const points =
-        transformedPoints(layer);
+        transformedPoints(
+            layer
+        );
 
 
-    if(points.length < 2){
+    if(
+        points.length<2
+    ){
         return null;
     }
 
 
     const values =
         points
-        .map(p=>p.y)
+        .map(
+            p=>p.y
+        )
         .filter(
             Number.isFinite
         );
 
 
-    if(values.length < 2){
+    if(
+        values.length<2
+    ){
         return null;
     }
-
-
-    const lo =
-        Math.min(...values);
-
-    const hi =
-        Math.max(...values);
 
 
     return {
 
         points:points,
 
-        lo:lo,
+        lo:
+            Math.min(
+                ...values
+            ),
 
-        hi:hi
+        hi:
+            Math.max(
+                ...values
+            )
+
+    };
+
+}
+
+
+/* =========================================================
+   라이브 음성 생성
+========================================================= */
+
+function createLiveVoice(
+    layer,
+    data,
+    style,
+    start
+){
+
+    const osc =
+        audioCtx.createOscillator();
+
+
+    const gain =
+        audioCtx.createGain();
+
+
+    osc.type =
+        style.waveform;
+
+
+    gain.gain.setValueAtTime(
+        0,
+        start
+    );
+
+
+    gain.gain.linearRampToValueAtTime(
+        layer.volume *
+        style.baseGain,
+        start+
+        style.attack
+    );
+
+
+    osc.connect(gain);
+
+
+    gain.connect(
+        audioCtx.destination
+    );
+
+
+    osc.start(start);
+
+
+    let subOsc=null;
+
+    let subGain=null;
+
+
+    if(
+        style.subGain>0
+    ){
+
+        subOsc =
+            audioCtx
+            .createOscillator();
+
+
+        subGain =
+            audioCtx
+            .createGain();
+
+
+        subOsc.type =
+            style.waveform;
+
+
+        subGain.gain.setValueAtTime(
+            0,
+            start
+        );
+
+
+        subGain.gain.linearRampToValueAtTime(
+            layer.volume *
+            style.subGain,
+            start+
+            style.attack
+        );
+
+
+        subOsc.connect(
+            subGain
+        );
+
+
+        subGain.connect(
+            audioCtx.destination
+        );
+
+
+        subOsc.start(start);
+
+    }
+
+
+    return {
+
+        layer:layer,
+
+        data:data,
+
+        osc:osc,
+
+        gain:gain,
+
+        subOsc:subOsc,
+
+        subGain:subGain,
+
+        lastFreq:0
 
     };
 
@@ -3270,11 +5583,13 @@ async function playMusic(){
         layers.filter(
             l =>
                 l.visible &&
-                l.points.length >= 2
+                l.points.length>=2
         );
 
 
-    if(!visibleLayers.length){
+    if(
+        !visibleLayers.length
+    ){
 
         msg.textContent =
             "음악으로 변환할 표시된 그래프가 없습니다.";
@@ -3287,7 +5602,7 @@ async function playMusic(){
     if(!audioCtx){
 
         audioCtx =
-            new (
+            new(
                 window.AudioContext ||
                 window.webkitAudioContext
             )();
@@ -3296,8 +5611,7 @@ async function playMusic(){
 
 
     if(
-        audioCtx.state ===
-        "suspended"
+        audioCtx.state==="suspended"
     ){
 
         await audioCtx.resume();
@@ -3332,92 +5646,56 @@ async function playMusic(){
     playbackDuration =
         duration;
 
+
     playbackStart =
         performance.now();
 
+
     playing=true;
+
+
+    const start =
+        audioCtx.currentTime+
+        .05;
 
 
     audioVoices=[];
 
 
-    /*
-       레이어마다 독립적인 oscillator 생성.
-       그래프의 전체 길이를 음악 전체 길이에
-       정확히 대응시킨다.
-    */
+    visibleLayers.forEach(
+        layer=>{
 
-    visibleLayers.forEach(layer=>{
+            const data =
+                prepareLayerAudio(
+                    layer
+                );
 
-        const data =
-            prepareLayerAudio(
-                layer
+
+            if(!data){
+                return;
+            }
+
+
+            const voice =
+                createLiveVoice(
+                    layer,
+                    data,
+                    style,
+                    start
+                );
+
+
+            audioVoices.push(
+                voice
             );
 
-
-        if(!data){
-            return;
         }
+    );
 
 
-        const osc =
-            audioCtx.createOscillator();
-
-        const gain =
-            audioCtx.createGain();
-
-
-        osc.type =
-            style.waveform;
-
-
-        const start =
-            audioCtx.currentTime +
-            .05;
-
-
-        gain.gain.setValueAtTime(
-            0,
-            start
-        );
-
-
-        gain.gain.linearRampToValueAtTime(
-            layer.volume *
-            style.baseGain,
-            start +
-            style.attack
-        );
-
-
-        osc.connect(gain);
-
-        gain.connect(
-            audioCtx.destination
-        );
-
-
-        osc.start(start);
-
-
-        audioVoices.push({
-
-            layer:layer,
-
-            data:data,
-
-            osc:osc,
-
-            gain:gain,
-
-            lastFreq:0
-
-        });
-
-    });
-
-
-    if(!audioVoices.length){
+    if(
+        !audioVoices.length
+    ){
 
         stopMusic();
 
@@ -3432,7 +5710,7 @@ async function playMusic(){
     document.getElementById(
         "now"
     ).textContent =
-        visibleLayers.length +
+        audioVoices.length +
         "개 그래프 레이어가 동시에 재생됩니다.";
 
 
@@ -3445,7 +5723,7 @@ async function playMusic(){
 
 
 /* =========================================================
-   음악 시간 진행
+   음악 Tick
 ========================================================= */
 
 function musicTick(){
@@ -3456,9 +5734,10 @@ function musicTick(){
 
 
     const elapsed =
-        (performance.now() -
-         playbackStart) /
-        1000;
+        (
+            performance.now() -
+            playbackStart
+        )/1000;
 
 
     const progress =
@@ -3466,90 +5745,136 @@ function musicTick(){
             0,
             Math.min(
                 1,
-                elapsed /
+                elapsed/
                 playbackDuration
             )
         );
 
 
-    audioVoices.forEach(voice=>{
+    audioVoices.forEach(
+        voice=>{
 
-        const points =
-            voice.data.points;
-
-
-        const index =
-            Math.min(
-                points.length-1,
-                Math.floor(
-                    progress *
-                    (points.length-1)
-                )
-            );
+            const points =
+                voice.data.points;
 
 
-        const p =
-            points[index];
+            const index =
+                Math.min(
+                    points.length-1,
+                    Math.floor(
+                        progress*
+                        (
+                            points.length-1
+                        )
+                    )
+                );
 
 
-        const midi =
-            graphMidi(
-                p.y,
-                voice.data.lo,
-                voice.data.hi,
+            const p =
+                points[index];
+
+
+            if(!p){
+                return;
+            }
+
+
+            const scale =
                 scales[
                     document.getElementById(
                         "scale"
                     ).value
-                ]
-            );
+                ];
 
 
-        const freq =
-            Math.max(
-                45,
-                Math.min(
-                    1800,
-                    midiFreq(midi)
-                )
-            );
-
-
-        const now =
-            audioCtx.currentTime;
-
-
-        if(
-            !voice.lastFreq
-        ){
-
-            voice.osc.frequency
-                .setValueAtTime(
-                    freq,
-                    now
-                );
-
-        }else{
-
-            voice.osc.frequency
-                .cancelScheduledValues(
-                    now
+            const midi =
+                graphMidi(
+                    p.y,
+                    voice.data.lo,
+                    voice.data.hi,
+                    scale
                 );
 
 
-            voice.osc.frequency
-                .linearRampToValueAtTime(
-                    freq,
-                    now + .055
+            const freq =
+                Math.max(
+                    45,
+                    Math.min(
+                        1800,
+                        midiFreq(midi)
+                    )
                 );
+
+
+            const now =
+                audioCtx.currentTime;
+
+
+            if(
+                !voice.lastFreq
+            ){
+
+                voice.osc.frequency
+                    .setValueAtTime(
+                        freq,
+                        now
+                    );
+
+
+                if(
+                    voice.subOsc
+                ){
+
+                    voice.subOsc
+                        .frequency
+                        .setValueAtTime(
+                            freq/2,
+                            now
+                        );
+
+                }
+
+            }else{
+
+                voice.osc.frequency
+                    .cancelScheduledValues(
+                        now
+                    );
+
+
+                voice.osc.frequency
+                    .linearRampToValueAtTime(
+                        freq,
+                        now+.055
+                    );
+
+
+                if(
+                    voice.subOsc
+                ){
+
+                    voice.subOsc.frequency
+                        .cancelScheduledValues(
+                            now
+                        );
+
+
+                    voice.subOsc.frequency
+                        .linearRampToValueAtTime(
+                            freq/2,
+                            now+.055
+                        );
+
+                }
+
+            }
+
+
+            voice.lastFreq =
+                freq;
 
         }
-
-
-        voice.lastFreq =
-            freq;
-
-    });
+    );
 
 
     document.getElementById(
@@ -3557,7 +5882,7 @@ function musicTick(){
     ).style.width =
         (
             progress*100
-        ) + "%";
+        )+"%";
 
 
     document.getElementById(
@@ -3575,7 +5900,9 @@ function musicTick(){
     draw();
 
 
-    if(progress < 1){
+    if(
+        progress<1
+    ){
 
         raf =
             requestAnimationFrame(
@@ -3611,25 +5938,47 @@ function finishMusic(){
 
             try{
 
-                voice.gain
-                    .gain
+                voice.gain.gain
                     .cancelScheduledValues(
                         now
                     );
 
 
-                voice.gain
-                    .gain
-                    .setTargetAtTime(
+                voice.gain.gain
+                    .linearRampToValueAtTime(
                         0,
-                        now,
-                        .08
+                        now+.12
                     );
 
 
                 voice.osc.stop(
-                    now+.35
+                    now+.2
                 );
+
+
+                if(
+                    voice.subGain &&
+                    voice.subOsc
+                ){
+
+                    voice.subGain.gain
+                        .cancelScheduledValues(
+                            now
+                        );
+
+
+                    voice.subGain.gain
+                        .linearRampToValueAtTime(
+                            0,
+                            now+.12
+                        );
+
+
+                    voice.subOsc.stop(
+                        now+.2
+                    );
+
+                }
 
             }catch(e){}
 
@@ -3690,25 +6039,49 @@ function stopMusic(){
 
                 try{
 
-                    voice.gain
-                        .gain
+                    voice.gain.gain
                         .cancelScheduledValues(
                             now
                         );
 
 
-                    voice.gain
-                        .gain
+                    voice.gain.gain
                         .setTargetAtTime(
                             0,
                             now,
-                            .04
+                            .03
                         );
 
 
                     voice.osc.stop(
                         now+.1
                     );
+
+
+                    if(
+                        voice.subGain &&
+                        voice.subOsc
+                    ){
+
+                        voice.subGain.gain
+                            .cancelScheduledValues(
+                                now
+                            );
+
+
+                        voice.subGain.gain
+                            .setTargetAtTime(
+                                0,
+                                now,
+                                .03
+                            );
+
+
+                        voice.subOsc.stop(
+                            now+.1
+                        );
+
+                    }
 
                 }catch(e){}
 
@@ -3756,6 +6129,2015 @@ document
 
 
 /* =========================================================
+   WAV 파일 생성
+========================================================= */
+
+function safeFilename(name){
+
+    return (
+        name
+        .replace(
+            /[<>:"/\\|?*]+/g,
+            "_"
+        )
+        .trim() ||
+        "Cosmos Song"
+    );
+
+}
+
+
+function createWavBlob(
+    audioBuffer
+){
+
+    const numChannels =
+        1;
+
+    const sampleRate =
+        audioBuffer.sampleRate;
+
+    const samples =
+        audioBuffer.getChannelData(0);
+
+
+    const bytesPerSample=2;
+
+    const dataSize =
+        samples.length *
+        bytesPerSample;
+
+
+    const buffer =
+        new ArrayBuffer(
+            44+dataSize
+        );
+
+
+    const view =
+        new DataView(buffer);
+
+
+    function writeString(
+        offset,
+        string
+    ){
+
+        for(
+            let i=0;
+            i<string.length;
+            i++
+        ){
+
+            view.setUint8(
+                offset+i,
+                string.charCodeAt(i)
+            );
+
+        }
+
+    }
+
+
+    writeString(
+        0,
+        "RIFF"
+    );
+
+
+    view.setUint32(
+        4,
+        36+dataSize,
+        true
+    );
+
+
+    writeString(
+        8,
+        "WAVE"
+    );
+
+
+    writeString(
+        12,
+        "fmt "
+    );
+
+
+    view.setUint32(
+        16,
+        16,
+        true
+    );
+
+
+    view.setUint16(
+        20,
+        1,
+        true
+    );
+
+
+    view.setUint16(
+        22,
+        numChannels,
+        true
+    );
+
+
+    view.setUint32(
+        24,
+        sampleRate,
+        true
+    );
+
+
+    view.setUint32(
+        28,
+        sampleRate *
+        numChannels *
+        bytesPerSample,
+        true
+    );
+
+
+    view.setUint16(
+        32,
+        numChannels *
+        bytesPerSample,
+        true
+    );
+
+
+    view.setUint16(
+        34,
+        16,
+        true
+    );
+
+
+    writeString(
+        36,
+        "data"
+    );
+
+
+    view.setUint32(
+        40,
+        dataSize,
+        true
+    );
+
+
+    let offset=44;
+
+
+    for(
+        let i=0;
+        i<samples.length;
+        i++
+    ){
+
+        const s =
+            Math.max(
+                -1,
+                Math.min(
+                    1,
+                    samples[i]
+                )
+            );
+
+
+        const value =
+            s<0
+            ? s*0x8000
+            : s*0x7fff;
+
+
+        view.setInt16(
+            offset,
+            value,
+            true
+        );
+
+
+        offset+=2;
+
+    }
+
+
+    return new Blob(
+        [buffer],
+        {
+            type:"audio/wav"
+        }
+    );
+
+}
+
+
+/* =========================================================
+   WAV 오프라인 렌더링
+========================================================= */
+
+async function downloadWav(){
+
+    const visibleLayers =
+        layers.filter(
+            l =>
+                l.visible &&
+                l.points.length>=2
+        );
+
+
+    if(
+        !visibleLayers.length
+    ){
+
+        msg.textContent =
+            "저장할 수 있는 표시된 그래프가 없습니다.";
+
+        return;
+
+    }
+
+
+    stopMusic();
+
+
+    const duration =
+        Number(
+            document.getElementById(
+                "duration"
+            ).value
+        );
+
+
+    const scale =
+        scales[
+            document.getElementById(
+                "scale"
+            ).value
+        ];
+
+
+    const style =
+        styles[
+            document.getElementById(
+                "style"
+            ).value
+        ];
+
+
+    const sampleRate =
+        44100;
+
+
+    const totalSamples =
+        Math.floor(
+            duration*
+            sampleRate
+        );
+
+
+    msg.textContent =
+        "WAV 파일을 만드는 중입니다. 잠시만 기다려 주세요...";
+
+
+    document.getElementById(
+        "now"
+    ).textContent =
+        "오디오 렌더링 중 · " +
+        duration +
+        "초";
+
+
+    const offline =
+        new OfflineAudioContext(
+            1,
+            totalSamples,
+            sampleRate
+        );
+
+
+    /*
+       마스터 컴프레서로 레이어가
+       동시에 울릴 때 지나치게 튀는 것을 줄임
+    */
+
+    const compressor =
+        offline.createDynamicsCompressor();
+
+
+    compressor.threshold.value =
+        -18;
+
+    compressor.knee.value =
+        12;
+
+    compressor.ratio.value =
+        5;
+
+    compressor.attack.value =
+        .003;
+
+    compressor.release.value =
+        .15;
+
+
+    compressor.connect(
+        offline.destination
+    );
+
+
+    visibleLayers.forEach(
+        layer=>{
+
+            const data =
+                prepareLayerAudio(
+                    layer
+                );
+
+
+            if(!data){
+                return;
+            }
+
+
+            const osc =
+                offline.createOscillator();
+
+
+            const gain =
+                offline.createGain();
+
+
+            osc.type =
+                style.waveform;
+
+
+            const points =
+                data.points;
+
+
+            const initialMidi =
+                graphMidi(
+                    points[0].y,
+                    data.lo,
+                    data.hi,
+                    scale
+                );
+
+
+            const initialFreq =
+                midiFreq(
+                    initialMidi
+                );
+
+
+            osc.frequency.setValueAtTime(
+                initialFreq,
+                0
+            );
+
+
+            for(
+                let i=1;
+                i<points.length;
+                i++
+            ){
+
+                const progress =
+                    i/
+                    (
+                        points.length-1
+                    );
+
+
+                const t =
+                    progress*
+                    duration;
+
+
+                const midi =
+                    graphMidi(
+                        points[i].y,
+                        data.lo,
+                        data.hi,
+                        scale
+                    );
+
+
+                const freq =
+                    Math.max(
+                        45,
+                        Math.min(
+                            1800,
+                            midiFreq(midi)
+                        )
+                    );
+
+
+                osc.frequency
+                    .linearRampToValueAtTime(
+                        freq,
+                        t
+                    );
+
+            }
+
+
+            const level =
+                layer.volume *
+                style.baseGain;
+
+
+            gain.gain.setValueAtTime(
+                0,
+                0
+            );
+
+
+            gain.gain
+                .linearRampToValueAtTime(
+                    level,
+                    Math.min(
+                        style.attack,
+                        duration/4
+                    )
+                );
+
+
+            gain.gain
+                .linearRampToValueAtTime(
+                    level,
+                    Math.max(
+                        style.attack,
+                        duration-.12
+                    )
+                );
+
+
+            gain.gain
+                .linearRampToValueAtTime(
+                    0,
+                    duration
+                );
+
+
+            osc.connect(gain);
+
+            gain.connect(compressor);
+
+            osc.start(0);
+
+            osc.stop(duration);
+
+
+            /*
+               서브 옥타브
+            */
+
+            if(style.subGain>0){
+
+                const sub =
+                    offline
+                    .createOscillator();
+
+
+                const subGain =
+                    offline
+                    .createGain();
+
+
+                sub.type =
+                    style.waveform;
+
+
+                sub.frequency.setValueAtTime(
+                    initialFreq/2,
+                    0
+                );
+
+
+                for(
+                    let i=1;
+                    i<points.length;
+                    i++
+                ){
+
+                    const progress =
+                        i/
+                        (
+                            points.length-1
+                        );
+
+
+                    const t =
+                        progress*
+                        duration;
+
+
+                    const midi =
+                        graphMidi(
+                            points[i].y,
+                            data.lo,
+                            data.hi,
+                            scale
+                        );
+
+
+                    const freq =
+                        Math.max(
+                            30,
+                            Math.min(
+                                900,
+                                midiFreq(midi)/2
+                            )
+                        );
+
+
+                    sub.frequency
+                        .linearRampToValueAtTime(
+                            freq,
+                            t
+                        );
+
+                }
+
+
+                subGain.gain.setValueAtTime(
+                    0,
+                    0
+                );
+
+
+                subGain.gain
+                    .linearRampToValueAtTime(
+                        layer.volume *
+                        style.subGain,
+                        Math.min(
+                            style.attack,
+                            duration/4
+                        )
+                    );
+
+
+                subGain.gain
+                    .linearRampToValueAtTime(
+                        layer.volume *
+                        style.subGain,
+                        Math.max(
+                            style.attack,
+                            duration-.12
+                        )
+                    );
+
+
+                subGain.gain
+                    .linearRampToValueAtTime(
+                        0,
+                        duration
+                    );
+
+
+                sub.connect(
+                    subGain
+                );
+
+
+                subGain.connect(
+                    compressor
+                );
+
+
+                sub.start(0);
+
+                sub.stop(duration);
+
+            }
+
+        }
+    );
+
+
+    try{
+
+        const rendered =
+            await offline.startRendering();
+
+
+        const blob =
+            createWavBlob(
+                rendered
+            );
+
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+
+        const a =
+            document.createElement(
+                "a"
+            );
+
+
+        const filename =
+            safeFilename(
+                document.getElementById(
+                    "songName"
+                ).value
+            );
+
+
+        a.href=url;
+
+        a.download =
+            filename +
+            ".wav";
+
+
+        document.body.appendChild(
+            a
+        );
+
+
+        a.click();
+
+        a.remove();
+
+
+        setTimeout(
+            ()=>{
+                URL.revokeObjectURL(
+                    url
+                );
+            },
+            5000
+        );
+
+
+        msg.textContent =
+            "WAV 파일을 저장했습니다.";
+
+
+        document.getElementById(
+            "now"
+        ).textContent =
+            "WAV 저장 완료";
+
+    }catch(error){
+
+        console.error(error);
+
+        msg.textContent =
+            "WAV 생성 중 오류가 발생했습니다.";
+
+    }
+
+}
+
+
+document
+.getElementById(
+    "downloadWav"
+)
+.addEventListener(
+    "click",
+    downloadWav
+);
+
+
+/* =========================================================
+   Library
+========================================================= */
+
+function createId(
+    prefix
+){
+
+    return (
+        prefix+
+        Date.now()+
+        "_" +
+        Math.random()
+        .toString(36)
+        .slice(2,8)
+    );
+
+}
+
+
+function defaultLibraries(){
+
+    return [
+
+        {
+
+            id:
+                createId(
+                    "lib_"
+                ),
+
+            name:
+                "My Library",
+
+            songs:[]
+
+        }
+
+    ];
+
+}
+
+
+function loadLibraries(){
+
+    try{
+
+        const raw =
+            localStorage.getItem(
+                LIBRARY_KEY
+            );
+
+
+        if(!raw){
+
+            return defaultLibraries();
+
+        }
+
+
+        const parsed =
+            JSON.parse(raw);
+
+
+        if(
+            !Array.isArray(parsed) ||
+            !parsed.length
+        ){
+
+            return defaultLibraries();
+
+        }
+
+
+        return parsed;
+
+    }catch(e){
+
+        return defaultLibraries();
+
+    }
+
+}
+
+
+function saveLibraries(){
+
+    try{
+
+        localStorage.setItem(
+            LIBRARY_KEY,
+            JSON.stringify(
+                libraries
+            )
+        );
+
+    }catch(e){
+
+        msg.textContent =
+            "Library 저장 공간을 사용할 수 없습니다.";
+
+    }
+
+}
+
+
+function currentLibrary(){
+
+    return libraries.find(
+        l =>
+            l.id===
+            currentLibraryId
+    ) || null;
+
+}
+
+
+/* =========================================================
+   Library UI
+========================================================= */
+
+function renderLibrarySelect(){
+
+    const select =
+        document.getElementById(
+            "librarySelect"
+        );
+
+
+    select.innerHTML="";
+
+
+    libraries.forEach(
+        lib=>{
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                lib.id;
+
+            option.textContent =
+                lib.name;
+
+            if(
+                lib.id===
+                currentLibraryId
+            ){
+
+                option.selected=true;
+
+            }
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
+}
+
+
+function renderSongList(){
+
+    const box =
+        document.getElementById(
+            "songList"
+        );
+
+
+    box.innerHTML="";
+
+
+    const lib =
+        currentLibrary();
+
+
+    if(!lib){
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "libraryMeta"
+    ).textContent =
+        lib.songs.length +
+        "개 곡";
+
+
+    if(
+        !lib.songs.length
+    ){
+
+        const empty =
+            document.createElement(
+                "div"
+            );
+
+        empty.className =
+            "notice";
+
+        empty.textContent =
+            "아직 저장된 곡이 없습니다. 현재 곡 이름을 입력하고 '곡 저장'을 눌러주세요.";
+
+        box.appendChild(
+            empty
+        );
+
+        return;
+
+    }
+
+
+    lib.songs
+        .slice()
+        .reverse()
+        .forEach(
+            song=>{
+
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+                item.className =
+                    "songItem";
+
+
+                const info =
+                    document.createElement(
+                        "div"
+                    );
+
+                info.className =
+                    "songInfo";
+
+
+                const title =
+                    document.createElement(
+                        "div"
+                    );
+
+                title.className =
+                    "songTitle";
+
+                title.textContent =
+                    song.name;
+
+
+                const date =
+                    document.createElement(
+                        "div"
+                    );
+
+                date.className =
+                    "songDate";
+
+                date.textContent =
+                    new Date(
+                        song.savedAt
+                    )
+                    .toLocaleString(
+                        "ko-KR"
+                    );
+
+
+                info.appendChild(
+                    title
+                );
+
+                info.appendChild(
+                    date
+                );
+
+
+                const actions =
+                    document.createElement(
+                        "div"
+                    );
+
+                actions.className =
+                    "songActions";
+
+
+                const loadBtn =
+                    document.createElement(
+                        "button"
+                    );
+
+                loadBtn.textContent =
+                    "불러오기";
+
+
+                const deleteBtn =
+                    document.createElement(
+                        "button"
+                    );
+
+                deleteBtn.textContent =
+                    "삭제";
+
+                deleteBtn.className =
+                    "danger";
+
+
+                actions.appendChild(
+                    loadBtn
+                );
+
+                actions.appendChild(
+                    deleteBtn
+                );
+
+
+                item.appendChild(
+                    info
+                );
+
+                item.appendChild(
+                    actions
+                );
+
+
+                loadBtn.addEventListener(
+                    "click",
+                    e=>{
+
+                        e.stopPropagation();
+
+                        loadSong(
+                            song.id
+                        );
+
+                    }
+                );
+
+
+                deleteBtn.addEventListener(
+                    "click",
+                    e=>{
+
+                        e.stopPropagation();
+
+                        deleteSong(
+                            song.id
+                        );
+
+                    }
+                );
+
+
+                box.appendChild(
+                    item
+                );
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   곡 직렬화
+========================================================= */
+
+function serializeLayers(){
+
+    return layers.map(
+        layer=>({
+
+            id:
+                layer.id,
+
+            name:
+                layer.name,
+
+            type:
+                layer.type,
+
+            expression:
+                layer.expression,
+
+            visible:
+                layer.visible,
+
+            volume:
+                layer.volume,
+
+            color:
+                layer.color,
+
+            /*
+               함수는 expression으로
+               다시 생성할 수 있으므로 points를
+               저장하지 않아도 됨.
+            */
+
+            points:
+                layer.type==="sketch"
+                ? layer.points
+                : [],
+
+            transform:{
+                tx:
+                    layer.transform.tx,
+
+                ty:
+                    layer.transform.ty,
+
+                scale:
+                    layer.transform.scale,
+
+                rotation:
+                    layer.transform.rotation
+            }
+
+        })
+    );
+
+}
+
+
+/* =========================================================
+   곡 불러오기용 레이어 복원
+========================================================= */
+
+function restoreLayers(
+    savedLayers
+){
+
+    layers =
+        savedLayers.map(
+            layer=>({
+
+                id:
+                    layer.id,
+
+                name:
+                    layer.name ||
+                    "Graph " +
+                    layer.id,
+
+                type:
+                    layer.type ||
+                    "function",
+
+                expression:
+                    layer.expression ||
+                    "",
+
+                visible:
+                    layer.visible !==
+                    false,
+
+                volume:
+                    Number.isFinite(
+                        layer.volume
+                    )
+                    ? layer.volume
+                    : .4,
+
+                color:
+                    layer.color ||
+                    layerColors[
+                        (
+                            layer.id-1
+                        ) %
+                        layerColors.length
+                    ],
+
+                points:
+                    layer.type==="sketch"
+                    ? (
+                        layer.points ||
+                        []
+                    )
+                    : [],
+
+                transform:{
+                    tx:
+                        layer.transform
+                        ?.tx || 0,
+
+                    ty:
+                        layer.transform
+                        ?.ty || 0,
+
+                    scale:
+                        layer.transform
+                        ?.scale || 1,
+
+                    rotation:
+                        layer.transform
+                        ?.rotation || 0
+                }
+
+            })
+        );
+
+
+    /*
+       함수 레이어 points 재생성
+    */
+
+    layers.forEach(
+        layer=>{
+
+            if(
+                layer.type==="function"
+            ){
+
+                try{
+
+                    const points =
+                        generateFunctionPoints(
+                            layer.expression
+                        );
+
+
+                    const center =
+                        getCenter(
+                            points
+                        );
+
+
+                    points.forEach(
+                        p=>{
+
+                            p.cx =
+                                center.x;
+
+                            p.cy =
+                                center.y;
+
+                        }
+                    );
+
+
+                    layer.points =
+                        points;
+
+                }catch(e){
+
+                    layer.points=[];
+
+                }
+
+            }else{
+
+                const center =
+                    getCenter(
+                        layer.points
+                    );
+
+
+                layer.points =
+                    layer.points.map(
+                        p=>({
+
+                            x:p.x,
+
+                            y:p.y,
+
+                            cx:
+                                p.cx ??
+                                center.x,
+
+                            cy:
+                                p.cy ??
+                                center.y
+
+                        })
+                    );
+
+            }
+
+        }
+    );
+
+
+    layerIdCounter =
+        Math.max(
+            ...layers.map(
+                l=>l.id
+            ),
+            1
+        );
+
+}
+
+
+/* =========================================================
+   현재 상태 직렬화
+========================================================= */
+
+function buildSongSnapshot(){
+
+    return {
+
+        id:
+            currentSongId ||
+            createId(
+                "song_"
+            ),
+
+        name:
+            document.getElementById(
+                "songName"
+            ).value.trim()
+            ||
+            "Untitled Cosmos",
+
+        savedAt:
+            Date.now(),
+
+        duration:
+            document.getElementById(
+                "duration"
+            ).value,
+
+        scale:
+            document.getElementById(
+                "scale"
+            ).value,
+
+        style:
+            document.getElementById(
+                "style"
+            ).value,
+
+        view:{
+
+            xmin:xmin,
+
+            xmax:xmax,
+
+            ymin:ymin,
+
+            ymax:ymax
+
+        },
+
+        layers:
+            serializeLayers()
+
+    };
+
+}
+
+
+/* =========================================================
+   곡 저장
+========================================================= */
+
+function saveSong(){
+
+    const lib =
+        currentLibrary();
+
+
+    if(!lib){
+
+        return;
+
+    }
+
+
+    const name =
+        document.getElementById(
+            "songName"
+        ).value.trim()
+        ||
+        "Untitled Cosmos";
+
+
+    document.getElementById(
+        "songName"
+    ).value =
+        name;
+
+
+    const snapshot =
+        buildSongSnapshot();
+
+
+    let index =
+        lib.songs.findIndex(
+            s =>
+                s.id===
+                currentSongId
+        );
+
+
+    if(index>=0){
+
+        snapshot.id =
+            currentSongId;
+
+        lib.songs[index] =
+            snapshot;
+
+    }else{
+
+        currentSongId =
+            snapshot.id;
+
+        lib.songs.push(
+            snapshot
+        );
+
+    }
+
+
+    saveLibraries();
+
+    renderSongList();
+
+
+    msg.textContent =
+        "'" +
+        name +
+        "' 곡을 '" +
+        lib.name +
+        "'에 저장했습니다.";
+
+}
+
+
+document
+.getElementById(
+    "saveSong"
+)
+.addEventListener(
+    "click",
+    saveSong
+);
+
+
+/* =========================================================
+   곡 불러오기
+========================================================= */
+
+function loadSong(songId){
+
+    const lib =
+        currentLibrary();
+
+
+    if(!lib){
+        return;
+    }
+
+
+    const song =
+        lib.songs.find(
+            s =>
+                s.id===
+                songId
+        );
+
+
+    if(!song){
+        return;
+    }
+
+
+    stopMusic();
+
+
+    currentSongId =
+        song.id;
+
+
+    document.getElementById(
+        "songName"
+    ).value =
+        song.name;
+
+
+    document.getElementById(
+        "duration"
+    ).value =
+        song.duration ||
+        "30";
+
+
+    document.getElementById(
+        "scale"
+    ).value =
+        song.scale ||
+        "major";
+
+
+    document.getElementById(
+        "style"
+    ).value =
+        song.style ||
+        "pop";
+
+
+    if(song.view){
+
+        xmin =
+            Number.isFinite(
+                song.view.xmin
+            )
+            ? song.view.xmin
+            : -10;
+
+        xmax =
+            Number.isFinite(
+                song.view.xmax
+            )
+            ? song.view.xmax
+            : 10;
+
+        ymin =
+            Number.isFinite(
+                song.view.ymin
+            )
+            ? song.view.ymin
+            : -6;
+
+        ymax =
+            Number.isFinite(
+                song.view.ymax
+            )
+            ? song.view.ymax
+            : 6;
+
+    }
+
+
+    restoreLayers(
+        song.layers
+    );
+
+
+    selectedLayerId =
+        layers.length
+        ? layers[0].id
+        : null;
+
+
+    expr.value =
+        selectedLayer()
+        ?.expression || "";
+
+
+    renderLayers();
+
+    draw();
+
+
+    msg.textContent =
+        "'" +
+        song.name +
+        "' 곡을 불러왔습니다.";
+
+}
+
+
+/* =========================================================
+   곡 삭제
+========================================================= */
+
+function deleteSong(songId){
+
+    const lib =
+        currentLibrary();
+
+
+    if(!lib){
+        return;
+    }
+
+
+    const song =
+        lib.songs.find(
+            s =>
+                s.id===
+                songId
+        );
+
+
+    if(!song){
+        return;
+    }
+
+
+    if(
+        !confirm(
+            "'" +
+            song.name +
+            "' 곡을 삭제할까요?"
+        )
+    ){
+        return;
+    }
+
+
+    lib.songs =
+        lib.songs.filter(
+            s =>
+                s.id!==
+                songId
+        );
+
+
+    if(
+        currentSongId===
+        songId
+    ){
+
+        currentSongId=null;
+
+    }
+
+
+    saveLibraries();
+
+    renderSongList();
+
+
+    msg.textContent =
+        "곡을 삭제했습니다.";
+
+}
+
+
+/* =========================================================
+   새 곡
+========================================================= */
+
+function createFreshWorkspace(){
+
+    stopMusic();
+
+
+    xmin=-10;
+
+    xmax=10;
+
+    ymin=-6;
+
+    ymax=6;
+
+
+    layerIdCounter=2;
+
+    selectedLayerId=1;
+
+
+    layers=[
+
+        {
+
+            id:1,
+
+            name:"Graph 1",
+
+            type:"function",
+
+            expression:"sin(x)",
+
+            visible:true,
+
+            volume:.55,
+
+            color:layerColors[0],
+
+            points:[],
+
+            transform:{
+                tx:0,
+                ty:0,
+                scale:1,
+                rotation:0
+            }
+
+        },
+
+        {
+
+            id:2,
+
+            name:"Graph 2",
+
+            type:"function",
+
+            expression:"0.5*cos(2*x)",
+
+            visible:true,
+
+            volume:.40,
+
+            color:layerColors[1],
+
+            points:[],
+
+            transform:{
+                tx:0,
+                ty:0,
+                scale:1,
+                rotation:0
+            }
+
+        }
+
+    ];
+
+
+    layers.forEach(
+        layer=>{
+
+            const points =
+                generateFunctionPoints(
+                    layer.expression
+                );
+
+
+            const center =
+                getCenter(
+                    points
+                );
+
+
+            points.forEach(
+                p=>{
+
+                    p.cx =
+                        center.x;
+
+                    p.cy =
+                        center.y;
+
+                }
+            );
+
+
+            layer.points =
+                points;
+
+        }
+    );
+
+
+    document.getElementById(
+        "songName"
+    ).value =
+        "Untitled Cosmos";
+
+
+    document.getElementById(
+        "duration"
+    ).value =
+        "30";
+
+
+    document.getElementById(
+        "scale"
+    ).value =
+        "major";
+
+
+    document.getElementById(
+        "style"
+    ).value =
+        "pop";
+
+
+    expr.value =
+        "sin(x)";
+
+
+    currentSongId=null;
+
+
+    renderLayers();
+
+    draw();
+
+}
+
+
+document
+.getElementById(
+    "newSong"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        createFreshWorkspace();
+
+        msg.textContent =
+            "새 곡 작업 공간을 만들었습니다.";
+
+    }
+);
+
+
+/* =========================================================
+   새 Library
+========================================================= */
+
+document
+.getElementById(
+    "newLibrary"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        const name =
+            prompt(
+                "새 Library 이름을 입력하세요."
+            );
+
+
+        if(!name){
+            return;
+        }
+
+
+        const library={
+
+            id:
+                createId(
+                    "lib_"
+                ),
+
+            name:
+                name.trim(),
+
+            songs:[]
+
+        };
+
+
+        libraries.push(
+            library
+        );
+
+
+        currentLibraryId =
+            library.id;
+
+
+        currentSongId=null;
+
+
+        saveLibraries();
+
+        renderLibrarySelect();
+
+        renderSongList();
+
+
+        msg.textContent =
+            "'" +
+            library.name +
+            "' Library를 만들었습니다.";
+
+    }
+);
+
+
+/* =========================================================
+   Library 이름 변경
+========================================================= */
+
+document
+.getElementById(
+    "renameLibrary"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        const lib =
+            currentLibrary();
+
+
+        if(!lib){
+            return;
+        }
+
+
+        const name =
+            prompt(
+                "새 Library 이름",
+                lib.name
+            );
+
+
+        if(!name){
+            return;
+        }
+
+
+        lib.name =
+            name.trim();
+
+
+        saveLibraries();
+
+        renderLibrarySelect();
+
+        renderSongList();
+
+
+        msg.textContent =
+            "Library 이름을 변경했습니다.";
+
+    }
+);
+
+
+/* =========================================================
+   Library 삭제
+========================================================= */
+
+document
+.getElementById(
+    "deleteLibrary"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        if(
+            libraries.length<=1
+        ){
+
+            msg.textContent =
+                "최소 한 개의 Library는 필요합니다.";
+
+            return;
+
+        }
+
+
+        const lib =
+            currentLibrary();
+
+
+        if(!lib){
+            return;
+        }
+
+
+        if(
+            !confirm(
+                "'" +
+                lib.name +
+                "' Library와 안의 저장된 곡들을 모두 삭제할까요?"
+            )
+        ){
+            return;
+        }
+
+
+        libraries =
+            libraries.filter(
+                l =>
+                    l.id!==
+                    currentLibraryId
+            );
+
+
+        currentLibraryId =
+            libraries[0].id;
+
+        currentSongId=null;
+
+
+        saveLibraries();
+
+        renderLibrarySelect();
+
+        renderSongList();
+
+
+        msg.textContent =
+            "Library를 삭제했습니다.";
+
+    }
+);
+
+
+/* =========================================================
+   Library 변경
+========================================================= */
+
+document
+.getElementById(
+    "librarySelect"
+)
+.addEventListener(
+    "change",
+    e=>{
+
+        currentLibraryId =
+            e.target.value;
+
+        currentSongId=null;
+
+        renderSongList();
+
+
+        msg.textContent =
+            "'" +
+            currentLibrary()
+            ?.name +
+            "' Library를 선택했습니다.";
+
+    }
+);
+
+
+/* =========================================================
    리사이즈
 ========================================================= */
 
@@ -3766,7 +8148,8 @@ function resize(){
 
 
     const dpr =
-        window.devicePixelRatio || 1;
+        window.devicePixelRatio ||
+        1;
 
 
     canvas.width =
@@ -3812,51 +8195,23 @@ window.addEventListener(
    초기화
 ========================================================= */
 
-renderLayers();
+libraries =
+    loadLibraries();
+
+
+currentLibraryId =
+    libraries[0].id;
+
+
+createFreshWorkspace();
+
+
+renderLibrarySelect();
+
+renderSongList();
+
 
 resize();
-
-
-/*
-   처음부터 두 그래프가 보이도록 생성
-*/
-
-try{
-
-    layers.forEach(layer=>{
-
-        if(
-            layer.type ===
-            "function" &&
-            !layer.points.length
-        ){
-
-            const points =
-                generateFunctionPoints(
-                    layer.expression
-                );
-
-
-            const center =
-                getCenter(points);
-
-
-            points.forEach(p=>{
-
-                p.cx=center.x;
-                p.cy=center.y;
-
-            });
-
-
-            layer.points=points;
-
-        }
-
-    });
-
-}catch(e){}
-
 
 renderLayers();
 
@@ -3864,6 +8219,7 @@ draw();
 
 
 })();
+
 </script>
 
 </body>
@@ -3887,6 +8243,6 @@ st.markdown(
 
 components.html(
     HTML,
-    height=1700,
+    height=2450,
     scrolling=True
 )
