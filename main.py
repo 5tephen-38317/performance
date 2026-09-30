@@ -229,22 +229,37 @@ button:disabled{
 }
 
 .navItem{
+    appearance:none;
+    -webkit-appearance:none;
+    border:0;
+    background:transparent;
     color:#707582;
     text-decoration:none;
     font-size:12px;
     font-weight:700;
     padding:8px 12px;
+    min-height:34px;
     border-radius:8px;
+    cursor:pointer;
+    box-shadow:none;
 }
 
 .navItem:hover{
     background:#f3f2f8;
     color:var(--text);
+    border-color:transparent;
 }
 
+.navItem.active,
 .navItem.primaryNav{
     background:var(--accent-soft);
     color:#6548db;
+}
+
+.navItem.active:hover,
+.navItem.primaryNav:hover{
+    background:#e9e5ff;
+    color:#573bc7;
 }
 
 /* ---------- layout ---------- */
@@ -750,6 +765,529 @@ hr{
     .row,.row3,.info{grid-template-columns:1fr;}
     .brandFooter{flex-direction:column;}
 }
+
+/* =========================================================
+   COSMOS WORKSPACE — DESMOS-LIKE STRUCTURE
+========================================================= */
+
+.workspaceShell{
+    background:#fff;
+    border:1px solid #dedfe6;
+    border-radius:14px;
+    box-shadow:0 8px 30px rgba(25,25,40,.07);
+    overflow:hidden;
+    min-height:760px;
+}
+
+.appToolbar{
+    height:58px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:0 16px;
+    border-bottom:1px solid #e2e3e8;
+    background:#fff;
+}
+
+.toolbarBrand{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-weight:800;
+    letter-spacing:-.3px;
+    margin-right:6px;
+}
+
+.toolbarFlower{
+    width:30px;
+    height:30px;
+    border:1px solid #ddd7ff;
+    border-radius:8px;
+    display:grid;
+    place-items:center;
+    background:#faf9ff;
+}
+
+.toolbarFlower svg{width:22px;height:22px;}
+
+.fileTitle{
+    height:34px;
+    min-width:190px;
+    border:1px solid transparent;
+    background:transparent;
+    padding:5px 9px;
+    font-weight:650;
+    color:#34353c;
+    border-radius:7px;
+}
+
+.fileTitle:hover,
+.fileTitle:focus{
+    border-color:#d9dbe3;
+    background:#fafafd;
+    outline:none;
+}
+
+.toolbarSpacer{flex:1;}
+
+.toolbarBtn{
+    min-height:34px;
+    padding:6px 10px;
+    font-size:12px;
+    border-radius:7px;
+}
+
+.toolbarBtn.icon{
+    width:34px;
+    padding:6px;
+    font-size:16px;
+}
+
+.workspace{
+    display:grid;
+    grid-template-columns:310px minmax(0,1fr);
+    height:702px;
+}
+
+.expressionPane{
+    background:#fbfbfc;
+    border-right:1px solid #dedfe6;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    overflow:hidden;
+}
+
+.expressionHeader{
+    height:58px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:0 12px;
+    border-bottom:1px solid #e4e5ea;
+}
+
+.expressionHeaderTitle{
+    font-size:13px;
+    font-weight:800;
+    flex:1;
+}
+
+.addMenuWrap{position:relative;}
+
+.addMenu{
+    position:absolute;
+    top:43px;
+    left:0;
+    z-index:30;
+    width:190px;
+    padding:6px;
+    background:#fff;
+    border:1px solid #dddfe6;
+    border-radius:10px;
+    box-shadow:0 14px 30px rgba(25,25,40,.12);
+    display:none;
+}
+
+.addMenu.open{display:block;}
+
+.addMenu button{
+    width:100%;
+    text-align:left;
+    border:0;
+    background:#fff;
+    min-height:34px;
+    font-size:11px;
+    border-radius:7px;
+}
+
+.addMenu button:hover{background:#f4f2ff;}
+
+.expressionScroll{
+    flex:1;
+    overflow:auto;
+    padding:8px;
+}
+
+.expressionScroll .layerList{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.expressionFooter{
+    border-top:1px solid #e3e4e9;
+    padding:9px;
+    background:#fff;
+}
+
+.expressionFooterRow{
+    display:flex;
+    gap:6px;
+}
+
+.expressionFooter button{
+    flex:1;
+    min-height:32px;
+    font-size:10px;
+}
+
+.compactLibrary{
+    border-top:1px solid #e3e4e9;
+    background:#fff;
+}
+
+.compactLibrary summary{
+    cursor:pointer;
+    padding:11px 12px;
+    font-size:11px;
+    font-weight:750;
+    list-style:none;
+}
+
+.compactLibrary summary::-webkit-details-marker{display:none;}
+
+.compactLibrary summary:after{
+    content:"＋";
+    float:right;
+    color:#8b8e99;
+}
+
+.compactLibrary[open] summary:after{content:"−";}
+
+.libraryInner{
+    padding:0 10px 10px;
+}
+
+.libraryInner .controls{display:flex;gap:5px;flex-wrap:wrap;}
+.libraryInner .controls button{min-height:30px;padding:5px 7px;font-size:9px;}
+.libraryInner .section{padding-top:8px;margin-top:8px;}
+.libraryInner input,.libraryInner select{min-height:32px;font-size:10px;}
+.libraryInner .libraryList{max-height:100px;overflow:auto;}
+
+.graphWorkspace{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    background:#fff;
+}
+
+.graphTop{
+    height:44px;
+    display:flex;
+    align-items:center;
+    padding:0 12px;
+    gap:8px;
+    border-bottom:1px solid #e4e5ea;
+}
+
+.graphTopTitle{
+    font-size:11px;
+    font-weight:800;
+    color:#34353c;
+}
+
+.graphTopHint{
+    font-size:10px;
+    color:#9a9ea8;
+    flex:1;
+}
+
+.graphCanvasArea{
+    position:relative;
+    flex:1;
+    min-height:0;
+    background:#fcfcfe;
+}
+
+.graphCanvasArea canvas{
+    display:block;
+    width:100%;
+    height:100%;
+    border:0;
+    border-radius:0;
+}
+
+.canvasSettings{
+    position:absolute;
+    top:10px;
+    right:10px;
+    z-index:5;
+}
+
+.canvasSettingsBtn{
+    width:34px;
+    height:34px;
+    min-height:34px;
+    padding:0;
+    border-radius:8px;
+    background:rgba(255,255,255,.94);
+    box-shadow:0 3px 12px rgba(20,20,30,.08);
+}
+
+.settingsPanel{
+    position:absolute;
+    top:48px;
+    right:10px;
+    z-index:20;
+    width:250px;
+    padding:12px;
+    border:1px solid #dedfe6;
+    border-radius:10px;
+    background:#fff;
+    box-shadow:0 16px 34px rgba(20,20,30,.13);
+    display:none;
+}
+
+.settingsPanel.open{display:block;}
+
+.settingsTitle{
+    font-size:11px;
+    font-weight:800;
+    margin-bottom:9px;
+}
+
+.settingsGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+}
+
+.settingsGrid label{
+    font-size:9px;
+    color:#777d89;
+}
+
+.settingsGrid input{
+    margin-top:3px;
+    width:100%;
+    min-height:30px;
+    padding:5px 7px;
+    font-size:10px;
+}
+
+.settingsChecks{
+    margin-top:9px;
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    font-size:10px;
+    color:#626670;
+}
+
+.graphBottom{
+    min-height:126px;
+    border-top:1px solid #e2e3e8;
+    padding:10px 12px;
+    background:#fff;
+}
+
+.bottomGrid{
+    display:grid;
+    grid-template-columns:minmax(0,1.6fr) minmax(230px,.8fr);
+    gap:10px;
+}
+
+.functionEditor{
+    border:1px solid #e1e2e8;
+    border-radius:9px;
+    background:#fbfbfc;
+    padding:8px;
+}
+
+.functionEditor label{
+    font-size:9px;
+    color:#777d89;
+    margin-bottom:4px;
+}
+
+.functionEditor input{
+    min-height:34px;
+    background:#fff;
+}
+
+.functionActions{
+    display:flex;
+    gap:6px;
+    margin-top:6px;
+}
+
+.functionActions button{
+    min-height:30px;
+    padding:5px 9px;
+    font-size:10px;
+}
+
+.analysisStrip{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:5px;
+}
+
+.analysisCell{
+    border:1px solid #e4e5ea;
+    border-radius:8px;
+    padding:7px;
+    background:#fff;
+    min-width:0;
+}
+
+.analysisLabel{
+    font-size:8px;
+    color:#9296a0;
+    margin-bottom:3px;
+}
+
+.analysisValue{
+    font-size:10px;
+    font-weight:700;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.workspaceRail{
+    position:relative;
+    border-left:1px solid #dedfe6;
+    background:#fff;
+}
+
+.workspaceRailTab{
+    position:absolute;
+    right:0;
+    top:18px;
+    z-index:8;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.railBtn{
+    width:38px;
+    min-height:38px;
+    padding:0;
+    border-radius:8px 0 0 8px;
+    background:#fff;
+    box-shadow:0 3px 12px rgba(20,20,30,.07);
+    font-size:16px;
+}
+
+.railPanel{
+    position:absolute;
+    top:0;
+    right:0;
+    width:330px;
+    height:100%;
+    padding:14px;
+    background:#fff;
+    border-left:1px solid #dedfe6;
+    box-shadow:-12px 0 30px rgba(20,20,30,.08);
+    z-index:7;
+    overflow:auto;
+    display:none;
+}
+
+.railPanel.open{display:block;}
+
+.railPanelHeader{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:12px;
+}
+
+.railPanelHeader h3{
+    margin:0;
+    font-size:14px;
+    flex:1;
+}
+
+.railClose{
+    width:30px;
+    min-height:30px;
+    padding:0;
+}
+
+.railPanel .musicBox{
+    margin-top:0;
+}
+
+.railPanel .card{
+    border:0;
+    box-shadow:none;
+    padding:0;
+}
+
+.railPanel .row{
+    grid-template-columns:1fr 1fr;
+}
+
+.keypad{
+    position:absolute;
+    right:14px;
+    bottom:14px;
+    z-index:12;
+    width:360px;
+    padding:10px;
+    border:1px solid #dedfe6;
+    border-radius:10px;
+    background:#fff;
+    box-shadow:0 16px 34px rgba(20,20,30,.13);
+    display:none;
+}
+
+.keypad.open{display:block;}
+
+.keypadGrid{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:5px;
+}
+
+.keypad button{
+    min-height:34px;
+    padding:5px;
+    font-size:10px;
+}
+
+.principlePanel{
+    font-size:11px;
+    line-height:1.7;
+    color:#656a75;
+}
+
+.principleFormula{
+    margin:10px 0;
+    padding:12px;
+    border:1px solid #e2defc;
+    background:#faf9ff;
+    border-radius:9px;
+    color:#4e3eb1;
+    font-weight:750;
+}
+
+.workspaceHint{
+    padding:7px 10px;
+    font-size:9px;
+    color:#9296a0;
+    border-top:1px solid #e6e7ec;
+    background:#fbfbfc;
+}
+
+@media(max-width:1050px){
+    .workspace{grid-template-columns:270px minmax(0,1fr);}
+    .bottomGrid{grid-template-columns:1fr;}
+    .analysisStrip{grid-template-columns:repeat(3,1fr);}
+}
+
+@media(max-width:760px){
+    .workspace{grid-template-columns:1fr;height:auto;}
+    .expressionPane{height:360px;border-right:0;border-bottom:1px solid #dedfe6;}
+    .graphWorkspace{height:700px;}
+    .workspaceRail{position:absolute;inset:58px 0 0 0;pointer-events:none;border:0;}
+    .workspaceRailTab,.railPanel{pointer-events:auto;}
+    .railPanel{width:min(330px,92vw);}
+}
 </style>
 
 </head>
@@ -759,9 +1297,7 @@ hr{
 <div id="cosmos">
 
 <div class="header">
-
     <div class="brand">
-
         <div class="brandMark" aria-label="Cosmos flower logo">
             <svg viewBox="0 0 48 48" aria-hidden="true">
                 <g fill="#8b6cf6">
@@ -777,646 +1313,299 @@ hr{
                 <circle cx="24" cy="24" r="2.2" fill="#8b6cf6"/>
             </svg>
         </div>
-
         <div class="brandText">
-            <div class="logo">
-                Cos<span>mos</span>
-            </div>
-
-            <div class="subtitle">
-                Graph → Music · 함수의 구조를 소리와 시각으로 탐구하는 수학 실험실
-            </div>
-
-            <div class="brandMeaning">
-                <span>ORDER</span>
-                <span class="dot"></span>
-                <span>HARMONY</span>
-                <span class="dot"></span>
-                <span>EXPRESSION</span>
-            </div>
+            <div class="logo">Cos<span>mos</span></div>
+            <div class="subtitle">Graph → Music · 수학적 구조를 시각화하고 소리로 경험하는 그래핑 스튜디오</div>
+            <div class="brandMeaning"><span>ORDER</span><span class="dot"></span><span>HARMONY</span><span class="dot"></span><span>EXPRESSION</span></div>
         </div>
-
     </div>
-
-    <div>
-        <span class="badge">Cosmos v3.1 · Mathematics in Harmony</span>
-    </div>
-
+    <span class="badge">Cosmos v3.2 · Mathematics in Harmony</span>
 </div>
 
-<nav class="topNav" aria-label="Cosmos navigation">
-    <a class="navItem primaryNav" href="#explore">Explore</a>
-    <a class="navItem" href="#layers">Layers</a>
-    <a class="navItem" href="#music">Music</a>
-    <a class="navItem" href="#principle">Principle</a>
-</nav>
+<div class="workspaceShell">
 
-
-<div class="grid">
-
-
-<!-- =========================================================
-     GRAPH PANEL
-========================================================= -->
-
-<section class="card" id="explore">
-
-    <div class="eyebrow">Explore</div>
-    <div class="panelTitle"><h2>Graph Canvas</h2><span class="panelHint">함수의 구조를 시각적으로 탐구</span></div>
-
-    <div class="graphWrap">
-
-        <canvas
-            id="graph"
-            width="1200"
-            height="650">
-        </canvas>
-
-    </div>
-
-
-    <div class="controls">
-
-        <button id="zoomIn">
-            ＋ 확대
-        </button>
-
-        <button id="zoomOut">
-            － 축소
-        </button>
-
-        <button id="left">
-            ← 이동
-        </button>
-
-        <button id="right">
-            → 이동
-        </button>
-
-        <button id="up">
-            ↑ 이동
-        </button>
-
-        <button id="down">
-            ↓ 이동
-        </button>
-
-        <button id="resetView">
-            화면 초기화
-        </button>
-
-    </div>
-
-
-    <!-- WORK MODE -->
-
-    <div class="section">
-
-        <h2>② 작업 모드</h2>
-
-        <div class="modeBar">
-
-            <button
-                id="navigateMode"
-                class="active">
-                이동
-            </button>
-
-            <button id="sketchMode">
-                손그림
-            </button>
-
-            <button id="editMode">
-                Edit
-            </button>
-
+    <div class="appToolbar">
+        <div class="toolbarBrand">
+            <div class="toolbarFlower">
+                <svg viewBox="0 0 48 48" aria-hidden="true">
+                    <g fill="#8b6cf6">
+                        <ellipse cx="24" cy="10.5" rx="5.2" ry="10"/>
+                        <ellipse cx="35.5" cy="16" rx="5.2" ry="10" transform="rotate(45 35.5 16)"/>
+                        <ellipse cx="37.5" cy="29" rx="5.2" ry="10" transform="rotate(90 37.5 29)"/>
+                        <ellipse cx="29.5" cy="37" rx="5.2" ry="10" transform="rotate(135 29.5 37)"/>
+                        <ellipse cx="18.5" cy="37" rx="5.2" ry="10" transform="rotate(225 18.5 37)"/>
+                        <ellipse cx="10.5" cy="29" rx="5.2" ry="10" transform="rotate(270 10.5 29)"/>
+                        <ellipse cx="12.5" cy="16" rx="5.2" ry="10" transform="rotate(315 12.5 16)"/>
+                    </g>
+                    <circle cx="24" cy="24" r="5.2" fill="#f5c76a"/>
+                </svg>
+            </div>
+            <span>COSMOS</span>
         </div>
 
-        <div
-            id="editNotice"
-            class="editNotice">
+        <input id="songName" class="fileTitle" type="text" value="Untitled Cosmos" autocomplete="off" aria-label="현재 곡 이름">
 
-            Edit 모드에서는 그래프를 클릭하여 선택한 뒤
-            그래프 안쪽을 드래그하면 이동할 수 있습니다.
-            모서리의 핸들을 드래그하면 크기를 바꿀 수 있고,
-            위쪽 회전 핸들을 드래그하면 자유롭게 회전할 수 있습니다.
-
-        </div>
-
-        <div
-            class="help"
-            style="margin-top:8px">
-
-            <b>이동</b> : 그래프 화면 이동 / 휠로 화면 확대·축소<br>
-            <b>손그림</b> : 선택된 레이어에 직접 곡선 그리기<br>
-            <b>Edit</b> : 그래프를 도형처럼 선택·이동·확대·축소·회전
-
-        </div>
-
+        <button id="newSong" class="toolbarBtn" title="새 작업 공간">새로 만들기</button>
+        <button id="saveSong" class="toolbarBtn primary" title="현재 곡 저장">저장</button>
+        <div class="toolbarSpacer"></div>
+        <button id="musicRailOpen" class="toolbarBtn">♫ Graph → Music</button>
+        <button id="principleRailOpen" class="toolbarBtn icon" title="Cosmos 원리">?</button>
     </div>
 
+    <div class="workspace">
 
-    <!-- FUNCTION -->
+        <!-- LEFT: EXPRESSIONS -->
+        <aside class="expressionPane">
 
-    <div class="section">
-
-        <h2>③ 선택된 레이어에 함수 입력</h2>
-
-        <input
-            id="expr"
-            type="text"
-            value="sin(x)"
-            autocomplete="off"
-            spellcheck="false"
-        >
-
-        <div class="controls">
-
-            <button
-                id="draw"
-                class="primary">
-                함수 그래프 생성
-            </button>
-
-            <button id="clearLayer">
-                선택 레이어 지우기
-            </button>
-
-        </div>
-
-        <div id="message"></div>
-
-    </div>
-
-
-    <!-- ANALYSIS -->
-
-    <div class="section">
-
-        <h2>④ 그래프 분석</h2>
-
-        <div class="info">
-
-            <div>
-                정의역 :
-                <span id="domain">—</span>
+            <div class="expressionHeader">
+                <div class="addMenuWrap">
+                    <button id="addMenuToggle" class="toolbarBtn primary" title="항목 추가">＋</button>
+                    <div id="addMenu" class="addMenu">
+                        <button id="addFunctionLayer">ƒ　함수 그래프</button>
+                        <button id="addSketchLayer">✎　손그림 그래프</button>
+                    </div>
+                </div>
+                <div class="expressionHeaderTitle">Expressions</div>
+                <button id="deleteLayer" class="toolbarBtn danger" title="선택 항목 삭제">삭제</button>
             </div>
 
-            <div>
-                최솟값 :
-                <span id="minY">—</span>
+            <div class="expressionScroll">
+                <div class="layerList" id="layerList"></div>
             </div>
 
-            <div>
-                최댓값 :
-                <span id="maxY">—</span>
+            <div class="expressionFooter">
+                <div id="editNotice" class="editNotice">Edit 모드: 그래프를 직접 선택하고 드래그해 이동·크기 조절·회전합니다.</div>
+                <div id="layerCount" style="display:none;"></div>
+                <div class="expressionFooterRow">
+                    <button id="navigateMode" class="active">이동</button>
+                    <button id="sketchMode">손그림</button>
+                    <button id="editMode">Edit</button>
+                </div>
+                <div class="workspaceHint">그래프를 드래그해 이동하고 휠로 확대·축소합니다. Edit에서는 그래프를 직접 잡아 움직입니다.</div>
             </div>
 
-            <div>
-                평균 높이 :
-                <span id="avgY">—</span>
+            <details class="compactLibrary">
+                <summary>Library</summary>
+                <div class="libraryInner">
+                    <select id="librarySelect"></select>
+                    <div class="controls">
+                        <button id="newLibrary" class="primary">＋ Library</button>
+                        <button id="renameLibrary">이름 변경</button>
+                        <button id="deleteLibrary" class="danger">삭제</button>
+                    </div>
+                    <div class="section">
+                        <label>현재 곡</label>
+                        <div class="controls">
+                            <button id="saveSongSecondary" class="primary">곡 저장</button>
+                        </div>
+                    </div>
+                    <div class="libraryMeta" id="libraryMeta">0개 곡</div>
+                    <div class="libraryList" id="songList"></div>
+                </div>
+            </details>
+        </aside>
+
+        <!-- CENTER: GRAPH -->
+        <main class="graphWorkspace">
+
+            <div class="graphTop">
+                <span class="graphTopTitle">Graph</span>
+                <span class="graphTopHint">수식을 입력하면 그래프가 즉시 캔버스에 표시됩니다.</span>
             </div>
 
-            <div>
-                선택 레이어 :
-                <span id="selectedLayerInfo">—</span>
+            <div class="graphCanvasArea">
+                <canvas id="graph" width="1200" height="650"></canvas>
+
+                <div class="canvasSettings">
+                    <button id="settingsToggle" class="canvasSettingsBtn" title="그래프 설정">⚙</button>
+                    <div id="settingsPanel" class="settingsPanel">
+                        <div class="settingsTitle">Graph Settings</div>
+                        <div class="settingsGrid">
+                            <div><label>X 최소</label><input id="xminInput" type="number" value="-10" step="1"></div>
+                            <div><label>X 최대</label><input id="xmaxInput" type="number" value="10" step="1"></div>
+                            <div><label>Y 최소</label><input id="yminInput" type="number" value="-6" step="1"></div>
+                            <div><label>Y 최대</label><input id="ymaxInput" type="number" value="6" step="1"></div>
+                        </div>
+                        <div class="settingsChecks">
+                            <label><input id="gridToggle" type="checkbox" checked> 격자</label>
+                            <label><input id="axisToggle" type="checkbox" checked> 축</label>
+                        </div>
+                        <button id="resetView" style="width:100%;margin-top:9px;">기본 화면으로</button>
+                    </div>
+                </div>
+
+                <div id="keypad" class="keypad">
+                    <div class="keypadGrid">
+                        <button data-key="x">x</button>
+                        <button data-key="y">y</button>
+                        <button data-key="(">(</button>
+                        <button data-key=")">)</button>
+                        <button data-key="^">aᵇ</button>
+                        <button data-key="pi">π</button>
+                        <button data-key="7">7</button>
+                        <button data-key="8">8</button>
+                        <button data-key="9">9</button>
+                        <button data-key="/">÷</button>
+                        <button data-key="sqrt(">√</button>
+                        <button data-key="sin(">sin</button>
+                        <button data-key="4">4</button>
+                        <button data-key="5">5</button>
+                        <button data-key="6">6</button>
+                        <button data-key="*">×</button>
+                        <button data-key="cos(">cos</button>
+                        <button data-key="tan(">tan</button>
+                        <button data-key="1">1</button>
+                        <button data-key="2">2</button>
+                        <button data-key="3">3</button>
+                        <button data-key="-">−</button>
+                        <button data-key="abs(">abs</button>
+                        <button data-key="log(">log</button>
+                        <button data-key="0">0</button>
+                        <button data-key=".">.</button>
+                        <button data-key="+">+</button>
+                        <button data-key="=">=</button>
+                        <button data-key="ln(">ln</button>
+                        <button data-key="e">e</button>
+                    </div>
+                </div>
             </div>
 
-        </div>
+            <div class="graphBottom">
+                <div class="bottomGrid">
+                    <div class="functionEditor">
+                        <label for="expr">선택된 표현식</label>
+                        <input id="expr" type="text" value="sin(x)" autocomplete="off" spellcheck="false">
+                        <div class="functionActions">
+                            <button id="draw" class="primary">그래프 적용</button>
+                            <button id="clearLayer">지우기</button>
+                            <button id="keypadToggle">⌨ 키패드</button>
+                        </div>
+                        <div id="message"></div>
+                    </div>
+
+                    <div class="analysisStrip">
+                        <div class="analysisCell"><div class="analysisLabel">정의역</div><div class="analysisValue" id="domain">—</div></div>
+                        <div class="analysisCell"><div class="analysisLabel">최솟값</div><div class="analysisValue" id="minY">—</div></div>
+                        <div class="analysisCell"><div class="analysisLabel">최댓값</div><div class="analysisValue" id="maxY">—</div></div>
+                        <div class="analysisCell"><div class="analysisLabel">평균</div><div class="analysisValue" id="avgY">—</div></div>
+                        <div class="analysisCell"><div class="analysisLabel">선택</div><div class="analysisValue" id="selectedLayerInfo">—</div></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- RIGHT RAIL -->
+        <aside class="workspaceRail">
+
+            <div class="workspaceRailTab">
+                <button id="musicRailButton" class="railBtn" title="Graph → Music">♫</button>
+                <button id="principleRailButton" class="railBtn" title="Cosmos 원리">?</button>
+            </div>
+
+            <div id="musicDrawer" class="railPanel">
+                <div class="railPanelHeader">
+                    <h3>Graph → Music</h3>
+                    <button id="musicRailClose" class="railClose">×</button>
+                </div>
+
+                <section class="card musicBox" id="music">
+                    <div class="musicHero">
+                        <div>
+                            <div class="musicHeroTitle">Graph → Music</div>
+                            <div class="musicHeroText">x축은 시간, y값은 음높이로 변환됩니다. 표시된 그래프는 동시에 하나의 음악으로 구성됩니다.</div>
+                        </div>
+                        <div class="musicMark">♫</div>
+                    </div>
+
+                    <div class="row">
+                        <div>
+                            <label>음악 길이</label>
+                            <select id="duration">
+                                <option value="10">10초</option><option value="20">20초</option><option value="30">30초</option>
+                                <option value="60">1분</option><option value="120">2분</option><option value="180">3분</option>
+                                <option value="240">4분</option><option value="300">5분</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>음계</label>
+                            <select id="scale">
+                                <option value="major">C Major</option>
+                                <option value="minor">A Minor</option>
+                                <option value="pentatonic">Pentatonic</option>
+                                <option value="chromatic">Chromatic</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <label>음악 스타일 / 장르</label>
+                        <select id="style">
+                            <optgroup label="Pop">
+                                <option value="pop">Pop</option><option value="kpop">K-pop</option><option value="jpop">J-pop</option>
+                                <option value="citypop">City Pop</option><option value="rnb">R&B</option>
+                            </optgroup>
+                            <optgroup label="Electronic">
+                                <option value="edm">EDM</option><option value="house">House</option><option value="techno">Techno</option>
+                                <option value="trance">Trance</option><option value="futurebass">Future Bass</option><option value="dnb">Drum & Bass</option>
+                                <option value="synthwave">Synthwave</option>
+                            </optgroup>
+                            <optgroup label="Hip-Hop">
+                                <option value="hiphop">Hip-Hop</option><option value="trap">Trap</option><option value="boombap">Boom Bap</option>
+                                <option value="phonk">Phonk</option><option value="funk">Funk</option>
+                            </optgroup>
+                            <optgroup label="Band & Jazz">
+                                <option value="rock">Rock</option><option value="jazz">Jazz</option><option value="blues">Blues</option>
+                            </optgroup>
+                            <optgroup label="Classical & Atmosphere">
+                                <option value="classic">Classic</option><option value="ambient">Ambient</option><option value="cinematic">Cinematic</option><option value="lofi">Lo-fi</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div class="controls">
+                        <button id="play" class="primary">▶ 그래프 전체로 음악 만들기</button>
+                        <button id="stop">■ 정지</button>
+                        <button id="downloadWav" class="success">↓ WAV 저장</button>
+                    </div>
+                    <div class="now" id="now">표시된 모든 그래프가 동시에 음악으로 변환됩니다.</div>
+                    <div class="progress"><div id="bar"></div></div>
+                </section>
+            </div>
+
+            <div id="principleDrawer" class="railPanel">
+                <div class="railPanelHeader">
+                    <h3>Cosmos Principle</h3>
+                    <button id="principleRailClose" class="railClose">×</button>
+                </div>
+                <div id="principle" class="principlePanel">
+                    <div class="principleFormula">x축 → 시간　│　y값 → 음높이</div>
+                    <b>Graph → Music</b><br>
+                    그래프의 전체 구간을 음악의 전체 재생 시간에 대응시킵니다.<br><br>
+                    그래프가 상승하면 음높이가 올라가고, 하강하면 음높이가 내려갑니다.<br><br>
+                    여러 표현식을 동시에 표시하면 각각의 그래프가 독립적인 선율로 변환되어 하나의 음악으로 합쳐집니다.
+                </div>
+            </div>
+
+        </aside>
 
     </div>
-
-</section>
-
-
-<!-- =========================================================
-     SIDE PANEL
-========================================================= -->
-
-<div>
-
-
-<!-- =========================================================
-     LIBRARY
-========================================================= -->
-
-<section class="card">
-
-    <h2>Library</h2>
-
-    <label>
-        현재 라이브러리
-    </label>
-
-    <select id="librarySelect"></select>
-
-
-    <div class="controls">
-
-        <button
-            id="newLibrary"
-            class="primary">
-            ＋ 새 Library
-        </button>
-
-        <button id="renameLibrary">
-            이름 변경
-        </button>
-
-        <button
-            id="deleteLibrary"
-            class="danger">
-            삭제
-        </button>
-
-    </div>
-
-
-    <div class="section">
-
-        <label>
-            현재 곡 이름
-        </label>
-
-        <input
-            id="songName"
-            type="text"
-            value="Untitled Cosmos"
-            autocomplete="off"
-        >
-
-        <div class="controls">
-
-            <button
-                id="newSong"
-                class="success">
-                ＋ 새 곡
-            </button>
-
-            <button
-                id="saveSong"
-                class="primary">
-                곡 저장
-            </button>
-
-        </div>
-
-    </div>
-
-
-    <div
-        class="libraryMeta"
-        id="libraryMeta">
-        0개 곡
-    </div>
-
-    <div
-        class="libraryList"
-        id="songList">
-    </div>
-
-</section>
-
-
-<!-- =========================================================
-     LAYERS
-========================================================= -->
-
-<section class="card musicBox" id="layers">
-
-    <div class="eyebrow">Layers</div>
-    <div class="panelTitle"><h2>Graph Layers</h2><span class="panelHint">여러 함수의 변화를 함께 구성</span></div>
-
-    <div
-        class="layerList"
-        id="layerList">
-    </div>
-
-
-    <div class="controls">
-
-        <button
-            id="addFunctionLayer"
-            class="primary">
-            ＋ 함수 레이어
-        </button>
-
-        <button id="addSketchLayer">
-            ＋ 손그림 레이어
-        </button>
-
-        <button
-            id="deleteLayer"
-            class="danger">
-            선택 레이어 삭제
-        </button>
-
-    </div>
-
-
-    <div
-        class="layerCount"
-        id="layerCount">
-        0개 레이어
-    </div>
-
-
-    <div
-        class="help"
-        style="margin-top:10px">
-
-        <b>선택</b>은 항상 한 레이어만 유지됩니다.<br>
-        👁 표시 상태와 선택 상태는 서로 독립적입니다.<br>
-        표시된 레이어만 음악에 포함됩니다.
-
-    </div>
-
-</section>
-
-
-<!-- =========================================================
-     MUSIC
-========================================================= -->
-
-<section class="card musicBox" id="music">
-
-    <div class="eyebrow">Music</div>
-    <div class="musicHero"><div><div class="musicHeroTitle">Graph → Music</div><div class="musicHeroText">그래프의 x축은 시간, y값은 음높이로 번역됩니다.</div></div><div class="musicMark">♫</div></div>
-
-
-    <div class="row">
-
-        <div>
-
-            <label>
-                음악 길이
-            </label>
-
-            <select id="duration">
-
-                <option value="10">10초</option>
-                <option value="20">20초</option>
-                <option value="30">30초</option>
-
-                <option value="60">1분</option>
-                <option value="120">2분</option>
-                <option value="180">3분</option>
-                <option value="240">4분</option>
-                <option value="300">5분</option>
-
-            </select>
-
-        </div>
-
-
-        <div>
-
-            <label>
-                음계
-            </label>
-
-            <select id="scale">
-
-                <option value="major">
-                    C Major
-                </option>
-
-                <option value="minor">
-                    A Minor
-                </option>
-
-                <option value="pentatonic">
-                    Pentatonic
-                </option>
-
-                <option value="chromatic">
-                    Chromatic
-                </option>
-
-            </select>
-
-        </div>
-
-    </div>
-
-
-    <div class="section">
-
-        <label>
-            음악 스타일 / 장르
-        </label>
-
-        <select id="style">
-
-            <optgroup label="Pop">
-
-                <option value="pop">
-                    Pop
-                </option>
-
-                <option value="kpop">
-                    K-pop
-                </option>
-
-                <option value="jpop">
-                    J-pop
-                </option>
-
-                <option value="citypop">
-                    City Pop
-                </option>
-
-                <option value="rnb">
-                    R&B
-                </option>
-
-            </optgroup>
-
-
-            <optgroup label="Electronic">
-
-                <option value="edm">
-                    EDM
-                </option>
-
-                <option value="house">
-                    House
-                </option>
-
-                <option value="techno">
-                    Techno
-                </option>
-
-                <option value="trance">
-                    Trance
-                </option>
-
-                <option value="futurebass">
-                    Future Bass
-                </option>
-
-                <option value="dnb">
-                    Drum & Bass
-                </option>
-
-                <option value="synthwave">
-                    Synthwave
-                </option>
-
-            </optgroup>
-
-
-            <optgroup label="Hip-Hop">
-
-                <option value="hiphop">
-                    Hip-Hop
-                </option>
-
-                <option value="trap">
-                    Trap
-                </option>
-
-                <option value="boombap">
-                    Boom Bap
-                </option>
-
-                <option value="phonk">
-                    Phonk
-                </option>
-
-                <option value="funk">
-                    Funk
-                </option>
-
-            </optgroup>
-
-
-            <optgroup label="Band & Jazz">
-
-                <option value="rock">
-                    Rock
-                </option>
-
-                <option value="jazz">
-                    Jazz
-                </option>
-
-                <option value="blues">
-                    Blues
-                </option>
-
-            </optgroup>
-
-
-            <optgroup label="Classical & Atmosphere">
-
-                <option value="classic">
-                    Classic
-                </option>
-
-                <option value="ambient">
-                    Ambient
-                </option>
-
-                <option value="cinematic">
-                    Cinematic
-                </option>
-
-                <option value="lofi">
-                    Lo-fi
-                </option>
-
-            </optgroup>
-
-        </select>
-
-    </div>
-
-
-    <div class="controls">
-
-        <button
-            id="play"
-            class="primary">
-            ▶ 그래프 전체로 음악 만들기
-        </button>
-
-        <button id="stop">
-            ■ 정지
-        </button>
-
-        <button
-            id="downloadWav"
-            class="success">
-            ↓ WAV 저장
-        </button>
-
-    </div>
-
-
-    <div
-        class="now"
-        id="now">
-
-        표시된 모든 그래프가 동시에 음악으로 변환됩니다.
-
-    </div>
-
-    <div class="progress">
-
-        <div id="bar"></div>
-
-    </div>
-
-</section>
-
-
-<!-- =========================================================
-     PRINCIPLE
-========================================================= -->
-
-<section class="card musicBox" id="principle">
-
-    <div class="eyebrow">Principle</div>
-    <div class="panelTitle"><h2>Cosmos 변환 원리</h2><span class="panelHint">Mathematics → Sound</span></div>
-
-    <div class="help">
-
-        <b>각 레이어</b> = 하나의 독립적인 음악 선율<br><br>
-
-        x축 → 음악의 시간<br>
-        y축 → 음높이<br>
-        그래프 상승 → 높은 음<br>
-        그래프 하강 → 낮은 음<br>
-        그래프의 전체 길이 → 음악 전체 길이<br><br>
-
-        여러 그래프를 겹치면
-        서로 다른 함수의 변화가
-        여러 개의 독립적인 선율로 동시에 표현됩니다.
-
-    </div>
-
-</section>
-
-
-</div>
-
 </div>
 
 <div class="brandFooter">
     <span>Cosmos · Mathematics in Harmony</span>
-    <span>구조를 발견하고, 다른 표현으로 경험합니다.</span>
+    <span>수학적 구조를 발견하고, 시각과 소리의 다른 표현으로 경험합니다.</span>
 </div>
 
 </div>
-
-
 <script>
 
 (function(){
 
 "use strict";
 
+
+/* 상단 페이지 내비게이션은 작업공간 툴바/레일 구조로 대체되었습니다. */
 
 /* =========================================================
    기본 DOM
@@ -4430,116 +4619,6 @@ function changeView(
 }
 
 
-document
-.getElementById(
-    "zoomIn"
-)
-.addEventListener(
-    "click",
-    ()=>{
-        changeView(.75);
-    }
-);
-
-
-document
-.getElementById(
-    "zoomOut"
-)
-.addEventListener(
-    "click",
-    ()=>{
-        changeView(1.35);
-    }
-);
-
-
-document
-.getElementById(
-    "left"
-)
-.addEventListener(
-    "click",
-    ()=>{
-        changeView(
-            1,
-            -.12,
-            0
-        );
-    }
-);
-
-
-document
-.getElementById(
-    "right"
-)
-.addEventListener(
-    "click",
-    ()=>{
-        changeView(
-            1,
-            .12,
-            0
-        );
-    }
-);
-
-
-document
-.getElementById(
-    "up"
-)
-.addEventListener(
-    "click",
-    ()=>{
-        changeView(
-            1,
-            0,
-            .12
-        );
-    }
-);
-
-
-document
-.getElementById(
-    "down"
-)
-.addEventListener(
-    "click",
-    ()=>{
-        changeView(
-            1,
-            0,
-            -.12
-        );
-    }
-);
-
-
-document
-.getElementById(
-    "resetView"
-)
-.addEventListener(
-    "click",
-    ()=>{
-
-        xmin=-10;
-
-        xmax=10;
-
-        ymin=-6;
-
-        ymax=6;
-
-        draw();
-
-    }
-);
-
-
 /* =========================================================
    화면 드래그
 ========================================================= */
@@ -4825,7 +4904,9 @@ function draw(){
     ctx.lineWidth=1;
 
     ctx.strokeStyle =
-        "#ececf1";
+        document.getElementById("gridToggle")?.checked
+        ? "#ececf1"
+        : "transparent";
 
     ctx.fillStyle =
         "#9a9ea8";
@@ -4923,7 +5004,9 @@ function draw(){
     /* axes */
 
     ctx.strokeStyle =
-        "#c8cad2";
+        document.getElementById("axisToggle")?.checked
+        ? "#c8cad2"
+        : "transparent";
 
     ctx.lineWidth =
         1.4;
@@ -8462,6 +8545,270 @@ document
 );
 
 
+
+/* =========================================================
+   WORKSPACE UI
+========================================================= */
+
+const addMenuToggle =
+    document.getElementById("addMenuToggle");
+
+const addMenu =
+    document.getElementById("addMenu");
+
+addMenuToggle.addEventListener(
+    "click",
+    e=>{
+        e.stopPropagation();
+        addMenu.classList.toggle("open");
+    }
+);
+
+document.addEventListener(
+    "click",
+    e=>{
+        if(
+            !e.target.closest(".addMenuWrap")
+        ){
+            addMenu.classList.remove("open");
+        }
+    }
+);
+
+document
+.querySelectorAll("#addMenu button")
+.forEach(
+    button=>{
+        button.addEventListener(
+            "click",
+            ()=>{
+                addMenu.classList.remove("open");
+            }
+        );
+    }
+);
+
+
+/* ---------- rail ---------- */
+
+function toggleRail(
+    id,
+    open
+){
+    document
+    .querySelectorAll(".railPanel")
+    .forEach(
+        panel=>{
+            panel.classList.toggle(
+                "open",
+                panel.id===id
+                    ? open
+                    : false
+            );
+        }
+    );
+}
+
+document
+.getElementById("musicRailOpen")
+.addEventListener(
+    "click",
+    ()=>toggleRail("musicDrawer",true)
+);
+
+document
+.getElementById("musicRailButton")
+.addEventListener(
+    "click",
+    ()=>toggleRail("musicDrawer",true)
+);
+
+document
+.getElementById("musicRailClose")
+.addEventListener(
+    "click",
+    ()=>toggleRail("musicDrawer",false)
+);
+
+document
+.getElementById("principleRailOpen")
+.addEventListener(
+    "click",
+    ()=>toggleRail("principleDrawer",true)
+);
+
+document
+.getElementById("principleRailButton")
+.addEventListener(
+    "click",
+    ()=>toggleRail("principleDrawer",true)
+);
+
+document
+.getElementById("principleRailClose")
+.addEventListener(
+    "click",
+    ()=>toggleRail("principleDrawer",false)
+);
+
+
+/* ---------- secondary save ---------- */
+
+document
+.getElementById("saveSongSecondary")
+.addEventListener(
+    "click",
+    ()=>{
+        document
+        .getElementById("saveSong")
+        .click();
+    }
+);
+
+
+/* ---------- graph settings ---------- */
+
+const settingsToggle =
+    document.getElementById("settingsToggle");
+
+const settingsPanel =
+    document.getElementById("settingsPanel");
+
+settingsToggle.addEventListener(
+    "click",
+    e=>{
+        e.stopPropagation();
+        settingsPanel.classList.toggle("open");
+    }
+);
+
+document.addEventListener(
+    "click",
+    e=>{
+        if(
+            !e.target.closest(".canvasSettings")
+        ){
+            settingsPanel.classList.remove("open");
+        }
+    }
+);
+
+function syncViewInputs(){
+    document.getElementById("xminInput").value = fmt(xmin);
+    document.getElementById("xmaxInput").value = fmt(xmax);
+    document.getElementById("yminInput").value = fmt(ymin);
+    document.getElementById("ymaxInput").value = fmt(ymax);
+}
+
+function applyViewInputs(){
+    const a = Number(document.getElementById("xminInput").value);
+    const b = Number(document.getElementById("xmaxInput").value);
+    const c = Number(document.getElementById("yminInput").value);
+    const d = Number(document.getElementById("ymaxInput").value);
+
+    if(
+        !Number.isFinite(a) ||
+        !Number.isFinite(b) ||
+        !Number.isFinite(c) ||
+        !Number.isFinite(d) ||
+        a>=b ||
+        c>=d
+    ){
+        msg.textContent = "축 범위를 올바르게 입력하세요.";
+        return;
+    }
+
+    xmin=a;
+    xmax=b;
+    ymin=c;
+    ymax=d;
+    draw();
+}
+
+["xminInput","xmaxInput","yminInput","ymaxInput"]
+.forEach(
+    id=>{
+        document
+        .getElementById(id)
+        .addEventListener(
+            "change",
+            applyViewInputs
+        );
+    }
+);
+
+document
+.getElementById("resetView")
+.addEventListener(
+    "click",
+    ()=>{
+        xmin=-10;
+        xmax=10;
+        ymin=-6;
+        ymax=6;
+        syncViewInputs();
+        draw();
+    }
+);
+
+document
+.getElementById("gridToggle")
+.addEventListener(
+    "change",
+    draw
+);
+
+document
+.getElementById("axisToggle")
+.addEventListener(
+    "change",
+    draw
+);
+
+
+/* ---------- keypad ---------- */
+
+document
+.getElementById("keypadToggle")
+.addEventListener(
+    "click",
+    ()=>{
+        document
+        .getElementById("keypad")
+        .classList.toggle("open");
+    }
+);
+
+document
+.querySelectorAll("#keypad [data-key]")
+.forEach(
+    button=>{
+        button.addEventListener(
+            "click",
+            ()=>{
+                const key=button.dataset.key;
+                const start=expr.selectionStart ?? expr.value.length;
+                const end=expr.selectionEnd ?? expr.value.length;
+
+                expr.value =
+                    expr.value.slice(0,start) +
+                    key +
+                    expr.value.slice(end);
+
+                expr.focus();
+
+                const pos=start+key.length;
+                expr.setSelectionRange(pos,pos);
+            }
+        );
+    }
+);
+
+
+/* ---------- initial workspace values ---------- */
+
+syncViewInputs();
+
 /* =========================================================
    리사이즈
 ========================================================= */
@@ -8568,6 +8915,6 @@ st.markdown(
 
 components.html(
     HTML,
-    height=2450,
+    height=2300,
     scrolling=True
 )
