@@ -3,7 +3,7 @@ import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="Cosmos — Graph to Music",
-    page_icon="∿",
+    page_icon="✿",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -15,293 +15,422 @@ HTML = r"""
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
 
-*{
-    box-sizing:border-box;
+<style>
+:root{
+    --bg:#f6f7fb;
+    --surface:#ffffff;
+    --surface-soft:#fbfbfd;
+    --text:#17181d;
+    --muted:#6f7480;
+    --muted-2:#9aa0ab;
+    --line:#e6e7ec;
+    --line-strong:#d9dbe3;
+    --accent:#7a5af8;
+    --accent-dark:#6242e5;
+    --accent-soft:#f0edff;
+    --danger:#b4233c;
+    --danger-soft:#fff1f3;
+    --success:#167c62;
+    --success-soft:#eaf8f3;
+    --shadow:0 12px 36px rgba(25, 25, 40, .06);
+    --shadow-sm:0 3px 14px rgba(25, 25, 40, .05);
 }
+
+*{box-sizing:border-box;}
+
+html{scroll-behavior:smooth;}
 
 body{
     margin:0;
-    font-family:
-        Inter,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",
+        "Noto Sans KR",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
 
-    background:#0b1020;
-    color:#edf2ff;
+button,input,select{font:inherit;}
+
+button{
+    border:1px solid var(--line-strong);
+    background:#fff;
+    color:var(--text);
+    border-radius:9px;
+    padding:9px 12px;
+    min-height:38px;
+    cursor:pointer;
+    transition:
+        background .16s ease,
+        border-color .16s ease,
+        color .16s ease,
+        transform .16s ease,
+        box-shadow .16s ease;
+}
+
+button:hover{
+    background:#f8f8fb;
+    border-color:#c9cbd5;
+}
+
+button:active{transform:translateY(1px);}
+
+button.active,
+button.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+    font-weight:700;
+    box-shadow:0 5px 14px rgba(122,90,248,.18);
+}
+
+button.active:hover,
+button.primary:hover{
+    background:var(--accent-dark);
+    border-color:var(--accent-dark);
+}
+
+button.danger{
+    background:var(--danger-soft);
+    border-color:#f2c7cf;
+    color:var(--danger);
+}
+
+button.danger:hover{
+    background:#ffe7eb;
+    border-color:#e9aeb9;
+}
+
+button.success{
+    background:var(--success-soft);
+    border-color:#b9e5d7;
+    color:var(--success);
+}
+
+button.success:hover{
+    background:#def3eb;
+}
+
+button:disabled{
+    opacity:.45;
+    cursor:not-allowed;
 }
 
 #cosmos{
-    max-width:1250px;
+    max-width:1380px;
     margin:0 auto;
-    padding:24px;
+    padding:30px 30px 60px;
 }
+
+/* ---------- brand ---------- */
 
 .header{
     display:flex;
     justify-content:space-between;
-    align-items:end;
-    gap:20px;
-    margin-bottom:18px;
+    align-items:center;
+    gap:24px;
+    margin-bottom:20px;
 }
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    min-width:0;
+}
+
+.brandMark{
+    width:48px;
+    height:48px;
+    border:1px solid #ddd7ff;
+    background:#fff;
+    border-radius:14px;
+    display:grid;
+    place-items:center;
+    box-shadow:var(--shadow-sm);
+    flex:none;
+}
+
+.brandMark svg{
+    width:34px;
+    height:34px;
+    display:block;
+}
+
+.brandText{min-width:0;}
 
 .logo{
-    font-size:34px;
+    font-size:25px;
+    line-height:1;
     font-weight:800;
-    letter-spacing:-1px;
+    letter-spacing:-.8px;
 }
 
-.logo span{
-    color:#8da2ff;
-}
+.logo span{color:var(--accent);}
 
 .subtitle{
-    color:#9da9c7;
-    font-size:14px;
-    margin-top:5px;
+    color:var(--muted);
+    font-size:13px;
+    margin-top:7px;
+    line-height:1.5;
+}
+
+.brandMeaning{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    margin-top:6px;
+    color:#8b8797;
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+}
+
+.brandMeaning .dot{
+    width:4px;
+    height:4px;
+    border-radius:50%;
+    background:#b7adf7;
 }
 
 .badge{
-    display:inline-block;
-    padding:5px 9px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:7px 10px;
+    border:1px solid var(--line);
     border-radius:999px;
-    background:#1b2947;
-    color:#b9c5ff;
-    font-size:11px;
+    background:#fff;
+    color:#6e687f;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.04em;
 }
+
+.badge::before{
+    content:"";
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:#72c6aa;
+}
+
+/* ---------- navigation ---------- */
+
+.topNav{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    padding:5px;
+    margin-bottom:18px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.84);
+    border-radius:12px;
+    box-shadow:var(--shadow-sm);
+}
+
+.navItem{
+    color:#707582;
+    text-decoration:none;
+    font-size:12px;
+    font-weight:700;
+    padding:8px 12px;
+    border-radius:8px;
+}
+
+.navItem:hover{
+    background:#f3f2f8;
+    color:var(--text);
+}
+
+.navItem.primaryNav{
+    background:var(--accent-soft);
+    color:#6548db;
+}
+
+/* ---------- layout ---------- */
 
 .grid{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 380px;
-    gap:16px;
+    grid-template-columns:minmax(0,1fr) 390px;
+    gap:18px;
+    align-items:start;
 }
 
 .card{
-    background:#121a2e;
-    border:1px solid #263354;
-    border-radius:18px;
-    padding:16px;
-    box-shadow:0 8px 30px rgba(0,0,0,.18);
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px;
+    box-shadow:var(--shadow);
 }
 
+.card + .card{margin-top:14px;}
+
 .card h2{
-    font-size:16px;
+    font-size:14px;
+    line-height:1.3;
     margin:0 0 12px;
+    letter-spacing:-.2px;
 }
+
+.section{
+    margin-top:18px;
+    padding-top:18px;
+    border-top:1px solid #f0f0f3;
+}
+
+.section h2{
+    font-size:12px;
+    color:#555a66;
+    margin-bottom:9px;
+}
+
+.eyebrow{
+    color:var(--accent);
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    margin-bottom:6px;
+}
+
+.panelTitle{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+}
+
+.panelTitle h2{margin:0;}
+
+.panelHint{
+    color:var(--muted-2);
+    font-size:10px;
+}
+
+/* ---------- graph ---------- */
 
 .graphWrap{
     position:relative;
+    overflow:hidden;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:#fcfcfe;
 }
 
 canvas{
     width:100%;
-    height:560px;
-    background:#080d19;
-    border-radius:13px;
+    height:590px;
+    background:#fcfcfe;
+    border-radius:12px;
     display:block;
     touch-action:none;
 }
 
+.graphToolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 11px;
+    border:1px solid var(--line);
+    border-top:0;
+    border-radius:0 0 12px 12px;
+    background:#fff;
+}
+
+.graphToolbarLabel{
+    color:var(--muted);
+    font-size:10px;
+}
+
 .controls{
     display:flex;
-    gap:8px;
+    gap:7px;
     flex-wrap:wrap;
     margin-top:10px;
 }
 
-button,
-input,
-select{
-    font:inherit;
+.graphControls button{
+    min-height:34px;
+    padding:7px 10px;
+    font-size:11px;
 }
 
-button{
-    border:1px solid #344365;
-    background:#18233d;
-    color:#eef2ff;
-    border-radius:10px;
-    padding:9px 12px;
-    cursor:pointer;
-    min-height:40px;
-}
-
-button:hover{
-    background:#202e4d;
-}
-
-button.active{
-    background:#6478e8;
-    border-color:#6478e8;
-    color:white;
-}
-
-button.primary{
-    background:#6478e8;
-    border-color:#6478e8;
-    font-weight:700;
-}
-
-button.danger{
-    background:#321c27;
-    border-color:#633344;
-}
-
-button.success{
-    background:#1b463a;
-    border-color:#2e705c;
-}
-
-button:disabled{
-    opacity:.5;
-    cursor:not-allowed;
-}
-
-input[type=text],
-input[type=search]{
-    width:100%;
-    padding:11px 12px;
-    border-radius:10px;
-    border:1px solid #33436c;
-    background:#0b1122;
-    color:#fff;
-    outline:none;
-}
-
-input[type=text]:focus,
-input[type=search]:focus{
-    border-color:#8da2ff;
-}
-
-select{
-    width:100%;
-    padding:10px;
-    border-radius:9px;
-    border:1px solid #33436c;
-    background:#0b1122;
-    color:#fff;
-}
-
-label{
-    display:block;
-    font-size:12px;
-    color:#9da9c7;
-    margin-bottom:6px;
-}
-
-.section{
-    margin-top:16px;
-}
+/* ---------- modes ---------- */
 
 .modeBar{
     display:grid;
     grid-template-columns:repeat(3,1fr);
-    gap:7px;
+    gap:6px;
 }
 
 .modeBar button{
     width:100%;
-}
-
-.layerList{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-}
-
-.layerItem{
-    border:1px solid #2b3858;
-    border-radius:12px;
-    padding:10px;
-    background:#0e1629;
-    cursor:pointer;
-}
-
-.layerItem.selected{
-    border-color:#7184ee;
-    box-shadow:
-        0 0 0 1px #7184ee inset,
-        0 0 14px rgba(113,132,238,.12);
-}
-
-.layerTop{
-    display:flex;
-    align-items:center;
-    gap:8px;
-}
-
-.layerColor{
-    width:11px;
-    height:11px;
-    border-radius:50%;
-    flex:none;
-}
-
-.layerNameInput{
-    flex:1;
-    min-width:0;
-    padding:5px 7px !important;
-    min-height:30px;
-    font-size:13px;
-    font-weight:700;
-}
-
-.layerType{
-    font-size:10px;
-    color:#7e8baa;
-    flex:none;
-}
-
-.layerActions{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-top:8px;
-}
-
-.layerActions button{
-    min-height:30px;
-    padding:5px 8px;
     font-size:11px;
-}
-
-.visibility{
-    font-size:12px;
-    color:#aeb9d5;
-    flex:none;
-}
-
-.volumeBox{
-    flex:1;
-    min-width:0;
-}
-
-.volumeHeader{
-    display:flex;
-    justify-content:space-between;
-    font-size:10px;
-    color:#7e8baa;
-    margin-bottom:4px;
-}
-
-.layerVolume{
-    width:100%;
-    accent-color:#8496ff;
-}
-
-.small{
-    font-size:11px;
-    color:#7886a8;
-    line-height:1.55;
+    min-height:37px;
 }
 
 .help{
-    font-size:12px;
-    color:#8996b7;
-    line-height:1.6;
+    font-size:11px;
+    color:#777d89;
+    line-height:1.7;
+}
+
+.help b{color:#505560;}
+
+.editNotice{
+    display:none;
+    margin-top:8px;
+    padding:10px 11px;
+    border-radius:9px;
+    background:var(--accent-soft);
+    border:1px solid #ddd6ff;
+    color:#6047c9;
+    font-size:10px;
+    line-height:1.55;
+}
+
+.editNotice.active{display:block;}
+
+/* ---------- inputs ---------- */
+
+input[type=text],
+input[type=search]{
+    width:100%;
+    padding:10px 11px;
+    border-radius:9px;
+    border:1px solid var(--line-strong);
+    background:#fff;
+    color:var(--text);
+    outline:none;
+    transition:border-color .16s ease,box-shadow .16s ease;
+}
+
+input[type=text]:focus,
+input[type=search]:focus,
+select:focus{
+    border-color:#b5a6ff;
+    box-shadow:0 0 0 3px rgba(122,90,248,.09);
+}
+
+select{
+    width:100%;
+    padding:10px 11px;
+    border-radius:9px;
+    border:1px solid var(--line-strong);
+    background:#fff;
+    color:var(--text);
+    outline:none;
+}
+
+label{
+    display:block;
+    font-size:10px;
+    font-weight:700;
+    color:#777d89;
+    margin-bottom:6px;
 }
 
 .row{
@@ -316,58 +445,41 @@ label{
     gap:8px;
 }
 
+/* ---------- info ---------- */
+
 .info{
-    padding:10px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+    padding:9px;
     border-radius:10px;
-    background:#0d1527;
-    border:1px solid #253453;
-    font-size:12px;
-    color:#aeb9d5;
-    line-height:1.7;
+    background:#fafafd;
+    border:1px solid var(--line);
+    font-size:11px;
+    color:#707682;
+    line-height:1.6;
+}
+
+.info > div{
+    padding:7px 8px;
+    border-radius:7px;
+    background:#fff;
+    border:1px solid #f0f0f3;
 }
 
 #message{
-    min-height:20px;
-    margin-top:8px;
-    color:#ffb4b4;
-    font-size:12px;
-}
-
-.musicBox{
-    margin-top:16px;
-}
-
-.now{
-    font-size:13px;
-    color:#aeb9d5;
-    min-height:22px;
-    margin:9px 0;
-}
-
-.progress{
-    height:7px;
-    background:#202b46;
-    border-radius:99px;
-    overflow:hidden;
-}
-
-#bar{
-    height:100%;
-    width:0;
-    background:#8496ff;
-    transition:width .05s linear;
-}
-
-.layerCount{
+    min-height:18px;
+    margin-top:7px;
+    color:#b4233c;
     font-size:11px;
-    color:#8996b7;
-    margin-top:6px;
 }
+
+/* ---------- library ---------- */
 
 .libraryList{
     display:flex;
     flex-direction:column;
-    gap:7px;
+    gap:6px;
     margin-top:10px;
 }
 
@@ -376,9 +488,9 @@ label{
     align-items:center;
     gap:8px;
     padding:9px;
-    border:1px solid #283653;
-    border-radius:10px;
-    background:#0e1629;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:#fff;
 }
 
 .songInfo{
@@ -387,7 +499,7 @@ label{
 }
 
 .songTitle{
-    font-size:12px;
+    font-size:11px;
     font-weight:700;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -395,91 +507,251 @@ label{
 }
 
 .songDate{
-    font-size:10px;
-    color:#73809e;
+    font-size:9px;
+    color:#9aa0ab;
     margin-top:3px;
 }
 
 .songActions{
     display:flex;
-    gap:5px;
+    gap:4px;
     flex:none;
 }
 
 .songActions button{
-    min-height:28px;
-    padding:5px 7px;
-    font-size:10px;
+    min-height:27px;
+    padding:4px 7px;
+    font-size:9px;
 }
 
 .libraryMeta{
-    font-size:11px;
-    color:#8290b0;
+    font-size:10px;
+    color:#8d929d;
     margin-top:7px;
 }
 
-.notice{
+/* ---------- layers ---------- */
+
+.layerList{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.layerItem{
+    border:1px solid var(--line);
+    border-radius:10px;
     padding:9px;
-    border-radius:9px;
-    background:#111d35;
-    border:1px solid #29395d;
-    color:#91a0c5;
+    background:#fff;
+    cursor:default;
+    transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;
+}
+
+.layerItem:hover{background:#fcfcfe;}
+
+.layerItem.selected{
+    border-color:#bdb0ff;
+    background:#fbfaff;
+    box-shadow:0 0 0 2px rgba(122,90,248,.08);
+}
+
+.layerTop{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+}
+
+.layerColor{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    flex:none;
+}
+
+.layerNameInput{
+    flex:1;
+    min-width:0;
+    padding:5px 6px !important;
+    min-height:28px;
     font-size:11px;
+    font-weight:700;
+    border-color:transparent !important;
+    background:transparent !important;
+    box-shadow:none !important;
+}
+
+.layerNameInput:focus{
+    border-color:var(--line-strong) !important;
+    background:#fff !important;
+}
+
+.layerType{
+    font-size:8px;
+    color:#a0a5ae;
+    font-weight:800;
+    letter-spacing:.06em;
+    flex:none;
+}
+
+.layerActions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:7px;
+}
+
+.layerActions button{
+    min-height:28px;
+    padding:4px 7px;
+    font-size:9px;
+}
+
+.visibility{
+    font-size:9px;
+    color:#777d89;
+    flex:none;
+}
+
+.volumeBox{
+    flex:1;
+    min-width:0;
+}
+
+.volumeHeader{
+    display:flex;
+    justify-content:space-between;
+    font-size:9px;
+    color:#999ea8;
+    margin-bottom:3px;
+}
+
+.layerVolume{
+    width:100%;
+    accent-color:var(--accent);
+}
+
+/* ---------- music ---------- */
+
+.musicBox{
+    margin-top:14px;
+}
+
+.musicHero{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    padding:12px;
+    margin-bottom:12px;
+    border:1px solid #e5defe;
+    border-radius:11px;
+    background:linear-gradient(180deg,#fbfaff,#fff);
+}
+
+.musicHeroTitle{
+    font-size:12px;
+    font-weight:800;
+    color:#302b3b;
+}
+
+.musicHeroText{
+    margin-top:3px;
+    color:#888391;
+    font-size:10px;
     line-height:1.5;
+}
+
+.musicMark{
+    width:30px;
+    height:30px;
+    border-radius:9px;
+    display:grid;
+    place-items:center;
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-size:14px;
+    flex:none;
+}
+
+.now{
+    font-size:11px;
+    color:#777d89;
+    min-height:20px;
+    margin:9px 0;
+}
+
+.progress{
+    height:6px;
+    background:#eeeef3;
+    border-radius:99px;
+    overflow:hidden;
+}
+
+#bar{
+    height:100%;
+    width:0;
+    background:var(--accent);
+    transition:width .05s linear;
+}
+
+.layerCount{
+    font-size:10px;
+    color:#8d929d;
+    margin-top:6px;
+}
+
+/* ---------- principle ---------- */
+
+.notice{
+    padding:10px;
+    border-radius:9px;
+    background:#fafafd;
+    border:1px solid var(--line);
+    color:#777d89;
+    font-size:10px;
+    line-height:1.6;
 }
 
 hr{
     border:0;
-    border-top:1px solid #24314e;
-    margin:15px 0;
+    border-top:1px solid #eeeeF2;
+    margin:14px 0;
 }
 
-.editNotice{
-    display:none;
-    margin-top:8px;
-    padding:9px;
-    border-radius:10px;
-    background:#1d2441;
-    border:1px solid #44528a;
-    color:#b9c5ff;
-    font-size:11px;
-    line-height:1.55;
+/* ---------- footer ---------- */
+
+.brandFooter{
+    margin-top:18px;
+    padding:13px 2px 0;
+    border-top:1px solid var(--line);
+    color:#9a9ea8;
+    font-size:10px;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
 }
 
-.editNotice.active{
-    display:block;
-}
+/* ---------- responsive ---------- */
 
 @media(max-width:950px){
-
-    .grid{
-        grid-template-columns:1fr;
-    }
-
-    canvas{
-        height:460px;
-    }
-
+    #cosmos{padding:22px 18px 45px;}
+    .grid{grid-template-columns:1fr;}
+    canvas{height:500px;}
 }
 
 @media(max-width:600px){
-
-    #cosmos{
-        padding:10px;
-    }
-
-    canvas{
-        height:390px;
-    }
-
-    .row,
-    .row3{
-        grid-template-columns:1fr;
-    }
-
+    #cosmos{padding:14px 10px 35px;}
+    .header{align-items:flex-start;}
+    .badge{display:none;}
+    .topNav{overflow-x:auto;}
+    .navItem{white-space:nowrap;}
+    canvas{height:390px;}
+    .row,.row3,.info{grid-template-columns:1fr;}
+    .brandFooter{flex-direction:column;}
 }
-
 </style>
+
 </head>
 
 <body>
@@ -488,25 +760,56 @@ hr{
 
 <div class="header">
 
-    <div>
+    <div class="brand">
 
-        <div class="logo">
-            Cos<span>mos</span>
+        <div class="brandMark" aria-label="Cosmos flower logo">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+                <g fill="#8b6cf6">
+                    <ellipse cx="24" cy="10.5" rx="5.2" ry="10"/>
+                    <ellipse cx="35.5" cy="16" rx="5.2" ry="10" transform="rotate(45 35.5 16)"/>
+                    <ellipse cx="37.5" cy="29" rx="5.2" ry="10" transform="rotate(90 37.5 29)"/>
+                    <ellipse cx="29.5" cy="37" rx="5.2" ry="10" transform="rotate(135 29.5 37)"/>
+                    <ellipse cx="18.5" cy="37" rx="5.2" ry="10" transform="rotate(225 18.5 37)"/>
+                    <ellipse cx="10.5" cy="29" rx="5.2" ry="10" transform="rotate(270 10.5 29)"/>
+                    <ellipse cx="12.5" cy="16" rx="5.2" ry="10" transform="rotate(315 12.5 16)"/>
+                </g>
+                <circle cx="24" cy="24" r="5.2" fill="#f5c76a"/>
+                <circle cx="24" cy="24" r="2.2" fill="#8b6cf6"/>
+            </svg>
         </div>
 
-        <div class="subtitle">
-            Graph → Music · 여러 그래프를 겹쳐 하나의 음악으로 번역하는 수학 음악 실험실
+        <div class="brandText">
+            <div class="logo">
+                Cos<span>mos</span>
+            </div>
+
+            <div class="subtitle">
+                Graph → Music · 함수의 구조를 소리와 시각으로 탐구하는 수학 실험실
+            </div>
+
+            <div class="brandMeaning">
+                <span>ORDER</span>
+                <span class="dot"></span>
+                <span>HARMONY</span>
+                <span class="dot"></span>
+                <span>EXPRESSION</span>
+            </div>
         </div>
 
     </div>
 
     <div>
-        <span class="badge">
-            Cosmos v3.0
-        </span>
+        <span class="badge">Cosmos v3.1 · Mathematics in Harmony</span>
     </div>
 
 </div>
+
+<nav class="topNav" aria-label="Cosmos navigation">
+    <a class="navItem primaryNav" href="#explore">Explore</a>
+    <a class="navItem" href="#layers">Layers</a>
+    <a class="navItem" href="#music">Music</a>
+    <a class="navItem" href="#principle">Principle</a>
+</nav>
 
 
 <div class="grid">
@@ -516,9 +819,10 @@ hr{
      GRAPH PANEL
 ========================================================= -->
 
-<section class="card">
+<section class="card" id="explore">
 
-    <h2>① Graph Canvas</h2>
+    <div class="eyebrow">Explore</div>
+    <div class="panelTitle"><h2>Graph Canvas</h2><span class="panelHint">함수의 구조를 시각적으로 탐구</span></div>
 
     <div class="graphWrap">
 
@@ -778,9 +1082,10 @@ hr{
      LAYERS
 ========================================================= -->
 
-<section class="card musicBox">
+<section class="card musicBox" id="layers">
 
-    <h2>Graph Layers</h2>
+    <div class="eyebrow">Layers</div>
+    <div class="panelTitle"><h2>Graph Layers</h2><span class="panelHint">여러 함수의 변화를 함께 구성</span></div>
 
     <div
         class="layerList"
@@ -833,9 +1138,10 @@ hr{
      MUSIC
 ========================================================= -->
 
-<section class="card musicBox">
+<section class="card musicBox" id="music">
 
-    <h2>Graph → Music</h2>
+    <div class="eyebrow">Music</div>
+    <div class="musicHero"><div><div class="musicHeroTitle">Graph → Music</div><div class="musicHeroText">그래프의 x축은 시간, y값은 음높이로 번역됩니다.</div></div><div class="musicMark">♫</div></div>
 
 
     <div class="row">
@@ -1069,9 +1375,10 @@ hr{
      PRINCIPLE
 ========================================================= -->
 
-<section class="card musicBox">
+<section class="card musicBox" id="principle">
 
-    <h2>Cosmos 변환 원리</h2>
+    <div class="eyebrow">Principle</div>
+    <div class="panelTitle"><h2>Cosmos 변환 원리</h2><span class="panelHint">Mathematics → Sound</span></div>
 
     <div class="help">
 
@@ -1094,6 +1401,11 @@ hr{
 
 </div>
 
+</div>
+
+<div class="brandFooter">
+    <span>Cosmos · Mathematics in Harmony</span>
+    <span>구조를 발견하고, 다른 표현으로 경험합니다.</span>
 </div>
 
 </div>
@@ -1250,7 +1562,7 @@ let editStartAngle = 0;
 ========================================================= */
 
 const LIBRARY_KEY =
-    "cosmos_v3_libraries";
+    "cosmos_v31_libraries";
 
 let libraries = [];
 
@@ -2205,10 +2517,29 @@ function renderLayers(){
            부모로 전파되지 않도록 막는다.
         */
 
+        top.addEventListener(
+            "click",
+            e=>{
+                if(
+                    e.target === nameInput
+                ){
+                    return;
+                }
+                selectLayer(layer.id);
+            }
+        );
+
+
         item.addEventListener(
             "click",
-            ()=>{
-                selectLayer(layer.id);
+            e=>{
+                if(
+                    e.target === visibility ||
+                    e.target === volume ||
+                    actions.contains(e.target)
+                ){
+                    e.stopPropagation();
+                }
             }
         );
 
@@ -2216,18 +2547,12 @@ function renderLayers(){
         item.addEventListener(
             "pointerdown",
             e=>{
-
                 if(
-                    e.target ===
-                    nameInput ||
-                    e.target ===
-                    visibility ||
-                    e.target ===
-                    volume
+                    actions.contains(e.target) ||
+                    e.target === nameInput
                 ){
                     e.stopPropagation();
                 }
-
             }
         );
 
@@ -4472,7 +4797,7 @@ function draw(){
 
 
     ctx.fillStyle =
-        "#080d19";
+        "#fcfcfe";
 
 
     ctx.fillRect(
@@ -4500,10 +4825,10 @@ function draw(){
     ctx.lineWidth=1;
 
     ctx.strokeStyle =
-        "#18243d";
+        "#ececf1";
 
     ctx.fillStyle =
-        "#64718e";
+        "#9a9ea8";
 
     ctx.font =
         "11px system-ui";
@@ -4598,7 +4923,7 @@ function draw(){
     /* axes */
 
     ctx.strokeStyle =
-        "#596783";
+        "#c8cad2";
 
     ctx.lineWidth =
         1.4;
@@ -4920,7 +5245,7 @@ function draw(){
 
 
                 ctx.strokeStyle =
-                    "#b9c5ff";
+                    "#b7a9ff";
 
                 ctx.lineWidth=1.5;
 
@@ -4989,13 +5314,13 @@ function draw(){
 
                         ctx.fillStyle =
                             h.type==="rotate"
-                            ? "#8da2ff"
+                            ? "#7a5af8"
                             : "#ffffff";
 
                         ctx.fill();
 
                         ctx.strokeStyle =
-                            "#5369bd";
+                            "#9c8bf0";
 
                         ctx.stroke();
 
@@ -8230,7 +8555,7 @@ st.markdown(
     """
     <style>
     [data-testid="stAppViewContainer"] {
-        background:#0b1020;
+        background:#f6f7fb;
     }
 
     [data-testid="stHeader"] {
