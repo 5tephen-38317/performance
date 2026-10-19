@@ -116,9 +116,11 @@ button:disabled{
 }
 
 #cosmos{
-    max-width:1380px;
-    margin:0 auto;
-    padding:30px 30px 60px;
+    width:100%;
+    max-width:none;
+    margin:0;
+    padding:10px 12px 12px;
+    box-sizing:border-box;
 }
 
 /* ---------- brand ---------- */
@@ -750,18 +752,23 @@ hr{
 /* ---------- responsive ---------- */
 
 @media(max-width:950px){
-    #cosmos{padding:22px 18px 45px;}
+    #cosmos{padding:8px;}
     .grid{grid-template-columns:1fr;}
     canvas{height:500px;}
 }
 
 @media(max-width:600px){
-    #cosmos{padding:14px 10px 35px;}
+    #cosmos{padding:6px;}
     .header{align-items:flex-start;}
     .badge{display:none;}
     .topNav{overflow-x:auto;}
     .navItem{white-space:nowrap;}
     canvas{height:390px;}
+    .workspace{grid-template-columns:1fr;height:auto;}
+    .expressionPane{height:300px;border-right:0;border-bottom:1px solid #dedfe6;}
+    .graphWorkspace{height:650px;}
+    .workspaceRail{position:absolute;right:6px;top:120px;bottom:auto;height:0;border:0;}
+    .workspaceRailTab{position:relative;top:0;}
     .row,.row3,.info{grid-template-columns:1fr;}
     .brandFooter{flex-direction:column;}
 }
@@ -776,7 +783,8 @@ hr{
     border-radius:14px;
     box-shadow:0 8px 30px rgba(25,25,40,.07);
     overflow:hidden;
-    min-height:760px;
+    min-height:0;
+    height:calc(100vh - 118px);
 }
 
 .appToolbar{
@@ -845,8 +853,10 @@ hr{
 
 .workspace{
     display:grid;
-    grid-template-columns:310px minmax(0,1fr);
-    height:702px;
+    grid-template-columns:290px minmax(0,1fr) 42px;
+    flex:1;
+    height:calc(100% - 58px);
+    min-height:0;
 }
 
 .expressionPane{
@@ -967,6 +977,7 @@ hr{
 
 .graphWorkspace{
     min-width:0;
+    min-height:0;
     display:flex;
     flex-direction:column;
     background:#fff;
@@ -996,7 +1007,7 @@ hr{
 .graphCanvasArea{
     position:relative;
     flex:1;
-    min-height:0;
+    min-height:260px;
     background:#fcfcfe;
 }
 
@@ -1281,13 +1292,45 @@ hr{
 }
 
 @media(max-width:760px){
-    .workspace{grid-template-columns:1fr;height:auto;}
-    .expressionPane{height:360px;border-right:0;border-bottom:1px solid #dedfe6;}
-    .graphWorkspace{height:700px;}
+    .workspace{grid-template-columns:250px minmax(0,1fr) 38px;height:calc(100% - 58px);}
+    .expressionPane{min-height:0;border-right:1px solid #dedfe6;border-bottom:0;}
+    .graphWorkspace{height:auto;min-height:0;}
     .workspaceRail{position:absolute;inset:58px 0 0 0;pointer-events:none;border:0;}
     .workspaceRailTab,.railPanel{pointer-events:auto;}
     .railPanel{width:min(330px,92vw);}
 }
+
+/* Full-workspace sizing and the graph-to-music arrangement view */
+html,body{margin:0!important;padding:0!important;width:100%;min-height:100%;overflow-x:hidden;background:#f6f7fb;}
+[data-testid="stAppViewContainer"]{padding:0!important;background:#f6f7fb!important;}
+[data-testid="stMainBlockContainer"]{max-width:none!important;padding:0!important;}
+[data-testid="stHeader"],[data-testid="stToolbar"],#MainMenu,footer{display:none!important;}
+#cosmos{min-height:0;}
+.workspaceShell{display:flex;flex-direction:column;height:calc(100vh - 20px);min-height:620px;}
+.workspace{flex:1;min-height:0;}
+.expressionPane,.graphWorkspace,.workspaceRail{min-height:0;}
+.graphCanvasArea{min-height:0;}
+.graphBottom{flex-shrink:0;}
+.brandFooter{display:none;}
+.arrangementStudio{margin:12px 0 14px;padding:12px;border:1px solid #e6e6ef;border-radius:12px;background:#fbfbff;}
+.arrangementHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.arrangementTitle{font-size:12px;font-weight:800;color:#252630;}
+.arrangementSub{font-size:10px;color:#858896;}
+.arrangementTrackList{display:flex;flex-direction:column;gap:6px;}
+.arrangementTrack{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center;gap:8px;min-height:42px;}
+.arrangementTrackName{font-size:10px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.arrangementTrackName small{display:block;font-size:9px;font-weight:500;color:#8c8f9b;margin-top:2px;}
+.arrangementLane{height:40px;position:relative;overflow:hidden;border-radius:6px;background:#f0f1f6;border:1px solid #e8e9f0;}
+.arrangementLane svg{display:block;width:100%;height:100%;}
+.arrangementPlayhead{position:absolute;top:0;bottom:0;left:0;width:2px;background:#ffffff;box-shadow:0 0 0 1px rgba(100,90,180,.28),0 0 10px rgba(139,108,246,.5);pointer-events:none;z-index:2;}
+.arrangementPlayhead:after{content:"";position:absolute;top:0;left:-3px;width:8px;height:8px;border-radius:50%;background:#8b6cf6;}
+.arrangementLegend{display:flex;justify-content:space-between;color:#9a9daa;font-size:9px;margin:7px 0 0 90px;}
+.arrangementEmpty{padding:13px 8px;color:#898c98;font-size:10px;text-align:center;background:#f5f5fa;border-radius:7px;}
+.musicBox .musicHero{margin-bottom:10px;}
+.musicBox .musicHeroText{line-height:1.5;}
+.musicBox .controls button{flex:1;min-width:0;}
+@media(max-width:850px){.workspaceShell{height:auto;min-height:0}.workspace{height:auto;min-height:0}.graphWorkspace{min-height:680px}.expressionPane{min-height:480px}.arrangementTrack{grid-template-columns:68px minmax(0,1fr)}.arrangementLegend{margin-left:76px}}
+
 </style>
 
 </head>
@@ -1516,6 +1559,20 @@ hr{
                             <div class="musicHeroText">x축은 시간, y값은 음높이로 변환됩니다. 표시된 그래프는 동시에 하나의 음악으로 구성됩니다.</div>
                         </div>
                         <div class="musicMark">♫</div>
+                    </div>
+
+                    <div class="arrangementStudio" aria-label="음악 트랙 미리보기">
+                        <div class="arrangementHead">
+                            <div>
+                                <div class="arrangementTitle">Arrangement · 함수별 트랙</div>
+                                <div class="arrangementSub">각 그래프가 독립적인 소리 트랙으로 겹쳐집니다.</div>
+                            </div>
+                            <span class="arrangementSub" id="arrangementStatus">READY</span>
+                        </div>
+                        <div class="arrangementTrackList" id="arrangementTrackList">
+                            <div class="arrangementEmpty">그래프를 추가하면 트랙 미리보기가 표시됩니다.</div>
+                        </div>
+                        <div class="arrangementLegend"><span>0:00</span><span>전체 구간</span><span id="arrangementEnd">재생 끝</span></div>
                     </div>
 
                     <div class="row">
@@ -2865,6 +2922,7 @@ function renderLayers(){
 
 
     updateSelectedInfo();
+    renderArrangement(playing && playbackDuration ? Math.max(0,Math.min(1,((performance.now()-playbackStart)/1000)/playbackDuration)) : 0);
 
 }
 
@@ -5979,6 +6037,40 @@ function createLiveVoice(
 
 
 /* =========================================================
+   함수별 음악 트랙 미리보기
+========================================================= */
+function renderArrangement(progressOverride){
+    const host=document.getElementById("arrangementTrackList");
+    if(!host) return;
+    const visible=layers.filter(layer=>layer.visible && Array.isArray(layer.points) && layer.points.length>1);
+    if(!visible.length){
+        host.innerHTML='<div class="arrangementEmpty">표시 중인 그래프가 없습니다. 왼쪽에서 함수를 추가하거나 숨김을 해제하세요.</div>';
+        return;
+    }
+    const progress=typeof progressOverride==="number" ? Math.max(0,Math.min(1,progressOverride)) : (playing && playbackDuration ? Math.max(0,Math.min(1,((performance.now()-playbackStart)/1000)/playbackDuration)) : 0);
+    host.innerHTML=visible.map((layer,index)=>{
+        const pts=layer.points;
+        let lo=Infinity,hi=-Infinity;
+        pts.forEach(p=>{if(Number.isFinite(p.y)){lo=Math.min(lo,p.y);hi=Math.max(hi,p.y);}});
+        if(!Number.isFinite(lo)||!Number.isFinite(hi)){lo=-1;hi=1;}
+        const span=Math.max(0.0001,hi-lo);
+        const d=pts.map((p,i)=>{
+            const x=pts.length<2?0:(i/(pts.length-1))*1000;
+            const y=35-((p.y-lo)/span)*27;
+            return (i?'L':'M')+x.toFixed(2)+' '+y.toFixed(2);
+        }).join(' ');
+        const color=layer.color||['#8b6cf6','#22b8a7','#f5b942','#f27d54','#5b8def'][index%5];
+        const label=(layer.name||('Graph '+(index+1))).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        const type=layer.type==='sketch'?'손그림':'함수';
+        return `<div class="arrangementTrack"><div class="arrangementTrackName" style="color:${color}">${label}<small>${type} · ${pts.length} points</small></div><div class="arrangementLane"><svg viewBox="0 0 1000 40" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" fill="none" stroke="${color}" stroke-opacity=".16" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/></svg><div class="arrangementPlayhead" style="left:calc(${(progress*100).toFixed(3)}% - 1px)"></div></div></div>`;
+    }).join('');
+    const status=document.getElementById('arrangementStatus');
+    if(status) status.textContent=playing?'PLAYING':'READY';
+    const end=document.getElementById('arrangementEnd');
+    if(end){const sec=Number(document.getElementById('duration')?.value||30);end.textContent=sec>=60?Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')+' end':sec+'s end';}
+}
+
+/* =========================================================
    음악 재생
 ========================================================= */
 
@@ -6060,6 +6152,7 @@ async function playMusic(){
 
 
     playing=true;
+    renderArrangement(0);
 
 
     const start =
@@ -6157,6 +6250,8 @@ function musicTick(){
                 playbackDuration
             )
         );
+
+    renderArrangement(progress);
 
 
     audioVoices.forEach(
@@ -6503,6 +6598,8 @@ function stopMusic(){
 
     playbackStart=0;
 
+
+    renderArrangement(0);
 
     document.getElementById(
         "bar"
@@ -8886,6 +8983,7 @@ renderSongList();
 resize();
 
 renderLayers();
+renderArrangement(0);
 
 draw();
 
@@ -8915,6 +9013,6 @@ st.markdown(
 
 components.html(
     HTML,
-    height=2300,
-    scrolling=True
+    height=1100,
+    scrolling=False
 )
