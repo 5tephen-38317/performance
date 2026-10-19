@@ -1365,12 +1365,12 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
 #graph{width:100%!important;height:100%!important;min-height:0!important;background:#fff!important;touch-action:none!important}
 .canvasSettings{top:8px!important;right:8px!important}
 .canvasSettingsBtn{width:38px!important;height:38px!important;border-radius:4px!important;background:#f7f7f7!important;color:#555!important;box-shadow:0 1px 3px #0002!important}
-.keypad{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important;flex:0 0 auto!important;max-height:180px!important;overflow:auto!important;border-radius:0!important;border-top:1px solid #ddd!important;background:#f4f4f4!important;box-shadow:none!important;padding:7px!important}
-.keypadGrid{gap:5px!important}.keypadGrid button{border-radius:3px!important;min-height:35px!important;background:#fff!important;border:1px solid #d6d6d6!important;color:#202124!important}
+.keypad{position:absolute!important;left:auto!important;right:12px!important;bottom:12px!important;top:auto!important;transform:none!important;width:min(390px,calc(100% - 24px))!important;max-height:min(42vh,360px)!important;overflow:auto!important;border:1px solid #c9cdd3!important;border-radius:8px!important;background:#f5f6f7!important;box-shadow:0 4px 18px rgba(0,0,0,.18)!important;padding:8px!important;z-index:30!important}
+.keypadGrid{grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:5px!important}.keypadGrid button{border-radius:4px!important;min-height:34px!important;background:#fff!important;border:1px solid #d6d6d6!important;color:#202124!important;font-size:12px!important}
 .brandFooter{display:none!important}
 .layerSoundBtn{width:34px!important;min-width:34px!important;padding:3px!important;font-size:17px!important;background:#fff!important;border:1px solid #d5d8de!important;border-radius:4px!important}
 .layerSoundBtn.active{background:#eaf0ff!important;border-color:#4169d5!important;color:#3156bd!important}
-@media(max-width:850px){.workspaceShell{height:calc(100dvh - 8px)!important;min-height:0!important}.workspace{height:calc(100% - 54px)!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(170px,34%)!important}.graphWorkspace{grid-row:1;min-height:0!important}.expressionPane{grid-row:2;min-height:0!important;border-top:1px solid #d8dadd!important;border-right:0!important}.expressionScroll{min-height:0!important;overflow:auto!important}.keypad{max-height:115px!important}.graphTopHint{display:none!important}}
+@media(max-width:850px){.workspaceShell{height:calc(100dvh - 4px)!important;min-height:0!important}.workspace{height:calc(100% - 54px)!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(150px,32%)!important}.graphWorkspace{grid-row:1;min-height:0!important}.expressionPane{grid-row:2;min-height:0!important;border-top:1px solid #d8dadd!important;border-right:0!important}.expressionScroll{min-height:0!important;overflow:auto!important}.keypad{max-height:38vh!important;right:6px!important;bottom:6px!important;width:min(360px,calc(100% - 12px))!important}.graphTopHint{display:none!important}}
 @media(max-height:700px){.keypad{max-height:125px!important}.expressionFooter .workspaceHint{display:none!important}}
 
 </style>
@@ -1525,6 +1525,8 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
                         <button data-key="y">y</button>
                         <button data-key="(">(</button>
                         <button data-key=")">)</button>
+                        <button data-key="[">[ ]</button>
+                        <button data-key="]">]</button>
                         <button data-key="^">aᵇ</button>
                         <button data-key="pi">π</button>
                         <button data-key="7">7</button>
@@ -1532,6 +1534,7 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
                         <button data-key="9">9</button>
                         <button data-key="/">÷</button>
                         <button data-key="sqrt(">√</button>
+                        <button data-key="frac(">frac</button>
                         <button data-key="sin(">sin</button>
                         <button data-key="4">4</button>
                         <button data-key="5">5</button>
@@ -1539,6 +1542,7 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
                         <button data-key="*">×</button>
                         <button data-key="cos(">cos</button>
                         <button data-key="tan(">tan</button>
+                        <button data-key="mod">mod</button>
                         <button data-key="1">1</button>
                         <button data-key="2">2</button>
                         <button data-key="3">3</button>
@@ -1977,7 +1981,11 @@ const funcs = {
 
     acos:Math.acos,
 
-    atan:Math.atan
+    atan:Math.atan,
+    frac:x=>x-Math.floor(x),
+    floor:Math.floor,
+    ceil:Math.ceil,
+    round:Math.round
 
 };
 
@@ -1986,7 +1994,11 @@ function tokenize(s){
 
     s = s
         .replace(/π/g,"pi")
-        .replace(/√/g,"sqrt");
+        .replace(/√/g,"sqrt")
+        .replace(/[×·⋅]/g,"*")
+        .replace(/÷/g,"/")
+        .replace(/[−–—]/g,"-")
+        .replace(/ /g," ");
 
     const tokens = [];
 
@@ -2046,15 +2058,10 @@ function tokenize(s){
                 j++;
             }
 
+            const word = s.slice(i,j).toLowerCase();
             tokens.push({
-
-                t:"id",
-
-                v:
-                    s
-                    .slice(i,j)
-                    .toLowerCase()
-
+                t: word === "mod" ? "mod" : "id",
+                v: word
             });
 
             i=j;
@@ -2064,7 +2071,7 @@ function tokenize(s){
         }
 
 
-        if("+-*/^(),".includes(s[i])){
+        if("+-*/^(),[]".includes(s[i])){
 
             tokens.push({
 
@@ -2205,6 +2212,17 @@ function parseExpression(s){
 
         }
 
+        // [x] 표기는 가우스 기호(내림 함수)로 처리합니다.
+        if(z.t==="["){
+            p++;
+            const a=addsub();
+            if(!ts[p] || ts[p].t!=="]"){
+                throw Error("대괄호 ]를 닫아주세요.");
+            }
+            p++;
+            return x=>Math.floor(a(x));
+        }
+
 
         if(z.t==="+"){
 
@@ -2266,49 +2284,21 @@ function parseExpression(s){
 
 
     function muldiv(){
-
-        let a =
-            power();
-
-        while(
-            ts[p] &&
-            (
-                ts[p].t==="*" ||
-                ts[p].t==="/"
-            )
-        ){
-
-            const op =
-                ts[p++].t;
-
-            const b =
-                power();
-
-            const aa =
-                a;
-
-            if(op==="*"){
-
-                a =
-                    x =>
-                        aa(x) *
-                        b(x);
-
-            }else{
-
-                a =
-                    x =>
-                        aa(x) /
-                        b(x);
-
-            }
-
+        let a=power();
+        while(ts[p]){
+            const token=ts[p];
+            const isExplicit = token.t==="*" || token.t==="/" || token.t==="mod";
+            const beginsPrimary = token.t==="num" || token.t==="id" || token.t==="(" || token.t==="[";
+            if(!isExplicit && !beginsPrimary) break;
+            const op = isExplicit ? ts[p++].t : "*";
+            const b=power();
+            const aa=a;
+            if(op==="*") a=x=>aa(x)*b(x);
+            else if(op==="/") a=x=>aa(x)/b(x);
+            else a=x=>{const divisor=b(x); return ((aa(x)%divisor)+divisor)%divisor;};
         }
-
         return a;
-
     }
-
 
     function addsub(){
 
@@ -9108,12 +9098,26 @@ draw();
 st.markdown(
     """
     <style>
-    [data-testid="stAppViewContainer"] {
-        background:#f6f7fb;
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+        background:#fff !important;
+        margin:0 !important;
+        padding:0 !important;
+        overflow:hidden !important;
     }
-
-    [data-testid="stHeader"] {
-        background:transparent;
+    [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stStatusWidget"] {
+        display:none !important;
+    }
+    [data-testid="stMainBlockContainer"] {
+        max-width:none !important;
+        width:100% !important;
+        padding:0 !important;
+        margin:0 !important;
+    }
+    [data-testid="stIFrame"], [data-testid="stIFrame"] iframe {
+        height:calc(100vh - 2px) !important;
+        min-height:0 !important;
+        border:0 !important;
+        display:block !important;
     }
     </style>
     """,
@@ -9122,6 +9126,6 @@ st.markdown(
 
 components.html(
     HTML,
-    height=1800,
-    scrolling=True
+    height=900,
+    scrolling=False
 )
