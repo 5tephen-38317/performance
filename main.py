@@ -1331,6 +1331,48 @@ html,body{margin:0!important;padding:0!important;width:100%;min-height:100%;over
 .musicBox .controls button{flex:1;min-width:0;}
 @media(max-width:850px){.workspaceShell{height:auto;min-height:0}.workspace{height:auto;min-height:0}.graphWorkspace{min-height:680px}.expressionPane{min-height:480px}.arrangementTrack{grid-template-columns:68px minmax(0,1fr)}.arrangementLegend{margin-left:76px}}
 
+
+/* Desmos-inspired compact graphing workspace */
+:root{--bg:#fff;--surface:#fff;--surface-soft:#fff;--text:#202124;--muted:#686b70;--line:#e3e5e8;--line-strong:#c8cbd0;--accent:#4169d5;--accent-dark:#3156bd;--accent-soft:#edf2ff;--shadow:0 2px 8px rgba(0,0,0,.08);--shadow-sm:0 1px 4px rgba(0,0,0,.08)}
+body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto Sans KR",sans-serif!important}
+#cosmos{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
+.header{display:none!important}
+.workspaceShell{width:100%!important;max-width:none!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;height:calc(100dvh - 12px)!important;min-height:620px!important;background:#fff!important}
+.appToolbar{height:54px!important;min-height:54px!important;padding:5px 12px!important;background:#292929!important;color:#fff!important;border:0!important;border-radius:0!important}
+.toolbarBrand{color:#fff!important}.toolbarFlower{display:none!important}.toolbarBrand span{font-size:18px!important;letter-spacing:1px!important;color:#fff!important}
+.fileTitle{background:transparent!important;color:#fff!important;border:0!important;border-left:1px solid #777!important;border-radius:0!important;font-size:17px!important;min-width:80px!important;max-width:220px!important}
+.toolbarBtn{border-radius:5px!important;min-height:34px!important;padding:6px 10px!important;font-size:13px!important}
+.workspace{height:calc(100% - 54px)!important;min-height:0!important;grid-template-columns:minmax(270px,32%) minmax(0,1fr)!important;gap:0!important;background:#fff!important}
+.expressionPane{background:#fff!important;border-right:1px solid #d8dadd!important;border-radius:0!important;min-height:0!important;overflow:hidden!important}
+.expressionHeader{padding:8px 10px!important;border-bottom:1px solid #d8dadd!important;background:#f7f7f7!important}
+.expressionHeaderTitle,.graphTopTitle{font-size:14px!important;font-weight:600!important;color:#45474b!important}
+.layerItem{border-radius:0!important;border:0!important;border-bottom:1px solid #e4e5e7!important;background:#fff!important;padding:0!important;margin:0!important;box-shadow:none!important}
+.layerItem.selected{background:#f7f9ff!important;outline:1px solid #4c74d9!important;outline-offset:-1px!important}
+.layerTop{min-height:42px!important;padding:7px 8px!important;gap:8px!important}
+.layerColor{width:5px!important;height:34px!important;border-radius:0!important;flex:0 0 5px!important}
+.layerNameInput{font-size:16px!important;border-radius:3px!important;border:1px solid transparent!important;background:transparent!important}
+.layerNameInput:focus{border-color:#4b74d8!important;background:#fff!important}
+.layerType{display:none!important}
+.layerActions{padding:4px 8px 8px 21px!important;gap:8px!important;align-items:center!important}
+.layerActions button{min-height:28px!important;padding:3px 8px!important;font-size:12px!important;border-radius:4px!important}
+.volumeBox{flex:1!important;min-width:60px!important}
+.expressionFooter{padding:8px!important;border-top:1px solid #e0e1e4!important;background:#fafafa!important}
+.workspaceHint,.editNotice{font-size:11px!important}
+.graphWorkspace{min-width:0!important;min-height:0!important;border:0!important;border-radius:0!important;background:#fff!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.graphTop{height:34px!important;min-height:34px!important;padding:5px 12px!important;background:#fff!important;border-bottom:1px solid #ececef!important}
+.graphTopHint{font-size:11px!important;color:#8a8d92!important}
+.graphCanvasArea{flex:1 1 auto!important;min-height:0!important;height:auto!important;border:0!important;border-radius:0!important;background:#fff!important;overflow:hidden!important}
+#graph{width:100%!important;height:100%!important;min-height:0!important;background:#fff!important;touch-action:none!important}
+.canvasSettings{top:8px!important;right:8px!important}
+.canvasSettingsBtn{width:38px!important;height:38px!important;border-radius:4px!important;background:#f7f7f7!important;color:#555!important;box-shadow:0 1px 3px #0002!important}
+.keypad{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;transform:none!important;flex:0 0 auto!important;max-height:180px!important;overflow:auto!important;border-radius:0!important;border-top:1px solid #ddd!important;background:#f4f4f4!important;box-shadow:none!important;padding:7px!important}
+.keypadGrid{gap:5px!important}.keypadGrid button{border-radius:3px!important;min-height:35px!important;background:#fff!important;border:1px solid #d6d6d6!important;color:#202124!important}
+.brandFooter{display:none!important}
+.layerSoundBtn{width:34px!important;min-width:34px!important;padding:3px!important;font-size:17px!important;background:#fff!important;border:1px solid #d5d8de!important;border-radius:4px!important}
+.layerSoundBtn.active{background:#eaf0ff!important;border-color:#4169d5!important;color:#3156bd!important}
+@media(max-width:850px){.workspaceShell{height:calc(100dvh - 8px)!important;min-height:0!important}.workspace{height:calc(100% - 54px)!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(170px,34%)!important}.graphWorkspace{grid-row:1;min-height:0!important}.expressionPane{grid-row:2;min-height:0!important;border-top:1px solid #d8dadd!important;border-right:0!important}.expressionScroll{min-height:0!important;overflow:auto!important}.keypad{max-height:115px!important}.graphTopHint{display:none!important}}
+@media(max-height:700px){.keypad{max-height:125px!important}.expressionFooter .workspaceHint{display:none!important}}
+
 </style>
 
 </head>
@@ -2560,6 +2602,56 @@ function selectLayer(id){
    레이어 UI
 ========================================================= */
 
+function playExpressionSound(layer, button){
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) { alert("이 브라우저는 웹 오디오를 지원하지 않습니다."); return; }
+        if (!audioCtx || audioCtx.state === "closed") audioCtx = new AudioCtx();
+        audioCtx.resume();
+        const ctx = audioCtx;
+        const gain = ctx.createGain();
+        const osc = ctx.createOscillator();
+        const now = ctx.currentTime;
+        const duration = 6;
+        const samples = 240;
+        const parse = layer.type === "function" ? parseExpression(layer.expression || "0") : null;
+        const pts = layer.type === "function" ? null : (layer.points || []);
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(Math.max(0.015, Math.min(0.13, Number(layer.volume ?? 0.6) * 0.12)), now + 0.04);
+        gain.gain.setValueAtTime(Math.max(0.015, Math.min(0.13, Number(layer.volume ?? 0.6) * 0.12)), now + duration - 0.08);
+        gain.gain.linearRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain); gain.connect(ctx.destination);
+        for (let i=0; i<=samples; i++) {
+            const t=i/samples;
+            const x=xmin+(xmax-xmin)*t;
+            let y=0;
+            try {
+                if (parse) y=parse(x);
+                else if (pts && pts.length) {
+                    const index=Math.min(pts.length-1, Math.round(t*(pts.length-1)));
+                    y=pts[index].y;
+                }
+            } catch(_e) { y=NaN; }
+            const at=now+t*duration;
+            if (Number.isFinite(y)) {
+                const bounded=Math.max(-8,Math.min(8,y));
+                const hz=220*Math.pow(2,bounded/12);
+                osc.frequency.setValueAtTime(Math.max(55,Math.min(1760,hz)),at);
+            } else {
+                // Undefined sections are represented by a very quiet low tone.
+                osc.frequency.setValueAtTime(55,at);
+            }
+        }
+        layer.soundPlaying=true;
+        button.classList.add("active"); button.textContent="Ⅱ";
+        osc.start(now); osc.stop(now+duration+0.03);
+        const cleanup=()=>{ layer.soundPlaying=false; layer.soundStop=null; button.classList.remove("active"); button.textContent="🔊"; try{gain.disconnect();}catch(_e){} };
+        osc.onended=cleanup;
+        layer.soundStop=()=>{ try{gain.gain.cancelScheduledValues(ctx.currentTime); gain.gain.setTargetAtTime(0.0001,ctx.currentTime,0.02); osc.stop(ctx.currentTime+0.08);}catch(_e){cleanup();} };
+    } catch(err) { console.error(err); alert("소리를 재생하지 못했습니다. 그래프 식을 확인해 주세요."); }
+}
+
 function renderLayers(){
 
     const box =
@@ -2667,6 +2759,13 @@ function renderLayers(){
             : "○ 숨김";
 
 
+        const soundButton = document.createElement("button");
+        soundButton.className = "layerSoundBtn" + (layer.soundPlaying ? " active" : "");
+        soundButton.type = "button";
+        soundButton.title = "이 그래프 소리 재생/정지";
+        soundButton.textContent = layer.soundPlaying ? "Ⅱ" : "🔊";
+        soundButton.setAttribute("aria-label", "그래프 소리 재생/정지");
+
         const volumeBox =
             document.createElement(
                 "div"
@@ -2743,13 +2842,9 @@ function renderLayers(){
         );
 
 
-        actions.appendChild(
-            visibility
-        );
-
-        actions.appendChild(
-            volumeBox
-        );
+        actions.appendChild(visibility);
+        actions.appendChild(soundButton);
+        actions.appendChild(volumeBox);
 
 
         item.appendChild(top);
@@ -2839,6 +2934,20 @@ function renderLayers(){
             }
         );
 
+
+        soundButton.addEventListener("pointerdown", e=>e.stopPropagation());
+        soundButton.addEventListener("click", e=>{
+            e.stopPropagation();
+            if (layer.soundPlaying && layer.soundStop) {
+                layer.soundStop();
+                layer.soundPlaying = false;
+                layer.soundStop = null;
+                soundButton.classList.remove("active");
+                soundButton.textContent = "🔊";
+            } else {
+                playExpressionSound(layer, soundButton);
+            }
+        });
 
         visibility.addEventListener(
             "click",
@@ -9013,6 +9122,6 @@ st.markdown(
 
 components.html(
     HTML,
-    height=1100,
-    scrolling=False
+    height=1800,
+    scrolling=True
 )
