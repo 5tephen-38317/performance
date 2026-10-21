@@ -1390,7 +1390,7 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
 }
 .mathEditor:focus{border-color:#4169e1;box-shadow:0 0 0 2px rgba(65,105,225,.12)}
 .mathEditor .implicitProduct{display:inline-block;width:0;overflow:hidden;vertical-align:baseline}
-.mathEditor sup.mathExponent{display:inline-block;font-size:.68em;line-height:1;vertical-align:baseline;position:relative;top:-.48em;white-space:nowrap;color:inherit}
+.mathEditor sup.mathExponent{display:inline-block;font-size:.68em;line-height:1;vertical-align:super;position:static;white-space:nowrap;color:inherit;min-width:0.35em}.mathEditor sup.mathExponent *{font-size:1em}.mathEditor sup.mathExponent:empty::after{content:"□";opacity:.35}
 .mathEditor sup.mathExponent:empty::after{content:"□";opacity:.35}
 .mathEditor sup.mathExponent:focus{outline:1px dotted #4169e1}
 .functionEditor #exprVisual{margin:2px 0 5px}
@@ -1399,7 +1399,7 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
 .brandFooter{display:none!important}
 .layerSoundBtn{width:34px!important;min-width:34px!important;padding:3px!important;font-size:17px!important;background:#fff!important;border:1px solid #d5d8de!important;border-radius:4px!important}
 .layerSoundBtn.active{background:#eaf0ff!important;border-color:#4169d5!important;color:#3156bd!important}
-@media(max-width:850px){.workspaceShell{height:calc(100dvh - 2px)!important;min-height:0!important}.workspace{height:calc(100% - 54px)!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(150px,32%)!important;position:relative!important}.graphWorkspace{grid-row:1;min-height:0!important}.expressionPane{grid-row:2;min-height:0!important;border-top:1px solid #d8dadd!important;border-right:0!important}.workspaceRail{position:absolute!important;top:0!important;right:0!important;bottom:0!important;width:38px!important;min-width:38px!important;border:0!important;background:transparent!important}.railPanel{right:38px!important;width:min(420px,calc(100vw - 44px))!important;height:100%!important}.expressionScroll{min-height:0!important;overflow:auto!important}.keypad{max-height:38vh!important;right:6px!important;bottom:6px!important;width:min(360px,calc(100% - 12px))!important}.graphTopHint{display:none!important}.toolbarPlayAll{display:none!important}}
+@media(max-width:850px){.workspaceShell{height:calc(100dvh - 2px)!important;min-height:0!important}.workspace{height:calc(100% - 54px)!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(150px,32%)!important;position:relative!important}.graphWorkspace{grid-row:1;min-height:0!important}.expressionPane{grid-row:2;min-height:0!important;border-top:1px solid #d8dadd!important;border-right:0!important}.workspaceRail{position:absolute!important;top:0!important;right:0!important;bottom:0!important;width:38px!important;min-width:38px!important;border:0!important;background:transparent!important}.railPanel{right:38px!important;width:min(420px,calc(100vw - 44px))!important;height:100%!important}.expressionScroll{min-height:0!important;overflow:auto!important}.keypad{max-height:38vh!important;right:6px!important;bottom:6px!important;width:min(360px,calc(100% - 12px))!important}.graphTopHint{display:none!important}.toolbarPlayAll{display:inline-flex!important;font-size:11px!important;padding:5px 7px!important;min-height:30px!important}}
 @media(max-height:700px){.keypad{max-height:125px!important}.expressionFooter .workspaceHint{display:none!important}}
 
 </style>
@@ -1763,6 +1763,28 @@ const expr =
 const exprVisual = document.getElementById("exprVisual");
 
 // 내부 계산용 ASCII 수식과 화면에 보이는 수학식 표기를 서로 변환합니다.
+let savedMathRange = null;
+function selectionInsideMathEditor(){
+    const sel=window.getSelection();
+    return !!(sel && sel.rangeCount && exprVisual && exprVisual.contains(sel.anchorNode));
+}
+function saveMathSelection(){
+    const sel=window.getSelection();
+    if(sel && sel.rangeCount && exprVisual && exprVisual.contains(sel.anchorNode)){
+        savedMathRange=sel.getRangeAt(0).cloneRange();
+    }
+}
+function restoreMathSelection(){
+    exprVisual.focus({preventScroll:true});
+    const sel=window.getSelection();
+    if(!sel) return null;
+    if(savedMathRange && exprVisual.contains(savedMathRange.startContainer) && exprVisual.contains(savedMathRange.endContainer)){
+        sel.removeAllRanges(); sel.addRange(savedMathRange);
+        return sel.getRangeAt(0);
+    }
+    const r=document.createRange(); r.selectNodeContents(exprVisual); r.collapse(false);
+    sel.removeAllRanges(); sel.addRange(r); return r;
+}
 function mathNodeToSource(node){
     if(node.nodeType===Node.TEXT_NODE){
         return (node.nodeValue||"").replace(/\u200B/g,"")
@@ -1786,65 +1808,44 @@ function appendMathSource(parent, source){
             let exponent="";
             if(source[i]==="("){
                 i++; let depth=1; let start=i;
-                while(i<source.length && depth>0){
-                    if(source[i]==="(") depth++;
-                    else if(source[i]===")") depth--;
-                    if(depth>0) i++;
-                }
-                exponent=source.slice(start,i);
-                if(source[i]===")") i++;
+                while(i<source.length && depth>0){if(source[i]==="(")depth++;else if(source[i]===")")depth--;if(depth>0)i++;}
+                exponent=source.slice(start,i); if(source[i]===")")i++;
             }else if(i<source.length){
                 if(/[+-]/.test(source[i])) exponent+=source[i++];
                 if(source[i]==="("){
                     i++; let depth=1; let start=i;
                     while(i<source.length && depth>0){if(source[i]==="(")depth++;else if(source[i]===")")depth--;if(depth>0)i++;}
                     exponent+=source.slice(start,i); if(source[i]===")")i++;
-                }else if(/[A-Za-z_]/.test(source[i])){
-                    while(i<source.length && /[A-Za-z_]/.test(source[i])) exponent+=source[i++];
-                }else if(/[0-9.]/.test(source[i])){
-                    while(i<source.length && /[0-9.]/.test(source[i])) exponent+=source[i++];
-                }
+                }else if(/[A-Za-z_]/.test(source[i])){while(i<source.length && /[A-Za-z_]/.test(source[i])) exponent+=source[i++];}
+                else if(/[0-9.]/.test(source[i])){while(i<source.length && /[0-9.]/.test(source[i])) exponent+=source[i++];}
             }
             const sup=document.createElement("sup"); sup.className="mathExponent"; sup.setAttribute("data-exp","1");
-            appendMathSource(sup,exponent);
-            parent.appendChild(sup);
-            continue;
+            appendMathSource(sup,exponent || "\u200B"); parent.appendChild(sup); continue;
         }
         if(ch==="*"){
             const prev=source[i-1]||"", next=source[i+1]||"";
-            const implicit=(/[0-9)\]]/.test(prev) && /[A-Za-z_(\[]/.test(next));
-            if(implicit){
-                flush();
-                const product=document.createElement("span");
-                product.className="implicitProduct";
-                product.setAttribute("data-implicit-product","1");
-                product.setAttribute("aria-label","곱하기");
-                parent.appendChild(product);
-            }else plain += "×";
-            i++;
-            continue;
+            if((/[0-9)\]]/.test(prev) && /[A-Za-z_(\[]/.test(next))){flush();const product=document.createElement("span");product.className="implicitProduct";product.setAttribute("data-implicit-product","1");product.setAttribute("aria-label","곱하기");parent.appendChild(product);}
+            else plain+="×";
+            i++; continue;
         }
-        plain += ch==="/" ? "÷" : ch==="-" ? "−" : ch==="p" && source.slice(i,i+2)==="pi" ? "π" : ch;
-        if(ch==="p" && source.slice(i,i+2)==="pi") i+=2; else i++;
+        if(ch==="p" && source.slice(i,i+2)==="pi"){plain+="π";i+=2;continue;}
+        plain += ch==="/" ? "÷" : (ch==="-" ? "−" : ch); i++;
     }
     flush();
 }
 function syncMathEditorFromSource(){
     if(!exprVisual) return;
-    exprVisual.replaceChildren();
-    appendMathSource(exprVisual, expr.value || "");
+    exprVisual.replaceChildren(); appendMathSource(exprVisual,expr.value||""); savedMathRange=null;
 }
 function syncSourceFromMathEditor(){
     if(!exprVisual) return;
     expr.value=Array.from(exprVisual.childNodes).map(mathNodeToSource).join("");
+    saveMathSelection();
 }
 function insertMathText(text){
-    exprVisual.focus();
-    const sel=window.getSelection();
-    if(!sel) return;
-    let range;
-    if(sel.rangeCount && exprVisual.contains(sel.anchorNode)) range=sel.getRangeAt(0);
-    else {range=document.createRange();range.selectNodeContents(exprVisual);range.collapse(false);}
+    let range=restoreMathSelection();
+    const sel=window.getSelection(); if(!sel) return;
+    if(!range){range=document.createRange();range.selectNodeContents(exprVisual);range.collapse(false);}
     range.deleteContents();
     if(text==="^"){
         const sup=document.createElement("sup");sup.className="mathExponent";sup.setAttribute("data-exp","1");
@@ -1852,63 +1853,43 @@ function insertMathText(text){
         const caret=document.createRange();caret.setStart(placeholder,1);caret.collapse(true);sel.removeAllRanges();sel.addRange(caret);
     }else{
         const shown=text==="*"?"×":text==="/"?"÷":text==="-"?"−":text==="pi"?"π":text;
-        const node=document.createTextNode(shown);range.insertNode(node);
-        range.setStartAfter(node);range.collapse(true);sel.removeAllRanges();sel.addRange(range);
+        const node=document.createTextNode(shown);range.insertNode(node);range.setStartAfter(node);range.collapse(true);sel.removeAllRanges();sel.addRange(range);
     }
     syncSourceFromMathEditor();
 }
-// 커서가 지수의 마지막에 있을 때 오른쪽 화살표를 누르면 지수 밖으로 이동합니다.
 function moveCaretOutsideExponentIfAtEnd(){
-    const selection=window.getSelection();
-    if(!selection || !selection.isCollapsed || !selection.rangeCount) return false;
-    const anchor=selection.anchorNode;
+    const sel=window.getSelection();
+    if(!sel || !sel.isCollapsed || !sel.rangeCount) return false;
+    const anchor=sel.anchorNode;
     const exponent=anchor && (anchor.nodeType===Node.ELEMENT_NODE ? anchor : anchor.parentElement)?.closest?.("sup.mathExponent");
     if(!exponent || !exprVisual.contains(exponent)) return false;
-    const caretRange=selection.getRangeAt(0).cloneRange();
-    const endRange=document.createRange();
-    endRange.selectNodeContents(exponent);
-    endRange.collapse(false);
-    if(caretRange.compareBoundaryPoints(Range.START_TO_START,endRange)!==0) return false;
-
+    const caret=sel.getRangeAt(0).cloneRange();
+    const before=document.createRange(); before.selectNodeContents(exponent); before.setEnd(caret.startContainer,caret.startOffset);
+    const caretText=before.toString().replace(/\u200B/g,"");
+    const fullText=exponent.textContent.replace(/\u200B/g,"");
+    const atEnd=caretText.length>=fullText.length || (anchor===exponent && sel.anchorOffset>=exponent.childNodes.length);
+    if(!atEnd) return false;
     let after=exponent.nextSibling;
-    if(!after || after.nodeType!==Node.TEXT_NODE){
-        after=document.createTextNode("");
-        exponent.parentNode.insertBefore(after,exponent.nextSibling);
-    }
-    const range=document.createRange();
-    range.setStart(after,0);
-    range.collapse(true);
-    selection.removeAllRanges();
-    selection.addRange(range);
-    syncSourceFromMathEditor();
-    return true;
+    if(!after || after.nodeType!==Node.TEXT_NODE){after=document.createTextNode("");exponent.parentNode.insertBefore(after,exponent.nextSibling);}
+    const r=document.createRange();r.setStart(after,after.nodeValue.length);r.collapse(true);sel.removeAllRanges();sel.addRange(r);
+    savedMathRange=r.cloneRange();syncSourceFromMathEditor();return true;
 }
 if(exprVisual){
     exprVisual.addEventListener("input",syncSourceFromMathEditor);
+    exprVisual.addEventListener("keyup",saveMathSelection);
+    exprVisual.addEventListener("mouseup",saveMathSelection);
+    exprVisual.addEventListener("focus",saveMathSelection);
+    document.addEventListener("selectionchange",()=>{if(selectionInsideMathEditor())saveMathSelection();});
     exprVisual.addEventListener("keydown",e=>{
-        if(e.key==="ArrowRight" && moveCaretOutsideExponentIfAtEnd()){
-            e.preventDefault();
-            return;
-        }
-        if(e.key==="^"){e.preventDefault();insertMathText("^");}
-        else if(e.key==="*" ){e.preventDefault();insertMathText("*");}
+        if(e.key==="ArrowRight" && moveCaretOutsideExponentIfAtEnd()){e.preventDefault();return;}
+        if(e.key==="^" || e.key==="*"){e.preventDefault();insertMathText(e.key);}
         else if(e.key==="/"){e.preventDefault();insertMathText("/");}
         else if(e.key==="-"){e.preventDefault();insertMathText("-");}
     });
     exprVisual.addEventListener("paste",e=>{
-        e.preventDefault();
-        const text=(e.clipboardData||window.clipboardData).getData("text").replace(/\s+/g,"");
-        // 붙여넣은 식의 ^ 지수도 실제 위첨자 요소로 렌더링합니다.
-        expr.value=text;
-        syncMathEditorFromSource();
-        exprVisual.focus();
-        const range=document.createRange();
-        range.selectNodeContents(exprVisual);
-        range.collapse(false);
-        const selection=window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        syncSourceFromMathEditor();
+        e.preventDefault();const text=(e.clipboardData||window.clipboardData).getData("text").replace(/\s+/g,"");
+        expr.value=text;syncMathEditorFromSource();exprVisual.focus();
+        const r=document.createRange();r.selectNodeContents(exprVisual);r.collapse(false);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);savedMathRange=r.cloneRange();syncSourceFromMathEditor();
     });
     syncMathEditorFromSource();
 }
@@ -9206,6 +9187,7 @@ document
 .querySelectorAll("#keypad [data-key]")
 .forEach(
     button=>{
+        button.addEventListener("mousedown", e=>{e.preventDefault();saveMathSelection();});
         button.addEventListener(
             "click",
             ()=>{
