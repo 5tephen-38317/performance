@@ -1323,6 +1323,13 @@ html,body{margin:0!important;padding:0!important;width:100%;min-height:100%;over
 .arrangementLane{height:40px;position:relative;overflow:hidden;border-radius:6px;background:#f0f1f6;border:1px solid #e8e9f0;}
 .arrangementLane svg{display:block;width:100%;height:100%;}
 .arrangementPlayhead{position:absolute;top:0;bottom:0;left:0;width:2px;background:#ffffff;box-shadow:0 0 0 1px rgba(100,90,180,.28),0 0 10px rgba(139,108,246,.5);pointer-events:none;z-index:2;}
+.bpmControl{padding:10px 12px;border:1px solid #e5e6ec;border-radius:10px;background:#fbfbfd;margin:10px 0 14px!important;}
+.bpmHeading{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.bpmHeading label{font-size:12px;font-weight:750;color:#30333a;}
+#bpmValue{font-size:12px;font-weight:800;color:#4169e1;font-variant-numeric:tabular-nums;}
+#bpm{width:100%;accent-color:#4169e1;margin:10px 0 2px;}
+.bpmScale{display:flex;justify-content:space-between;color:#8a8d96;font-size:10px;}
+
 .arrangementPlayhead:after{content:"";position:absolute;top:0;left:-3px;width:8px;height:8px;border-radius:50%;background:#8b6cf6;}
 .arrangementLegend{display:flex;justify-content:space-between;color:#9a9daa;font-size:9px;margin:7px 0 0 90px;}
 .arrangementEmpty{padding:13px 8px;color:#898c98;font-size:10px;text-align:center;background:#f5f5fa;border-radius:7px;}
@@ -1374,6 +1381,19 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
 #graph{width:100%!important;height:100%!important;min-height:0!important;background:#fff!important;touch-action:none!important}
 .canvasSettings{top:8px!important;right:8px!important}
 .canvasSettingsBtn{width:38px!important;height:38px!important;border-radius:4px!important;background:#f7f7f7!important;color:#555!important;box-shadow:0 1px 3px #0002!important}
+/* 수학식 입력기: 지수는 실제 위첨자로 표시하고 곱셈 기호는 ×로 렌더링 */
+.mathEditor{
+    width:100%;min-height:42px;max-height:112px;overflow:auto;box-sizing:border-box;
+    padding:9px 12px;border:1px solid #cfd2d8;border-radius:8px;background:#fff;
+    color:#202124;font:20px/1.55 "Cambria Math","STIX Two Math",Cambria,serif;
+    white-space:pre-wrap;overflow-wrap:anywhere;outline:none;cursor:text;
+}
+.mathEditor:focus{border-color:#4169e1;box-shadow:0 0 0 2px rgba(65,105,225,.12)}
+.mathEditor .implicitProduct{display:inline-block;width:0;overflow:hidden;vertical-align:baseline}
+.mathEditor sup.mathExponent{display:inline-block;font-size:.68em;line-height:1;vertical-align:baseline;position:relative;top:-.48em;white-space:nowrap;color:inherit}
+.mathEditor sup.mathExponent:empty::after{content:"□";opacity:.35}
+.mathEditor sup.mathExponent:focus{outline:1px dotted #4169e1}
+.functionEditor #exprVisual{margin:2px 0 5px}
 .keypad{position:absolute!important;left:auto!important;right:12px!important;bottom:12px!important;top:auto!important;transform:none!important;width:min(390px,calc(100% - 24px))!important;max-height:min(42vh,360px)!important;overflow:auto!important;border:1px solid #c9cdd3!important;border-radius:8px!important;background:#f5f6f7!important;box-shadow:0 4px 18px rgba(0,0,0,.18)!important;padding:8px!important;z-index:30!important}
 .keypadGrid{grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:5px!important}.keypadGrid button{border-radius:4px!important;min-height:34px!important;background:#fff!important;border:1px solid #d6d6d6!important;color:#202124!important;font-size:12px!important}
 .brandFooter{display:none!important}
@@ -1572,8 +1592,9 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
             <div class="graphBottom">
                 <div class="bottomGrid">
                     <div class="functionEditor">
-                        <label for="expr">선택된 표현식</label>
-                        <input id="expr" type="text" value="sin(x)" autocomplete="off" spellcheck="false">
+                        <label for="exprVisual">선택된 표현식</label>
+                        <input id="expr" type="text" value="sin(x)" autocomplete="off" spellcheck="false" aria-hidden="true" tabindex="-1" style="display:none!important">
+                        <div id="exprVisual" class="mathEditor" contenteditable="true" role="textbox" aria-label="수식 입력" spellcheck="false"></div>
                         <div class="functionActions">
                             <button id="draw" class="primary">그래프 적용</button>
                             <button id="clearLayer">지우기</button>
@@ -1650,6 +1671,11 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
                             </select>
                         </div>
                     </div>
+                    <div class="section bpmControl">
+                        <div class="bpmHeading"><label for="bpm">BPM · 템포</label><output id="bpmValue" for="bpm">145 BPM</output></div>
+                        <input id="bpm" type="range" min="50" max="220" step="1" value="145" aria-label="음악 템포 BPM">
+                        <div class="bpmScale"><span>50 느리게</span><span>220 빠르게</span></div>
+                    </div>
 
                     <div class="section">
                         <label>음악 스타일 / 장르</label>
@@ -1696,7 +1722,7 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
                     <section class="helpSection"><b>1. 그래프 입력</b><p>왼쪽의 <b>＋</b>를 눌러 함수 그래프를 추가하고, 식을 입력한 뒤 Enter 또는 <b>그래프 적용</b>을 누르세요. 예: <code>sin(x)</code>, <code>x^2</code>, <code>abs(x)</code>.</p></section>
                     <section class="helpSection"><b>2. 여러 그래프 다루기</b><p>각 식은 별도 레이어입니다. 레이어를 선택해 식을 바꾸거나, 표시/숨김을 전환하고, 음량을 조절할 수 있습니다. 숨겨진 레이어는 전체 재생에 포함되지 않습니다.</p></section>
                     <section class="helpSection"><b>3. 그래프를 음악으로</b><p><b>▶ 전체 재생</b> 또는 <b>Graph → Music</b>을 누르세요. 표시 중인 모든 레이어가 동시에 재생됩니다. x축은 곡의 진행 시간, y값은 음높이에 대응하며 재생 중인 점이 각 그래프를 따라 움직입니다.</p></section>
-                    <section class="helpSection"><b>4. 음악 설정 및 저장</b><p>Graph → Music 패널에서 곡 길이, 음계, 음악 스타일을 고른 뒤 재생하세요. <b>정지</b>로 재생을 멈추고 <b>WAV 저장</b>으로 오디오 파일을 내보낼 수 있습니다.</p></section>
+                    <section class="helpSection"><b>4. 음악 설정 및 저장</b><p>Graph → Music 패널에서 곡 길이, BPM(템포), 음계, 음악 스타일을 고른 뒤 재생하세요. <b>정지</b>로 재생을 멈추고 <b>WAV 저장</b>으로 오디오 파일을 내보낼 수 있습니다.</p></section>
                     <section class="helpSection"><b>5. 그래프 화면</b><p>마우스 휠로 확대/축소하고 그래프 영역을 드래그해 이동하세요. ⚙ 설정에서 x·y 범위, 격자, 축 표시를 바꿀 수 있습니다. ⌨ 키패드 버튼으로 수식 기호 패널을 열 수 있습니다.</p></section>
                     <section class="helpSection"><b>6. 수식 예시</b><p><code>sin(x)</code> · <code>cos(2x)</code> · <code>x^2</code> · <code>sqrt(abs(x))</code> · <code>frac(x)</code> · <code>[x]</code> · <code>x mod 2</code></p></section>
                 </div>
@@ -1734,6 +1760,136 @@ const ctx =
 
 const expr =
     document.getElementById("expr");
+const exprVisual = document.getElementById("exprVisual");
+
+// 내부 계산용 ASCII 수식과 화면에 보이는 수학식 표기를 서로 변환합니다.
+function mathNodeToSource(node){
+    if(node.nodeType===Node.TEXT_NODE){
+        return (node.nodeValue||"").replace(/\u200B/g,"")
+            .replace(/×/g,"*").replace(/÷/g,"/").replace(/[−–]/g,"-").replace(/π/g,"pi");
+    }
+    if(node.nodeType!==Node.ELEMENT_NODE) return "";
+    if(node.matches && node.matches("span.implicitProduct")) return "*";
+    if(node.matches && node.matches("sup.mathExponent")){
+        const inner=Array.from(node.childNodes).map(mathNodeToSource).join("");
+        return inner ? "^("+inner+")" : "^";
+    }
+    return Array.from(node.childNodes).map(mathNodeToSource).join("");
+}
+function appendMathSource(parent, source){
+    let i=0, plain="";
+    const flush=()=>{if(plain){parent.appendChild(document.createTextNode(plain));plain="";}};
+    while(i<source.length){
+        const ch=source[i];
+        if(ch==="^"){
+            flush(); i++;
+            let exponent="";
+            if(source[i]==="("){
+                i++; let depth=1; let start=i;
+                while(i<source.length && depth>0){
+                    if(source[i]==="(") depth++;
+                    else if(source[i]===")") depth--;
+                    if(depth>0) i++;
+                }
+                exponent=source.slice(start,i);
+                if(source[i]===")") i++;
+            }else if(i<source.length){
+                if(/[+-]/.test(source[i])) exponent+=source[i++];
+                if(source[i]==="("){
+                    i++; let depth=1; let start=i;
+                    while(i<source.length && depth>0){if(source[i]==="(")depth++;else if(source[i]===")")depth--;if(depth>0)i++;}
+                    exponent+=source.slice(start,i); if(source[i]===")")i++;
+                }else if(/[A-Za-z_]/.test(source[i])){
+                    while(i<source.length && /[A-Za-z_]/.test(source[i])) exponent+=source[i++];
+                }else if(/[0-9.]/.test(source[i])){
+                    while(i<source.length && /[0-9.]/.test(source[i])) exponent+=source[i++];
+                }
+            }
+            const sup=document.createElement("sup"); sup.className="mathExponent"; sup.setAttribute("data-exp","1");
+            appendMathSource(sup,exponent);
+            parent.appendChild(sup);
+            continue;
+        }
+        if(ch==="*"){
+            const prev=source[i-1]||"", next=source[i+1]||"";
+            const implicit=(/[0-9)\]]/.test(prev) && /[A-Za-z_(\[]/.test(next));
+            if(implicit){
+                flush();
+                const product=document.createElement("span");
+                product.className="implicitProduct";
+                product.setAttribute("data-implicit-product","1");
+                product.setAttribute("aria-label","곱하기");
+                parent.appendChild(product);
+            }else plain += "×";
+            i++;
+            continue;
+        }
+        plain += ch==="/" ? "÷" : ch==="-" ? "−" : ch==="p" && source.slice(i,i+2)==="pi" ? "π" : ch;
+        if(ch==="p" && source.slice(i,i+2)==="pi") i+=2; else i++;
+    }
+    flush();
+}
+function syncMathEditorFromSource(){
+    if(!exprVisual) return;
+    exprVisual.replaceChildren();
+    appendMathSource(exprVisual, expr.value || "");
+}
+function syncSourceFromMathEditor(){
+    if(!exprVisual) return;
+    expr.value=Array.from(exprVisual.childNodes).map(mathNodeToSource).join("");
+}
+function insertMathText(text){
+    exprVisual.focus();
+    const sel=window.getSelection();
+    if(!sel) return;
+    let range;
+    if(sel.rangeCount && exprVisual.contains(sel.anchorNode)) range=sel.getRangeAt(0);
+    else {range=document.createRange();range.selectNodeContents(exprVisual);range.collapse(false);}
+    range.deleteContents();
+    if(text==="^"){
+        const sup=document.createElement("sup");sup.className="mathExponent";sup.setAttribute("data-exp","1");
+        const placeholder=document.createTextNode("\u200B");sup.appendChild(placeholder);range.insertNode(sup);
+        const caret=document.createRange();caret.setStart(placeholder,1);caret.collapse(true);sel.removeAllRanges();sel.addRange(caret);
+    }else{
+        const shown=text==="*"?"×":text==="/"?"÷":text==="-"?"−":text==="pi"?"π":text;
+        const node=document.createTextNode(shown);range.insertNode(node);
+        range.setStartAfter(node);range.collapse(true);sel.removeAllRanges();sel.addRange(range);
+    }
+    syncSourceFromMathEditor();
+}
+if(exprVisual){
+    exprVisual.addEventListener("input",syncSourceFromMathEditor);
+    exprVisual.addEventListener("keydown",e=>{
+        if(e.key==="^"){e.preventDefault();insertMathText("^");}
+        else if(e.key==="*" ){e.preventDefault();insertMathText("*");}
+        else if(e.key==="/"){e.preventDefault();insertMathText("/");}
+        else if(e.key==="-"){e.preventDefault();insertMathText("-");}
+    });
+    exprVisual.addEventListener("paste",e=>{
+        e.preventDefault();
+        const text=(e.clipboardData||window.clipboardData).getData("text").replace(/\s+/g,"");
+        // 붙여넣은 식의 ^ 지수도 실제 위첨자 요소로 렌더링합니다.
+        expr.value=text;
+        syncMathEditorFromSource();
+        exprVisual.focus();
+        const range=document.createRange();
+        range.selectNodeContents(exprVisual);
+        range.collapse(false);
+        const selection=window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        syncSourceFromMathEditor();
+    });
+    syncMathEditorFromSource();
+}
+
+function syncBpmLabel(){
+    const bpm=document.getElementById("bpm");
+    const label=document.getElementById("bpmValue");
+    if(bpm && label) label.textContent=Math.max(50,Math.min(220,Number(bpm.value)||145))+" BPM";
+}
+const bpmControl=document.getElementById("bpm");
+if(bpmControl){bpmControl.addEventListener("input",syncBpmLabel);syncBpmLabel();}
 
 const msg =
     document.getElementById("message");
@@ -2479,6 +2635,44 @@ function generateFunctionPoints(expression){
 
 
 /* =========================================================
+   주기 함수 작업용 자동 보기 맞춤
+========================================================= */
+function refreshFunctionLayerPoints(layer){
+    if(!layer || layer.type!=="function" || !layer.expression) return;
+    const points=generateFunctionPoints(layer.expression);
+    const center=getCenter(points);
+    points.forEach(p=>{p.cx=center.x;p.cy=center.y;});
+    layer.points=points;
+}
+
+function fitPeriodicWorkspace(){
+    // mod가 들어간 식은 반복 구간과 음표 패턴을 한눈에 보기 쉽게 표시합니다.
+    if(xmax-xmin>10 || xmin<0 || xmax>10){
+        xmin=0;
+        xmax=3.2;
+    }
+    layers.forEach(layer=>{
+        if(layer.type==="function") refreshFunctionLayerPoints(layer);
+    });
+    const values=[];
+    layers.filter(layer=>layer.visible).forEach(layer=>{
+        (layer.points||[]).forEach(point=>{
+            if(Number.isFinite(point.y)) values.push(point.y);
+        });
+    });
+    if(values.length){
+        const low=Math.min(...values);
+        const high=Math.max(...values);
+        const span=Math.max(1,high-low);
+        const pad=Math.max(0.8,span*0.1);
+        ymin=low-pad;
+        ymax=high+pad;
+    }
+    syncViewInputs();
+}
+
+
+/* =========================================================
    변환
 ========================================================= */
 
@@ -2592,6 +2786,7 @@ function selectLayer(id){
 
     expr.value =
         l.expression || "";
+    syncMathEditorFromSource();
 
     renderLayers();
 
@@ -3135,6 +3330,13 @@ document
             layer.points =
                 points;
 
+            // 수식 유형에 따라 참고 이미지와 비슷한 색을 자동 적용합니다.
+            if(/frac\s*\(|\[[^\]]+\]/i.test(layer.expression) && /\bmod\b/i.test(layer.expression)){
+                layer.color="#f0cf4a";
+            }else if(/\be\s*\^/i.test(layer.expression) && /\^/.test(layer.expression) && /\bmod\b/i.test(layer.expression)){
+                layer.color="#202124";
+            }
+
             layer.transform={
 
                 tx:0,
@@ -3147,6 +3349,9 @@ document
 
             };
 
+            if(/\bmod\b/i.test(layer.expression)){
+                fitPeriodicWorkspace();
+            }
 
             msg.textContent="";
 
@@ -3268,7 +3473,7 @@ function addLayer(type){
 
     expr.value =
         layer.expression;
-
+    syncMathEditorFromSource();
 
     renderLayers();
 
@@ -3353,7 +3558,7 @@ document
         expr.value =
             selectedLayer()
             ?.expression || "";
-
+        syncMathEditorFromSource();
 
         renderLayers();
 
@@ -4716,7 +4921,7 @@ document
 
 
         expr.value="";
-
+        syncMathEditorFromSource();
 
         renderLayers();
 
@@ -5280,50 +5485,28 @@ function draw(){
 
         ctx.beginPath();
 
-
         let hasStarted=false;
+        let previousPoint=null;
+        const stepLike=/frac\s*\(|\[[^\]]+\]/i.test(layer.expression||"");
+        const jumpThreshold=stepLike ? 0.45 : Math.max(0.8,(ymax-ymin)*0.22);
 
-
-        points.forEach(
-            p=>{
-
-                const px =
-                    sx(p.x);
-
-                const py =
-                    sy(p.y);
-
-
-                if(
-                    px<-100 ||
-                    px>w+100 ||
-                    py<-100 ||
-                    py>h+100
-                ){
-                    return;
-                }
-
-
-                if(!hasStarted){
-
-                    ctx.moveTo(
-                        px,
-                        py
-                    );
-
-                    hasStarted=true;
-
-                }else{
-
-                    ctx.lineTo(
-                        px,
-                        py
-                    );
-
-                }
-
+        points.forEach(p=>{
+            const px=sx(p.x);
+            const py=sy(p.y);
+            if(px<-100 || px>w+100 || py<-100 || py>h+100){
+                previousPoint=null;
+                hasStarted=false;
+                return;
             }
-        );
+            const discontinuity=previousPoint && Math.abs(p.y-previousPoint.y)>jumpThreshold;
+            if(!hasStarted || discontinuity){
+                ctx.moveTo(px,py);
+                hasStarted=true;
+            }else{
+                ctx.lineTo(px,py);
+            }
+            previousPoint=p;
+        });
 
 
         ctx.stroke();
@@ -6361,6 +6544,10 @@ function musicTick(){
                 playbackDuration
             )
         );
+    const bpm=Math.max(50,Math.min(220,Number(document.getElementById("bpm")?.value)||145));
+    const beatStep=30/bpm; // 8분음표마다 음높이를 갱신합니다.
+    const musicalElapsed=Math.floor(elapsed/beatStep)*beatStep;
+    const musicalProgress=Math.max(0,Math.min(1,musicalElapsed/playbackDuration));
 
     renderArrangement(progress);
 
@@ -6376,7 +6563,7 @@ function musicTick(){
                 Math.min(
                     points.length-1,
                     Math.floor(
-                        progress*
+                        musicalProgress*
                         (
                             points.length-1
                         )
@@ -7117,31 +7304,12 @@ async function downloadWav(){
             );
 
 
-            for(
-                let i=1;
-                i<points.length;
-                i++
-            ){
-
-                const progress =
-                    i/
-                    (
-                        points.length-1
-                    );
-
-
-                const t =
-                    progress*
-                    duration;
-
-
-                const midi =
-                    graphMidi(
-                        points[i].y,
-                        data.lo,
-                        data.hi,
-                        scale
-                    );
+            const bpm=Math.max(50,Math.min(220,Number(document.getElementById("bpm")?.value)||145));
+            const beatStep=30/bpm;
+            for(let t=beatStep;t<duration;t+=beatStep){
+                const progress=Math.min(1,t/duration);
+                const pointIndex=Math.min(points.length-1,Math.floor(progress*(points.length-1)));
+                const midi=graphMidi(points[pointIndex].y,data.lo,data.hi,scale);
 
 
                 const freq =
@@ -8052,6 +8220,9 @@ function buildSongSnapshot(){
                 "duration"
             ).value,
 
+        bpm:
+            Number(document.getElementById("bpm")?.value || 145),
+
         scale:
             document.getElementById(
                 "scale"
@@ -8217,6 +8388,8 @@ function loadSong(songId){
         song.duration ||
         "30";
 
+    document.getElementById("bpm").value = String(Math.max(50,Math.min(220,Number(song.bpm)||145)));
+    syncBpmLabel();
 
     document.getElementById(
         "scale"
@@ -8279,7 +8452,7 @@ function loadSong(songId){
     expr.value =
         selectedLayer()
         ?.expression || "";
-
+    syncMathEditorFromSource();
 
     renderLayers();
 
@@ -8490,6 +8663,8 @@ function createFreshWorkspace(){
     ).value =
         "30";
 
+    document.getElementById("bpm").value = "145";
+    syncBpmLabel();
 
     document.getElementById(
         "scale"
@@ -8505,7 +8680,7 @@ function createFreshWorkspace(){
 
     expr.value =
         "sin(x)";
-
+    syncMathEditorFromSource();
 
     currentSongId=null;
 
@@ -9005,18 +9180,7 @@ document
             "click",
             ()=>{
                 const key=button.dataset.key;
-                const start=expr.selectionStart ?? expr.value.length;
-                const end=expr.selectionEnd ?? expr.value.length;
-
-                expr.value =
-                    expr.value.slice(0,start) +
-                    key +
-                    expr.value.slice(end);
-
-                expr.focus();
-
-                const pos=start+key.length;
-                expr.setSelectionRange(pos,pos);
+                insertMathText(key);
             }
         );
     }
