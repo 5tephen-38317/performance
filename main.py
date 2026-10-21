@@ -1678,6 +1678,15 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
                     </div>
 
                     <div class="section">
+                        <label for="arrangementMode">편곡 방식</label>
+                        <select id="arrangementMode">
+                            <option value="all">모든 그래프를 각각 다른 악기 파트로 편성</option>
+                            <option value="backing">그래프는 멜로디로, 자동 반주·베이스·드럼 추가</option>
+                        </select>
+                        <div class="muted">모든 그래프 모드에서는 레이어마다 음색을 나누고, 자동 반주 모드에서는 코드·베이스·리듬을 더합니다.</div>
+                    </div>
+
+                    <div class="section">
                         <label>음악 스타일 / 장르</label>
                         <select id="style">
                             <optgroup label="Pop">
@@ -1697,7 +1706,7 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
                                 <option value="rock">Rock</option><option value="jazz">Jazz</option><option value="blues">Blues</option>
                             </optgroup>
                             <optgroup label="Classical & Atmosphere">
-                                <option value="classic">Classic</option><option value="ambient">Ambient</option><option value="cinematic">Cinematic</option><option value="lofi">Lo-fi</option>
+                                <option value="classic">Classic</option><option value="piano">Piano & Strings</option><option value="ambient">Ambient</option><option value="cinematic">Cinematic OST</option><option value="epic">Epic Fantasy</option><option value="lofi">Lo-fi</option>
                             </optgroup>
                         </select>
                     </div>
@@ -1775,15 +1784,26 @@ function saveMathSelection(){
     }
 }
 function restoreMathSelection(){
-    exprVisual.focus({preventScroll:true});
     const sel=window.getSelection();
-    if(!sel) return null;
+    // 현재 커서가 편집기 안에 있으면 저장된 커서로 덮어쓰지 않습니다.
+    if(sel && sel.rangeCount && exprVisual && exprVisual.contains(sel.anchorNode)){
+        return sel.getRangeAt(0).cloneRange();
+    }
+    exprVisual.focus({preventScroll:true});
+    const live=window.getSelection();
+    if(!live) return null;
     if(savedMathRange && exprVisual.contains(savedMathRange.startContainer) && exprVisual.contains(savedMathRange.endContainer)){
-        sel.removeAllRanges(); sel.addRange(savedMathRange);
-        return sel.getRangeAt(0);
+        live.removeAllRanges(); live.addRange(savedMathRange);
+        return live.getRangeAt(0).cloneRange();
     }
     const r=document.createRange(); r.selectNodeContents(exprVisual); r.collapse(false);
-    sel.removeAllRanges(); sel.addRange(r); return r;
+    live.removeAllRanges(); live.addRange(r); return r;
+}
+function setMathCaret(range){
+    const sel=window.getSelection();
+    if(!sel || !range) return;
+    range.collapse(true); sel.removeAllRanges(); sel.addRange(range);
+    savedMathRange=range.cloneRange();
 }
 function mathNodeToSource(node){
     if(node.nodeType===Node.TEXT_NODE){
@@ -1843,36 +1863,42 @@ function syncSourceFromMathEditor(){
     saveMathSelection();
 }
 function insertMathText(text){
-    let range=restoreMathSelection();
-    const sel=window.getSelection(); if(!sel) return;
-    if(!range){range=document.createRange();range.selectNodeContents(exprVisual);range.collapse(false);}
+    const range=restoreMathSelection();
+    const sel=window.getSelection(); if(!sel || !range) return;
     range.deleteContents();
     if(text==="^"){
         const sup=document.createElement("sup");sup.className="mathExponent";sup.setAttribute("data-exp","1");
         const placeholder=document.createTextNode("\u200B");sup.appendChild(placeholder);range.insertNode(sup);
-        const caret=document.createRange();caret.setStart(placeholder,1);caret.collapse(true);sel.removeAllRanges();sel.addRange(caret);
+        const caret=document.createRange();caret.setStart(placeholder,1);caret.collapse(true);setMathCaret(caret);
     }else{
         const shown=text==="*"?"×":text==="/"?"÷":text==="-"?"−":text==="pi"?"π":text;
-        const node=document.createTextNode(shown);range.insertNode(node);range.setStartAfter(node);range.collapse(true);sel.removeAllRanges();sel.addRange(range);
+        const node=document.createTextNode(shown);range.insertNode(node);
+        const caret=document.createRange();caret.setStartAfter(node);caret.collapse(true);setMathCaret(caret);
     }
     syncSourceFromMathEditor();
+    // syncSourceFromMathEditor는 DOM을 재생성하지 않으므로 현재 커서를 다시 저장합니다.
+    saveMathSelection();
 }
 function moveCaretOutsideExponentIfAtEnd(){
     const sel=window.getSelection();
-    if(!sel || !sel.isCollapsed || !sel.rangeCount) return false;
+    if(!sel || !sel.isCollapsed || !sel.rangeCount || !exprVisual) return false;
     const anchor=sel.anchorNode;
     const exponent=anchor && (anchor.nodeType===Node.ELEMENT_NODE ? anchor : anchor.parentElement)?.closest?.("sup.mathExponent");
     if(!exponent || !exprVisual.contains(exponent)) return false;
     const caret=sel.getRangeAt(0).cloneRange();
-    const before=document.createRange(); before.selectNodeContents(exponent); before.setEnd(caret.startContainer,caret.startOffset);
+    const before=document.createRange(); before.selectNodeContents(exponent);
+    try{before.setEnd(caret.startContainer,caret.startOffset);}catch(_){return false;}
     const caretText=before.toString().replace(/\u200B/g,"");
     const fullText=exponent.textContent.replace(/\u200B/g,"");
-    const atEnd=caretText.length>=fullText.length || (anchor===exponent && sel.anchorOffset>=exponent.childNodes.length);
+    const atEnd=caretText.length>=fullText.length;
     if(!atEnd) return false;
     let after=exponent.nextSibling;
-    if(!after || after.nodeType!==Node.TEXT_NODE){after=document.createTextNode("");exponent.parentNode.insertBefore(after,exponent.nextSibling);}
-    const r=document.createRange();r.setStart(after,after.nodeValue.length);r.collapse(true);sel.removeAllRanges();sel.addRange(r);
-    savedMathRange=r.cloneRange();syncSourceFromMathEditor();return true;
+    if(!after || after.nodeType!==Node.TEXT_NODE){
+        after=document.createTextNode(""); exponent.parentNode.insertBefore(after,exponent.nextSibling);
+    }
+    // 기존 상수(-4 등)가 뒤에 있으면 그 앞에 커서를 둡니다.
+    const r=document.createRange();r.setStart(after,0);r.collapse(true);setMathCaret(r);
+    return true;
 }
 if(exprVisual){
     exprVisual.addEventListener("input",syncSourceFromMathEditor);
@@ -1881,10 +1907,9 @@ if(exprVisual){
     exprVisual.addEventListener("focus",saveMathSelection);
     document.addEventListener("selectionchange",()=>{if(selectionInsideMathEditor())saveMathSelection();});
     exprVisual.addEventListener("keydown",e=>{
-        if(e.key==="ArrowRight" && moveCaretOutsideExponentIfAtEnd()){e.preventDefault();return;}
+        if(e.key==="ArrowRight" && moveCaretOutsideExponentIfAtEnd()){e.preventDefault();e.stopPropagation();return;}
         if(e.key==="^" || e.key==="*"){e.preventDefault();insertMathText(e.key);}
         else if(e.key==="/"){e.preventDefault();insertMathText("/");}
-        else if(e.key==="-"){e.preventDefault();insertMathText("-");}
     });
     exprVisual.addEventListener("paste",e=>{
         e.preventDefault();const text=(e.clipboardData||window.clipboardData).getData("text").replace(/\s+/g,"");
@@ -2001,6 +2026,7 @@ let playbackStart = 0;
 let playbackDuration = 10;
 
 let audioVoices = [];
+let backingNodes = [];
 
 
 /* =========================================================
@@ -6083,8 +6109,24 @@ const styles={
         waveform:"triangle",
         attack:.12,
         release:.48,
-        baseGain:.62,
-        subGain:.07
+        baseGain:.72,
+        subGain:.10
+    },
+
+    epic:{
+        waveform:"sawtooth",
+        attack:.16,
+        release:.62,
+        baseGain:.58,
+        subGain:.16
+    },
+
+    piano:{
+        waveform:"triangle",
+        attack:.008,
+        release:.38,
+        baseGain:.82,
+        subGain:.025
     },
 
     lofi:{
@@ -6376,6 +6418,52 @@ function renderArrangement(progressOverride){
 }
 
 /* =========================================================
+   자동 반주: 코드 패드 + 베이스 + 드럼
+========================================================= */
+function scheduleBacking(context, destination, duration, styleKey, bpm, scaleName){
+    const mode=document.getElementById("arrangementMode")?.value||"all";
+    if(mode!=="backing") return [];
+    const nodes=[];
+    const beat=60/Math.max(50,Math.min(220,Number(bpm)||145));
+    const isEpic=styleKey==="epic"||styleKey==="cinematic";
+    const isPiano=styleKey==="piano"||styleKey==="classic";
+    const roots=scaleName==="minor"?[57,60,62,57]:[60,65,67,60];
+    const chordSteps=scaleName==="minor"?[[0,3,7],[0,3,7],[0,4,7],[0,3,7]]:[[0,4,7],[0,5,9],[0,4,7],[0,5,9]];
+    const chordEvery=beat*(isEpic?2:4);
+    for(let t=0,bar=0;t<duration;t+=chordEvery,bar++){
+        const root=roots[bar%roots.length];
+        const tones=chordSteps[bar%chordSteps.length];
+        tones.forEach((step,j)=>{
+            const osc=context.createOscillator();
+            const gain=context.createGain();
+            osc.type=isEpic?"sawtooth":(isPiano?"triangle":"sine");
+            osc.frequency.setValueAtTime(midiFreq(root+step+(isEpic?12:0)),t);
+            gain.gain.setValueAtTime(0,t);
+            gain.gain.linearRampToValueAtTime(isEpic?.035:.022,t+Math.min(.18,beat*.35));
+            gain.gain.setValueAtTime(isEpic?.035:.022,Math.min(duration,t+chordEvery*.72));
+            gain.gain.linearRampToValueAtTime(0,Math.min(duration,t+chordEvery*.95));
+            osc.connect(gain);gain.connect(destination);osc.start(t);osc.stop(Math.min(duration,t+chordEvery));nodes.push(osc);
+        });
+        // Low bass pulse on each bar
+        const bass=context.createOscillator(); const bg=context.createGain();
+        bass.type="sine"; bass.frequency.setValueAtTime(midiFreq(root-12),t);
+        bg.gain.setValueAtTime(0,t); bg.gain.linearRampToValueAtTime(isEpic?.12:.075,t+.025); bg.gain.exponentialRampToValueAtTime(.001,Math.min(duration,t+beat*1.6));
+        bass.connect(bg);bg.connect(destination);bass.start(t);bass.stop(Math.min(duration,t+beat*1.65));nodes.push(bass);
+    }
+    // Simple percussive beat; use a short noise burst for kick/snare-like attacks.
+    if(!isPiano){
+        const step=beat/2;
+        for(let t=0,i=0;t<duration;t+=step,i++){
+            const osc=context.createOscillator(); const gain=context.createGain();
+            const kick=(i%4===0); osc.type="sine"; osc.frequency.setValueAtTime(kick?105:190,t); osc.frequency.exponentialRampToValueAtTime(kick?42:95,Math.min(duration,t+.11));
+            gain.gain.setValueAtTime(kick?.18:.055,t); gain.gain.exponentialRampToValueAtTime(.001,Math.min(duration,t+.13));
+            osc.connect(gain);gain.connect(destination);osc.start(t);osc.stop(Math.min(duration,t+.14));nodes.push(osc);
+        }
+    }
+    return nodes;
+}
+
+/* =========================================================
    음악 재생
 ========================================================= */
 
@@ -6466,6 +6554,9 @@ async function playMusic(){
 
 
     audioVoices=[];
+    backingNodes=[];
+    const arrangementMode=document.getElementById("arrangementMode")?.value||"all";
+    const instrumentStyles=["piano","cinematic","epic","synthwave","classic","edm","ambient"];
 
 
     visibleLayers.forEach(
@@ -6482,11 +6573,14 @@ async function playMusic(){
             }
 
 
+            const layerStyle = arrangementMode==="all"
+                ? (styles[instrumentStyles[visibleLayers.indexOf(layer)%instrumentStyles.length]]||style)
+                : style;
             const voice =
                 createLiveVoice(
                     layer,
                     data,
-                    style,
+                    layerStyle,
                     start
                 );
 
@@ -6498,6 +6592,14 @@ async function playMusic(){
         }
     );
 
+    backingNodes=scheduleBacking(
+        audioCtx,
+        audioCtx.destination,
+        duration,
+        document.getElementById("style").value,
+        document.getElementById("bpm")?.value||145,
+        document.getElementById("scale").value
+    );
 
     if(
         !audioVoices.length
@@ -6517,7 +6619,8 @@ async function playMusic(){
         "now"
     ).textContent =
         audioVoices.length +
-        "개 그래프 레이어가 동시에 재생됩니다.";
+        "개 그래프 레이어 재생 중 · " +
+        (document.getElementById("arrangementMode")?.value==="backing" ? "자동 코드·베이스·리듬 포함" : "레이어별 악기 편성");
 
 
     raf =
@@ -6903,6 +7006,8 @@ function stopMusic(){
     }
 
 
+    backingNodes.forEach(node=>{try{node.stop(audioCtx.currentTime+.03);}catch(e){}});
+    backingNodes=[];
     audioVoices=[];
 
     playbackStart=0;
@@ -7263,6 +7368,18 @@ async function downloadWav(){
         offline.destination
     );
 
+    // WAV에도 라이브 재생과 동일한 자동 코드·베이스·드럼 편성을 렌더링합니다.
+    scheduleBacking(
+        offline,
+        compressor,
+        duration,
+        document.getElementById("style").value,
+        document.getElementById("bpm")?.value||145,
+        document.getElementById("scale").value
+    );
+
+    const arrangementMode=document.getElementById("arrangementMode")?.value||"all";
+    const instrumentStyles=["piano","cinematic","epic","synthwave","classic","edm","ambient"];
 
     visibleLayers.forEach(
         layer=>{
@@ -7286,8 +7403,11 @@ async function downloadWav(){
                 offline.createGain();
 
 
+            const layerStyle = arrangementMode==="all"
+                ? (styles[instrumentStyles[visibleLayers.indexOf(layer)%instrumentStyles.length]]||style)
+                : style;
             osc.type =
-                style.waveform;
+                layerStyle.waveform;
 
 
             const points =
@@ -7344,7 +7464,7 @@ async function downloadWav(){
 
             const level =
                 layer.volume *
-                style.baseGain;
+                layerStyle.baseGain;
 
 
             gain.gain.setValueAtTime(
@@ -7357,7 +7477,7 @@ async function downloadWav(){
                 .linearRampToValueAtTime(
                     level,
                     Math.min(
-                        style.attack,
+                        layerStyle.attack,
                         duration/4
                     )
                 );
@@ -7367,7 +7487,7 @@ async function downloadWav(){
                 .linearRampToValueAtTime(
                     level,
                     Math.max(
-                        style.attack,
+                        layerStyle.attack,
                         duration-.12
                     )
                 );
@@ -7393,7 +7513,7 @@ async function downloadWav(){
                서브 옥타브
             */
 
-            if(style.subGain>0){
+            if(layerStyle.subGain>0){
 
                 const sub =
                     offline
@@ -7406,7 +7526,7 @@ async function downloadWav(){
 
 
                 sub.type =
-                    style.waveform;
+                    layerStyle.waveform;
 
 
                 sub.frequency.setValueAtTime(
@@ -7470,9 +7590,9 @@ async function downloadWav(){
                 subGain.gain
                     .linearRampToValueAtTime(
                         layer.volume *
-                        style.subGain,
+                        layerStyle.subGain,
                         Math.min(
-                            style.attack,
+                            layerStyle.attack,
                             duration/4
                         )
                     );
@@ -7481,9 +7601,9 @@ async function downloadWav(){
                 subGain.gain
                     .linearRampToValueAtTime(
                         layer.volume *
-                        style.subGain,
+                        layerStyle.subGain,
                         Math.max(
-                            style.attack,
+                            layerStyle.attack,
                             duration-.12
                         )
                     );
