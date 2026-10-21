@@ -1594,7 +1594,7 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
                     <div class="functionEditor">
                         <label for="exprVisual">선택된 표현식</label>
                         <input id="expr" type="text" value="sin(x)" autocomplete="off" spellcheck="false" aria-hidden="true" tabindex="-1" style="display:none!important">
-                        <div id="exprVisual" class="mathEditor" contenteditable="true" role="textbox" aria-label="수식 입력" spellcheck="false"></div>
+                        <div id="exprVisual" class="mathEditor" contenteditable="true" role="textbox" aria-label="수식 입력. 지수 입력 후 오른쪽 화살표를 누르면 지수 밖으로 이동합니다." spellcheck="false"></div>
                         <div class="functionActions">
                             <button id="draw" class="primary">그래프 적용</button>
                             <button id="clearLayer">지우기</button>
@@ -1857,9 +1857,39 @@ function insertMathText(text){
     }
     syncSourceFromMathEditor();
 }
+// 커서가 지수의 마지막에 있을 때 오른쪽 화살표를 누르면 지수 밖으로 이동합니다.
+function moveCaretOutsideExponentIfAtEnd(){
+    const selection=window.getSelection();
+    if(!selection || !selection.isCollapsed || !selection.rangeCount) return false;
+    const anchor=selection.anchorNode;
+    const exponent=anchor && (anchor.nodeType===Node.ELEMENT_NODE ? anchor : anchor.parentElement)?.closest?.("sup.mathExponent");
+    if(!exponent || !exprVisual.contains(exponent)) return false;
+    const caretRange=selection.getRangeAt(0).cloneRange();
+    const endRange=document.createRange();
+    endRange.selectNodeContents(exponent);
+    endRange.collapse(false);
+    if(caretRange.compareBoundaryPoints(Range.START_TO_START,endRange)!==0) return false;
+
+    let after=exponent.nextSibling;
+    if(!after || after.nodeType!==Node.TEXT_NODE){
+        after=document.createTextNode("");
+        exponent.parentNode.insertBefore(after,exponent.nextSibling);
+    }
+    const range=document.createRange();
+    range.setStart(after,0);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    syncSourceFromMathEditor();
+    return true;
+}
 if(exprVisual){
     exprVisual.addEventListener("input",syncSourceFromMathEditor);
     exprVisual.addEventListener("keydown",e=>{
+        if(e.key==="ArrowRight" && moveCaretOutsideExponentIfAtEnd()){
+            e.preventDefault();
+            return;
+        }
         if(e.key==="^"){e.preventDefault();insertMathText("^");}
         else if(e.key==="*" ){e.preventDefault();insertMathText("*");}
         else if(e.key==="/"){e.preventDefault();insertMathText("/");}
