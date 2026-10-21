@@ -1337,12 +1337,21 @@ html,body{margin:0!important;padding:0!important;width:100%;min-height:100%;over
 body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto Sans KR",sans-serif!important}
 #cosmos{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
 .header{display:none!important}
-.workspaceShell{width:100%!important;max-width:none!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;height:calc(100dvh - 12px)!important;min-height:620px!important;background:#fff!important}
+.workspaceShell{width:100%!important;max-width:none!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;height:calc(100dvh - 2px)!important;min-height:620px!important;background:#fff!important}
 .appToolbar{height:54px!important;min-height:54px!important;padding:5px 12px!important;background:#292929!important;color:#fff!important;border:0!important;border-radius:0!important}
 .toolbarBrand{color:#fff!important}.toolbarFlower{display:none!important}.toolbarBrand span{font-size:18px!important;letter-spacing:1px!important;color:#fff!important}
 .fileTitle{background:transparent!important;color:#fff!important;border:0!important;border-left:1px solid #777!important;border-radius:0!important;font-size:17px!important;min-width:80px!important;max-width:220px!important}
 .toolbarBtn{border-radius:5px!important;min-height:34px!important;padding:6px 10px!important;font-size:13px!important}
-.workspace{height:calc(100% - 54px)!important;min-height:0!important;grid-template-columns:minmax(270px,32%) minmax(0,1fr)!important;gap:0!important;background:#fff!important}
+.workspace{height:calc(100% - 54px)!important;min-height:0!important;grid-template-columns:minmax(250px,29%) minmax(0,1fr) 38px!important;gap:0!important;background:#fff!important;overflow:visible!important;}
+.workspaceRail{display:block!important;position:relative!important;width:38px!important;min-width:38px!important;overflow:visible!important;z-index:40!important;background:#fff!important;border-left:1px solid #d8dadd!important;}
+.railPanel{box-sizing:border-box!important;position:absolute!important;top:0!important;right:0!important;width:min(420px,calc(100vw - 48px))!important;height:100%!important;max-height:100%!important;padding:14px!important;overflow:auto!important;background:#fff!important;z-index:100!important;border:1px solid #d8dadd!important;box-shadow:-10px 0 28px #0002!important;}
+.railPanel.open{display:block!important;}
+.workspaceRailTab{right:0!important;top:10px!important;z-index:110!important;}
+.helpContent{padding-bottom:18px!important;}
+.helpSection{padding:12px 0!important;border-bottom:1px solid #e7e8eb!important;line-height:1.6!important;}
+.helpSection p{margin:6px 0 0!important;color:#555b65!important;font-size:12px!important;}
+.helpSection code{display:inline-block;background:#f1f3f5!important;padding:1px 4px!important;border-radius:3px!important;color:#222!important;}
+.toolbarPlayAll{background:#4b72d8!important;color:#fff!important;border-color:#4b72d8!important;font-weight:700!important;}
 .expressionPane{background:#fff!important;border-right:1px solid #d8dadd!important;border-radius:0!important;min-height:0!important;overflow:hidden!important}
 .expressionHeader{padding:8px 10px!important;border-bottom:1px solid #d8dadd!important;background:#f7f7f7!important}
 .expressionHeaderTitle,.graphTopTitle{font-size:14px!important;font-weight:600!important;color:#45474b!important}
@@ -1370,7 +1379,7 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
 .brandFooter{display:none!important}
 .layerSoundBtn{width:34px!important;min-width:34px!important;padding:3px!important;font-size:17px!important;background:#fff!important;border:1px solid #d5d8de!important;border-radius:4px!important}
 .layerSoundBtn.active{background:#eaf0ff!important;border-color:#4169d5!important;color:#3156bd!important}
-@media(max-width:850px){.workspaceShell{height:calc(100dvh - 4px)!important;min-height:0!important}.workspace{height:calc(100% - 54px)!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(150px,32%)!important}.graphWorkspace{grid-row:1;min-height:0!important}.expressionPane{grid-row:2;min-height:0!important;border-top:1px solid #d8dadd!important;border-right:0!important}.expressionScroll{min-height:0!important;overflow:auto!important}.keypad{max-height:38vh!important;right:6px!important;bottom:6px!important;width:min(360px,calc(100% - 12px))!important}.graphTopHint{display:none!important}}
+@media(max-width:850px){.workspaceShell{height:calc(100dvh - 2px)!important;min-height:0!important}.workspace{height:calc(100% - 54px)!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(150px,32%)!important;position:relative!important}.graphWorkspace{grid-row:1;min-height:0!important}.expressionPane{grid-row:2;min-height:0!important;border-top:1px solid #d8dadd!important;border-right:0!important}.workspaceRail{position:absolute!important;top:0!important;right:0!important;bottom:0!important;width:38px!important;min-width:38px!important;border:0!important;background:transparent!important}.railPanel{right:38px!important;width:min(420px,calc(100vw - 44px))!important;height:100%!important}.expressionScroll{min-height:0!important;overflow:auto!important}.keypad{max-height:38vh!important;right:6px!important;bottom:6px!important;width:min(360px,calc(100% - 12px))!important}.graphTopHint{display:none!important}.toolbarPlayAll{display:none!important}}
 @media(max-height:700px){.keypad{max-height:125px!important}.expressionFooter .workspaceHint{display:none!important}}
 
 </style>
@@ -1433,8 +1442,9 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
         <button id="newSong" class="toolbarBtn" title="새 작업 공간">새로 만들기</button>
         <button id="saveSong" class="toolbarBtn primary" title="현재 곡 저장">저장</button>
         <div class="toolbarSpacer"></div>
+        <button id="toolbarPlayAll" class="toolbarBtn toolbarPlayAll" title="표시된 모든 그래프를 동시에 재생">▶ 전체 재생</button>
         <button id="musicRailOpen" class="toolbarBtn">♫ Graph → Music</button>
-        <button id="principleRailOpen" class="toolbarBtn icon" title="Cosmos 원리">?</button>
+        <button id="principleRailOpen" class="toolbarBtn icon" title="도움말">?</button>
     </div>
 
     <div class="workspace">
@@ -1589,7 +1599,7 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
 
             <div class="workspaceRailTab">
                 <button id="musicRailButton" class="railBtn" title="Graph → Music">♫</button>
-                <button id="principleRailButton" class="railBtn" title="Cosmos 원리">?</button>
+                <button id="principleRailButton" class="railBtn" title="도움말">?</button>
             </div>
 
             <div id="musicDrawer" class="railPanel">
@@ -1681,12 +1691,14 @@ body{background:#fff!important;color:#202124!important;font-family:Arial,"Noto S
                     <h3>Cosmos Principle</h3>
                     <button id="principleRailClose" class="railClose">×</button>
                 </div>
-                <div id="principle" class="principlePanel">
-                    <div class="principleFormula">x축 → 시간　│　y값 → 음높이</div>
-                    <b>Graph → Music</b><br>
-                    그래프의 전체 구간을 음악의 전체 재생 시간에 대응시킵니다.<br><br>
-                    그래프가 상승하면 음높이가 올라가고, 하강하면 음높이가 내려갑니다.<br><br>
-                    여러 표현식을 동시에 표시하면 각각의 그래프가 독립적인 선율로 변환되어 하나의 음악으로 합쳐집니다.
+                <div id="principle" class="principlePanel helpContent">
+                    <div class="principleFormula">COSMOS 빠른 사용 안내</div>
+                    <section class="helpSection"><b>1. 그래프 입력</b><p>왼쪽의 <b>＋</b>를 눌러 함수 그래프를 추가하고, 식을 입력한 뒤 Enter 또는 <b>그래프 적용</b>을 누르세요. 예: <code>sin(x)</code>, <code>x^2</code>, <code>abs(x)</code>.</p></section>
+                    <section class="helpSection"><b>2. 여러 그래프 다루기</b><p>각 식은 별도 레이어입니다. 레이어를 선택해 식을 바꾸거나, 표시/숨김을 전환하고, 음량을 조절할 수 있습니다. 숨겨진 레이어는 전체 재생에 포함되지 않습니다.</p></section>
+                    <section class="helpSection"><b>3. 그래프를 음악으로</b><p><b>▶ 전체 재생</b> 또는 <b>Graph → Music</b>을 누르세요. 표시 중인 모든 레이어가 동시에 재생됩니다. x축은 곡의 진행 시간, y값은 음높이에 대응하며 재생 중인 점이 각 그래프를 따라 움직입니다.</p></section>
+                    <section class="helpSection"><b>4. 음악 설정 및 저장</b><p>Graph → Music 패널에서 곡 길이, 음계, 음악 스타일을 고른 뒤 재생하세요. <b>정지</b>로 재생을 멈추고 <b>WAV 저장</b>으로 오디오 파일을 내보낼 수 있습니다.</p></section>
+                    <section class="helpSection"><b>5. 그래프 화면</b><p>마우스 휠로 확대/축소하고 그래프 영역을 드래그해 이동하세요. ⚙ 설정에서 x·y 범위, 격자, 축 표시를 바꿀 수 있습니다. ⌨ 키패드 버튼으로 수식 기호 패널을 열 수 있습니다.</p></section>
+                    <section class="helpSection"><b>6. 수식 예시</b><p><code>sin(x)</code> · <code>cos(2x)</code> · <code>x^2</code> · <code>sqrt(abs(x))</code> · <code>frac(x)</code> · <code>[x]</code> · <code>x mod 2</code></p></section>
                 </div>
             </div>
 
@@ -8813,6 +8825,16 @@ document
 );
 
 document
+.getElementById("toolbarPlayAll")
+.addEventListener(
+    "click",
+    ()=>{
+        toggleRail("musicDrawer",true);
+        playMusic();
+    }
+);
+
+document
 .getElementById("musicRailButton")
 .addEventListener(
     "click",
@@ -9126,6 +9148,6 @@ st.markdown(
 
 components.html(
     HTML,
-    height=900,
+    height=1100,
     scrolling=False
 )
