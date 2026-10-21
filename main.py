@@ -1882,32 +1882,53 @@ function insertMathText(text){
 function moveCaretOutsideExponentIfAtEnd(){
     const sel=window.getSelection();
     if(!sel || !sel.isCollapsed || !sel.rangeCount || !exprVisual) return false;
-    const anchor=sel.anchorNode;
-    const exponent=anchor && (anchor.nodeType===Node.ELEMENT_NODE ? anchor : anchor.parentElement)?.closest?.("sup.mathExponent");
+    const current=sel.getRangeAt(0);
+    let node=current.startContainer;
+    const exponent=(node.nodeType===Node.ELEMENT_NODE ? node : node.parentElement)?.closest?.("sup.mathExponent");
     if(!exponent || !exprVisual.contains(exponent)) return false;
-    const caret=sel.getRangeAt(0).cloneRange();
-    const before=document.createRange(); before.selectNodeContents(exponent);
-    try{before.setEnd(caret.startContainer,caret.startOffset);}catch(_){return false;}
-    const caretText=before.toString().replace(/\u200B/g,"");
-    const fullText=exponent.textContent.replace(/\u200B/g,"");
-    const atEnd=caretText.length>=fullText.length;
+
+    // 커서가 지수의 마지막 위치인지 DOM 경계점으로 확인합니다.
+    const endRange=document.createRange();
+    endRange.selectNodeContents(exponent);
+    endRange.collapse(false);
+    let atEnd=false;
+    try { atEnd=current.compareBoundaryPoints(Range.START_TO_START,endRange)===0; }
+    catch(_) { atEnd=false; }
+    // 브라우저가 커서를 sup 요소 자체의 끝에 둔 경우도 처리합니다.
+    if(!atEnd && current.startContainer===exponent && current.startOffset===exponent.childNodes.length) atEnd=true;
     if(!atEnd) return false;
+
+    // 빈 텍스트 노드는 브라우저가 커서 위치를 다시 지수 안으로 보정할 수 있으므로,
+    // 지수 바깥에 zero-width space를 둔 텍스트 노드를 만들어 커서를 안정적으로 고정합니다.
     let after=exponent.nextSibling;
     if(!after || after.nodeType!==Node.TEXT_NODE){
-        after=document.createTextNode(""); exponent.parentNode.insertBefore(after,exponent.nextSibling);
+        after=document.createTextNode("\u200B");
+        exponent.parentNode.insertBefore(after,exponent.nextSibling);
+    } else if(!after.nodeValue){
+        after.nodeValue="\u200B";
     }
-    // 기존 상수(-4 등)가 뒤에 있으면 그 앞에 커서를 둡니다.
-    const r=document.createRange();r.setStart(after,0);r.collapse(true);setMathCaret(r);
+    const r=document.createRange();
+    r.setStart(after, after.nodeValue.length);
+    r.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r);
+    savedMathRange=r.cloneRange();
     return true;
 }
 if(exprVisual){
     exprVisual.addEventListener("input",syncSourceFromMathEditor);
     exprVisual.addEventListener("keyup",saveMathSelection);
     exprVisual.addEventListener("mouseup",saveMathSelection);
+    exprVisual.addEventListener("beforeinput",saveMathSelection);
     exprVisual.addEventListener("focus",saveMathSelection);
     document.addEventListener("selectionchange",()=>{if(selectionInsideMathEditor())saveMathSelection();});
     exprVisual.addEventListener("keydown",e=>{
-        if(e.key==="ArrowRight" && moveCaretOutsideExponentIfAtEnd()){e.preventDefault();e.stopPropagation();return;}
+        if(e.key==="ArrowRight" && moveCaretOutsideExponentIfAtEnd()){
+            e.preventDefault();e.stopPropagation();
+            syncSourceFromMathEditor();
+            saveMathSelection();
+            return;
+        }
         if(e.key==="^" || e.key==="*"){e.preventDefault();insertMathText(e.key);}
         else if(e.key==="/"){e.preventDefault();insertMathText("/");}
     });
