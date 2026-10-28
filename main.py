@@ -1935,7 +1935,7 @@ HTML = r"""<!DOCTYPE html>
 
         // Cloud account and per-user data storage (Supabase).
         // Configure these two values using your own Supabase project before deployment.
-        const SUPABASE_URL = 'https://mkvlgqcrgpqsmrlmuvjx.supabase.co/rest/v1/';
+        const SUPABASE_URL = 'https://github.com/5tephen-38317/performance/blob/main/main.py';
         const SUPABASE_ANON_KEY = 'sb_publishable_QhXwfPy9tfGK06BAWn24og_RE2chtR8';
         const cloudConfigured = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('YOUR_') && !SUPABASE_ANON_KEY.includes('YOUR_');
         const cloud = cloudConfigured && window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
