@@ -24,12 +24,30 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# CLOUD SYNC SETUP (required for cross-device accounts):
+# 1) Create a Supabase project and copy Project URL + anon/public key.
+# 2) Replace SUPABASE_URL and SUPABASE_ANON_KEY in the HTML JavaScript below.
+# 3) Run this SQL in Supabase SQL Editor:
+# create table public.cosmos_workspaces (
+#   user_id uuid primary key references auth.users(id) on delete cascade,
+#   payload jsonb not null default '{}'::jsonb,
+#   updated_at timestamptz not null default now()
+# );
+# alter table public.cosmos_workspaces enable row level security;
+# create policy "Users can read own workspace" on public.cosmos_workspaces
+#   for select to authenticated using (auth.uid() = user_id);
+# create policy "Users can insert own workspace" on public.cosmos_workspaces
+#   for insert to authenticated with check (auth.uid() = user_id);
+# create policy "Users can update own workspace" on public.cosmos_workspaces
+#   for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 HTML = r"""<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cosmos | 그래핑 계산기</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Math.js CDN -->
@@ -168,11 +186,15 @@ HTML = r"""<!DOCTYPE html>
 
         <!-- Right User Actions -->
         <div class="flex items-center space-x-1 sm:space-x-2">
-            <button onclick="openModal('login-modal')" class="hidden sm:inline-block text-xs font-medium px-3 py-1.5 rounded hover:bg-[#3b3b3b] transition">
+            <span id="account-label" class="hidden text-xs text-slate-200 px-2"></span>
+            <button id="login-nav-btn" onclick="openModal('login-modal')" class="text-xs font-medium px-3 py-1.5 rounded hover:bg-[#3b3b3b] transition">
                 로그인
             </button>
-            <button onclick="openModal('signup-modal')" class="bg-[#2b72ee] hover:bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded transition shadow-sm">
+            <button id="signup-nav-btn" onclick="openModal('signup-modal')" class="bg-[#2b72ee] hover:bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded transition shadow-sm">
                 회원가입
+            </button>
+            <button id="logout-nav-btn" onclick="logoutAccount()" class="hidden text-xs font-medium px-3 py-1.5 rounded border border-slate-600 hover:bg-[#3b3b3b] transition">
+                로그아웃
             </button>
             <div class="h-4 w-[1px] bg-slate-600 mx-1"></div>
             <button onclick="openModal('share-modal')" class="p-1.5 text-slate-300 hover:text-white hover:bg-[#3b3b3b] rounded transition" title="공유">
@@ -393,6 +415,21 @@ HTML = r"""<!DOCTYPE html>
                             </select>
                         </label>
                     </div>
+                    <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
+                        <div class="flex items-center justify-between"><strong class="text-sm text-slate-800">음악 만들기</strong><span class="text-[10px] text-slate-500">그래프 + 반주</span></div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
+                            <label class="flex flex-col gap-1 text-slate-600">BPM <span id="music-bpm-value" class="font-semibold">100</span><input id="music-bpm" type="range" min="50" max="180" value="100" step="1" class="w-full accent-blue-600"></label>
+                            <label class="flex flex-col gap-1 text-slate-600">곡 장르<select id="music-genre" class="border border-slate-300 rounded px-2 py-1.5 bg-white text-slate-800"><option value="pop">Pop</option><option value="kpop">K-pop</option><option value="jpop">J-pop</option><option value="lofi">Lo-fi</option><option value="edm">EDM</option><option value="house">House</option><option value="trance">Trance</option><option value="dnb">Drum &amp; Bass</option><option value="synthwave">Synthwave</option><option value="classic">Classic</option><option value="jazz">Jazz</option><option value="rock">Rock</option><option value="hiphop">Hip-Hop</option><option value="trap">Trap</option><option value="phonk">Phonk</option><option value="funk">Funk</option><option value="ambient">Ambient</option></select></label>
+                            <label class="flex flex-col gap-1 text-slate-600">조성<select id="music-key" class="border border-slate-300 rounded px-2 py-1.5 bg-white text-slate-800"><option value="0">C 메이저 / A 마이너</option><option value="2">D 메이저</option><option value="4">E 메이저</option><option value="5">F 메이저</option><option value="7">G 메이저</option><option value="9">A 메이저</option></select></label>
+                            <label class="flex flex-col gap-1 text-slate-600">음계<select id="music-scale" class="border border-slate-300 rounded px-2 py-1.5 bg-white text-slate-800"><option value="major">메이저</option><option value="minor">마이너</option><option value="pentatonic">펜타토닉</option><option value="chromatic">반음계</option></select></label>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-slate-700">
+                            <label><input type="checkbox" id="part-melody" checked> 그래프 멜로디</label><label><input type="checkbox" id="part-bass" checked> 베이스</label><label><input type="checkbox" id="part-chords" checked> 코드</label><label><input type="checkbox" id="part-arp"> 아르페지오</label><label><input type="checkbox" id="part-drums" checked> 드럼 전체 켜기</label><label><input type="checkbox" id="part-kick" checked> 킥</label><label><input type="checkbox" id="part-snare" checked> 스네어</label><label><input type="checkbox" id="part-hihat" checked> 하이햇</label>
+                        </div>
+                        <div id="audio-layer-volumes" class="space-y-1 text-[11px]"></div>
+                        <div class="flex flex-wrap gap-2 items-center"><input id="music-song-name" type="text" placeholder="곡 이름" class="border border-slate-300 rounded px-2 py-1 text-xs w-28"><button onclick="saveMusicPreset()" class="audio-btn px-2 py-1.5">곡 저장</button><select id="music-library-select" class="border border-slate-300 rounded px-2 py-1 text-xs bg-white"><option value="">저장한 곡 불러오기</option></select><button onclick="loadMusicPreset()" class="audio-btn px-2 py-1.5">불러오기</button></div>
+                        <div class="flex flex-wrap gap-2"><button onclick="playGraphMusic()" class="audio-btn px-3 py-1.5"><i class="fa-solid fa-music mr-1"></i>음악 재생</button><button onclick="stopGraphMusic()" class="audio-btn px-3 py-1.5"><i class="fa-solid fa-stop mr-1"></i>음악 정지</button><span id="music-status" class="self-center text-[11px] text-slate-500">그래프 추적과 음악을 함께 재생할 수 있어요.</span></div>
+                    </div>
                     <div class="grid grid-cols-3 gap-2 text-[11px]">
                         <label class="flex flex-col gap-1 text-slate-600">시작 x
                             <input id="audio-x-start" type="number" value="-10" step="0.5" class="w-full min-w-0 border border-slate-300 rounded px-2 py-1 text-slate-800">
@@ -402,7 +439,7 @@ HTML = r"""<!DOCTYPE html>
                         </label>
                         <label class="flex flex-col gap-1 text-slate-600">재생 시간
                             <select id="audio-duration" class="w-full min-w-0 border border-slate-300 rounded px-2 py-1 bg-white text-slate-800">
-                                <option value="8">8초</option><option value="15" selected>15초</option><option value="30">30초</option><option value="60">1분</option>
+                                <option value="15">15초</option><option value="30" selected>30초</option><option value="60">1분</option><option value="120">2분</option><option value="180">3분</option>
                             </select>
                         </label>
                     </div>
@@ -485,26 +522,43 @@ HTML = r"""<!DOCTYPE html>
     <div id="modal-backdrop" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         
         <!-- Login Modal -->
-        <div id="login-modal" class="hidden bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 flex flex-col space-y-4">
+        <div id="login-modal" class="hidden bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 flex flex-col space-y-4" role="dialog" aria-modal="true" aria-labelledby="login-heading">
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-slate-800">Cosmos 로그인</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                <h3 id="login-heading" class="text-lg font-bold text-slate-800">Cosmos 로그인</h3>
+                <button onclick="closeModal()" aria-label="닫기" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <input type="email" placeholder="이메일 주소" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-            <input type="password" placeholder="비밀번호" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-            <button onclick="showToast('로그인 되었습니다.'); closeModal();" class="w-full bg-[#2b72ee] text-white py-2 rounded font-semibold text-sm hover:bg-blue-600 transition">로그인</button>
+            <p class="text-xs text-slate-500">이 브라우저에서 가입한 계정으로 로그인합니다.</p>
+            <form onsubmit="loginAccount(event)" class="flex flex-col space-y-3">
+                <label class="text-xs font-semibold text-slate-600">이메일</label>
+                <input id="login-email" type="email" autocomplete="username" required placeholder="name@example.com" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                <label class="text-xs font-semibold text-slate-600">비밀번호</label>
+                <input id="login-password" type="password" autocomplete="current-password" required placeholder="비밀번호" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                <p id="login-error" class="hidden text-xs text-red-600" role="alert"></p>
+                <button type="submit" class="w-full bg-[#2b72ee] text-white py-2 rounded font-semibold text-sm hover:bg-blue-600 transition">로그인</button>
+            </form>
+            <button onclick="openModal('signup-modal')" class="text-xs text-blue-600 hover:underline">아직 계정이 없나요? 회원가입</button>
         </div>
 
         <!-- Signup Modal -->
-        <div id="signup-modal" class="hidden bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 flex flex-col space-y-4">
+        <div id="signup-modal" class="hidden bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 flex flex-col space-y-4" role="dialog" aria-modal="true" aria-labelledby="signup-heading">
             <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-slate-800">계정 만들기</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                <h3 id="signup-heading" class="text-lg font-bold text-slate-800">Cosmos 계정 만들기</h3>
+                <button onclick="closeModal()" aria-label="닫기" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <input type="text" placeholder="이름" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-            <input type="email" placeholder="이메일 주소" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-            <input type="password" placeholder="비밀번호 설정" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-            <button onclick="showToast('계정이 생성되었습니다.'); closeModal();" class="w-full bg-[#2b72ee] text-white py-2 rounded font-semibold text-sm hover:bg-blue-600 transition">회원가입</button>
+            <p class="text-xs text-slate-500">데모 계정은 현재 사용 중인 브라우저에만 저장됩니다.</p>
+            <form onsubmit="signupAccount(event)" class="flex flex-col space-y-3">
+                <label class="text-xs font-semibold text-slate-600">이름</label>
+                <input id="signup-name" type="text" autocomplete="name" required maxlength="40" placeholder="이름" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                <label class="text-xs font-semibold text-slate-600">이메일</label>
+                <input id="signup-email" type="email" autocomplete="email" required placeholder="name@example.com" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                <label class="text-xs font-semibold text-slate-600">비밀번호 (8자 이상)</label>
+                <input id="signup-password" type="password" autocomplete="new-password" minlength="8" required placeholder="8자 이상 입력" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                <label class="text-xs font-semibold text-slate-600">비밀번호 확인</label>
+                <input id="signup-confirm" type="password" autocomplete="new-password" minlength="8" required placeholder="비밀번호 다시 입력" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                <p id="signup-error" class="hidden text-xs text-red-600" role="alert"></p>
+                <button type="submit" class="w-full bg-[#2b72ee] text-white py-2 rounded font-semibold text-sm hover:bg-blue-600 transition">회원가입</button>
+            </form>
+            <button onclick="openModal('login-modal')" class="text-xs text-blue-600 hover:underline">이미 계정이 있나요? 로그인</button>
         </div>
 
         <!-- Share Modal -->
@@ -606,7 +660,11 @@ HTML = r"""<!DOCTYPE html>
                 xEnd: 10,
                 waveform: 'sine',
                 mode: 'active',
-                lastFrameAt: 0
+                lastFrameAt: 0,
+                musicPlaying: false,
+                lastMusicStep: -1,
+                musicVolumes: { melody: 0.45, bass: 0.35, chords: 0.22, arp: 0.2, drums: 0.25 },
+                musicNodes: []
             },
 
             // Interactive Snap Points
@@ -1404,6 +1462,7 @@ HTML = r"""<!DOCTYPE html>
         }
 
         function stopAudioTrace() {
+            state.audio.musicPlaying = false;
             state.audio.isPlaying = false;
             cancelAnimationFrame(state.audio.timer);
             state.audio.elapsedBeforePause = 0;
@@ -1447,6 +1506,126 @@ HTML = r"""<!DOCTYPE html>
             } catch (_) { return NaN; }
         }
 
+        function musicScaleNotes() {
+            const type = document.getElementById('music-scale').value;
+            if (type === 'minor') return [0,2,3,5,7,8,10];
+            if (type === 'pentatonic') return [0,2,4,7,9];
+            if (type === 'chromatic') return Array.from({length:12}, (_,i)=>i);
+            return [0,2,4,5,7,9,11];
+        }
+        function playSynthNote(freq, duration, type='triangle', volume=0.15, when=null) {
+            if (!state.audio.ctx || !state.audio.masterGain) return;
+            const ctx = state.audio.ctx, t = when == null ? ctx.currentTime : when;
+            const osc = ctx.createOscillator(), gain = ctx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(Math.max(30, Math.min(2000, freq)), t);
+            gain.gain.setValueAtTime(0.0001, t); gain.gain.exponentialRampToValueAtTime(Math.max(0.001, volume), t + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(0.06, duration));
+            osc.connect(gain); gain.connect(state.audio.masterGain); osc.start(t); osc.stop(t + duration + 0.04);
+            state.audio.musicNodes.push({osc, gain});
+            if (state.audio.musicNodes.length > 160) state.audio.musicNodes.splice(0, 40);
+        }
+        function playKick(when) {
+            const ctx=state.audio.ctx, osc=ctx.createOscillator(), gain=ctx.createGain();
+            osc.type='sine'; osc.frequency.setValueAtTime(120,when); osc.frequency.exponentialRampToValueAtTime(42,when+0.12);
+            gain.gain.setValueAtTime(0.22,when); gain.gain.exponentialRampToValueAtTime(0.001,when+0.14);
+            osc.connect(gain); gain.connect(state.audio.masterGain); osc.start(when); osc.stop(when+0.15);
+        }
+        function playHat(when, volume=0.07) {
+            const ctx=state.audio.ctx, length=Math.floor(ctx.sampleRate*0.045), buffer=ctx.createBuffer(1,length,ctx.sampleRate), data=buffer.getChannelData(0);
+            for(let i=0;i<length;i++) data[i]=(Math.random()*2-1)*(1-i/length);
+            const src=ctx.createBufferSource(), filter=ctx.createBiquadFilter(), gain=ctx.createGain();
+            src.buffer=buffer; filter.type='highpass'; filter.frequency.value=6500; gain.gain.setValueAtTime(Math.max(0.001,volume),when); gain.gain.exponentialRampToValueAtTime(0.001,when+0.045);
+            src.connect(filter); filter.connect(gain); gain.connect(state.audio.masterGain); src.start(when);
+        }
+        function playSnare(when, volume=0.12) {
+            const ctx=state.audio.ctx, length=Math.floor(ctx.sampleRate*0.12), buffer=ctx.createBuffer(1,length,ctx.sampleRate), data=buffer.getChannelData(0);
+            for(let i=0;i<length;i++) data[i]=(Math.random()*2-1)*(1-i/length);
+            const src=ctx.createBufferSource(), filter=ctx.createBiquadFilter(), gain=ctx.createGain();
+            src.buffer=buffer; filter.type='highpass'; filter.frequency.value=1200;
+            gain.gain.setValueAtTime(Math.max(0.001,volume),when); gain.gain.exponentialRampToValueAtTime(0.001,when+0.12);
+            src.connect(filter); filter.connect(gain); gain.connect(state.audio.masterGain); src.start(when);
+        }
+        function runMusicStep(step, x) {
+            const ctx=state.audio.ctx, bpm=Number(document.getElementById('music-bpm').value), beat=60/bpm, when=ctx.currentTime+0.015;
+            const genre=document.getElementById('music-genre').value, root=Number(document.getElementById('music-key').value), scale=musicScaleNotes();
+            const target=getAudioTargets()[0]; let graphY=target ? evaluateAudioY(target,x) : 0; if(!Number.isFinite(graphY)) graphY=0;
+            const graphMidi=Math.max(45,Math.min(84,Math.round(60+graphY*2)));
+            const note=(n,oct=0)=>440*Math.pow(2,(n+root+oct-69)/12);
+            const vol=state.audio.musicVolumes;
+            if(document.getElementById('part-melody').checked){
+                const degree=Math.abs(Math.round(graphY*2+step))%scale.length; const midi=graphMidi+(scale[degree]||0)-scale[0];
+                playSynthNote(note(midi),beat*0.72,genre==='edm'?'sawtooth':'triangle',vol.melody,when);
+            }
+            if(document.getElementById('part-bass').checked && step%2===0) {
+                const bassMidi = genre==='dnb' ? 31+root%12 : genre==='funk' ? 38+root%12 : 36+root%12;
+                playSynthNote(note(bassMidi),beat*(genre==='lofi'?1.9:1.65),genre==='phonk'||genre==='dnb'?'sawtooth':'triangle',vol.bass,when);
+            }
+            if(document.getElementById('part-chords').checked && step%4===0){
+                const chord=[0, scale[2]||4, scale[4]||7]; chord.forEach(n=>playSynthNote(note(48+n),beat*3.2,genre==='classic'||genre==='ambient'?'sine':'triangle',vol.chords/2.2,when));
+            }
+            if(document.getElementById('part-arp').checked){const degree=scale[step%scale.length];playSynthNote(note(60+degree),beat*0.42,genre==='edm'||genre==='trance'?'sawtooth':'triangle',vol.arp,when);}
+            const drumsOn=document.getElementById('part-drums').checked;
+            const kickOn=document.getElementById('part-kick').checked;
+            const snareOn=document.getElementById('part-snare').checked;
+            const hatOn=document.getElementById('part-hihat').checked;
+            if(drumsOn && kickOn && (step%4===0 || (['phonk','trap','hiphop'].includes(genre) && step%4===2) || (['house','edm','dnb'].includes(genre) && step%2===0))) playKick(when);
+            if(drumsOn && snareOn && (step%4===2 || (['rock','pop','kpop','jpop','funk'].includes(genre) && step%4===0))) playSnare(when, genre==='phonk'?0.16:0.10);
+            if(drumsOn && hatOn && (step%2===0 || ['edm','house','trance','trap','dnb'].includes(genre))) playHat(when, ['edm','trap','dnb'].includes(genre)?0.09:0.055);
+        }
+        function playGraphMusic() {
+            if(!initAudioEngine()) return;
+            state.audio.musicPlaying=true; state.audio.lastMusicStep=-1;
+            document.getElementById('music-status').textContent='음악 재생 중 · 그래프 값이 멜로디에 반영됩니다.';
+            state.audio.masterGain.gain.setTargetAtTime(state.audio.vol, state.audio.ctx.currentTime, 0.03);
+            if(!state.audio.isPlaying) toggleAudioPlayback();
+        }
+        function stopGraphMusic() {
+            state.audio.musicPlaying=false; state.audio.musicNodes.forEach(n=>{try{n.osc.stop()}catch(_){} try{n.gain.disconnect()}catch(_){}}); state.audio.musicNodes=[];
+            document.getElementById('music-status').textContent='음악 정지됨';
+            if(state.audio.isPlaying) pauseAudioTrace();
+        }
+        function readMusicPreset() {
+            const settings = { bpm:document.getElementById('music-bpm').value, genre:document.getElementById('music-genre').value, key:document.getElementById('music-key').value, scale:document.getElementById('music-scale').value, parts:['melody','bass','chords','arp','drums','kick','snare','hihat'].reduce((o,k)=>{o[k]=document.getElementById('part-'+k).checked;return o;},{}), waveform:document.getElementById('audio-waveform').value }; localStorage.setItem('cosmos_music_settings', JSON.stringify(settings)); scheduleCloudSave(); return settings;
+        }
+        function refreshMusicLibrary() {
+            const select=document.getElementById('music-library-select'); if(!select) return;
+            const current=select.value; let songs=[]; try{songs=JSON.parse(localStorage.getItem('cosmosMusicLibrary')||'[]')}catch(_){}
+            select.innerHTML='<option value="">저장한 곡 불러오기</option>';
+            songs.forEach((song,i)=>{const option=document.createElement('option');option.value=String(i);option.textContent=song.name;select.appendChild(option);});
+            if(current && songs[Number(current)]) select.value=current;
+        }
+        function saveMusicPreset() {
+            const name=document.getElementById('music-song-name').value.trim() || '내 곡 '+new Date().toLocaleString('ko-KR');
+            let songs=[];try{songs=JSON.parse(localStorage.getItem('cosmosMusicLibrary')||'[]')}catch(_){}
+            songs.push({name,settings:readMusicPreset()});
+            try{localStorage.setItem('cosmosMusicLibrary',JSON.stringify(songs));refreshMusicLibrary();scheduleCloudSave();document.getElementById('music-status').textContent='「'+name+'」 저장 완료';}
+            catch(_){document.getElementById('music-status').textContent='브라우저 저장 공간에 접근할 수 없습니다.';}
+        }
+        function loadMusicPreset() {
+            const select=document.getElementById('music-library-select'); if(!select.value) return;
+            let songs=[];try{songs=JSON.parse(localStorage.getItem('cosmosMusicLibrary')||'[]')}catch(_){}
+            const song=songs[Number(select.value)]; if(!song) return; const a=song.settings;
+            document.getElementById('music-bpm').value=a.bpm; document.getElementById('music-bpm-value').textContent=a.bpm;
+            document.getElementById('music-genre').value=a.genre; document.getElementById('music-key').value=a.key; document.getElementById('music-scale').value=a.scale;
+            Object.entries(a.parts||{}).forEach(([k,v])=>{const el=document.getElementById('part-'+k);if(el)el.checked=v;});
+            if(a.waveform) document.getElementById('audio-waveform').value=a.waveform;
+            document.getElementById('music-status').textContent='「'+song.name+'」 불러옴';
+        }
+        function renderAudioLayerVolumes() {
+            const host=document.getElementById('audio-layer-volumes'); if(!host) return;
+            const targets=state.items.filter(it=>it.type==='expression');
+            host.innerHTML='<div class="font-semibold text-slate-600">레이어별 볼륨</div>';
+            if(!targets.length){host.insertAdjacentHTML('beforeend','<div class="text-slate-400">함수를 추가하면 레이어별 볼륨이 표시됩니다.</div>');return;}
+            targets.forEach((item,i)=>{
+                const key='layer-vol-'+item.id;
+                if(state.audio.musicVolumes[key]===undefined) state.audio.musicVolumes[key]=0.6;
+                const row=document.createElement('label'); row.className='flex items-center gap-2 text-slate-600';
+                row.innerHTML=`<span class="w-28 truncate">${item.name||item.expr||('레이어 '+(i+1))}</span><input class="flex-1 accent-blue-600" type="range" min="0" max="1" step="0.05" value="${state.audio.musicVolumes[key]}" aria-label="레이어 볼륨"><span class="w-8 text-right">${Math.round(state.audio.musicVolumes[key]*100)}%</span>`;
+                const slider=row.querySelector('input'); slider.addEventListener('input',()=>{state.audio.musicVolumes[key]=Number(slider.value);row.lastElementChild.textContent=Math.round(slider.value*100)+'%';}); host.appendChild(row);
+            });
+        }
+        document.getElementById('music-bpm').addEventListener('input', e=>document.getElementById('music-bpm-value').textContent=e.target.value);
+
         function audioTraceFrame(now) {
             if (!state.audio.isPlaying) return;
             const elapsed = Math.max(0, (now - state.audio.startedAt) / 1000);
@@ -1459,6 +1638,11 @@ HTML = r"""<!DOCTYPE html>
 
             let firstValid = null;
             const nowAudio = state.audio.ctx.currentTime;
+            if (state.audio.musicPlaying) {
+                const bpm=Number(document.getElementById('music-bpm').value);
+                const step=Math.floor(elapsed/(60/bpm/2));
+                if(step!==state.audio.lastMusicStep){state.audio.lastMusicStep=step;runMusicStep(step,x);}
+            }
             state.audio.tracks.forEach(track => {
                 const y = evaluateAudioY(track.item, x);
                 if (!Number.isFinite(y) || Math.abs(y) > 1e6) {
@@ -1474,7 +1658,8 @@ HTML = r"""<!DOCTYPE html>
                 const graphPan = track.count <= 1 ? Math.max(-1, Math.min(1, (x - state.audio.xStart) / (state.audio.xEnd - state.audio.xStart) * 2 - 1)) : -0.85 + 1.7 * track.index / Math.max(1, track.count - 1);
                 if (track.panner) track.panner.pan.setTargetAtTime(graphPan, nowAudio, 0.04);
                 const yGain = Math.max(0.18, Math.min(1, 0.35 + (y + 4) / 16));
-                const layerGain = yGain / Math.sqrt(track.count);
+                const individualVolume = state.audio.musicVolumes['layer-vol-' + track.item.id] === undefined ? 1 : state.audio.musicVolumes['layer-vol-' + track.item.id];
+                const layerGain = yGain * individualVolume / Math.sqrt(track.count);
                 track.gain.gain.setTargetAtTime(layerGain, nowAudio, 0.035);
                 if (track.item.id === state.activeItemId || !firstValid) firstValid = { x, y, color: track.item.color, audioTrace: true, freq };
             });
@@ -1724,7 +1909,8 @@ HTML = r"""<!DOCTYPE html>
 
         function saveGraphState() {
             localStorage.setItem('cosmos_saved_graph', JSON.stringify(state.items));
-            showToast('그래프가 브라우저에 저장되었습니다!');
+            saveCloudWorkspace(true);
+            showToast('그래프 저장 요청을 완료했습니다.');
         }
 
         /**
@@ -1745,6 +1931,138 @@ HTML = r"""<!DOCTYPE html>
 
         function closeModal() {
             document.getElementById('modal-backdrop').classList.add('hidden');
+        }
+
+        // Cloud account and per-user data storage (Supabase).
+        // Configure these two values using your own Supabase project before deployment.
+        const SUPABASE_URL = 'https://eqiozrbihsqcttaskdwg.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_HU44ZRw5dEA7srhdCB3-Og_NBD975Ik';
+        const cloudConfigured = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('YOUR_') && !SUPABASE_ANON_KEY.includes('YOUR_');
+        const cloud = cloudConfigured && window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+        let cosmosUser = null;
+        let cloudSaveTimer = null;
+
+        function showAuthError(id, message) {
+            const el = document.getElementById(id);
+            el.textContent = message;
+            el.classList.remove('hidden');
+        }
+        function clearAuthError(id) {
+            const el = document.getElementById(id);
+            el.textContent = '';
+            el.classList.add('hidden');
+        }
+        function requireCloud(id) {
+            if (cloud) return true;
+            showAuthError(id, '계정 동기화를 사용하려면 Supabase 프로젝트 URL과 anon key 설정이 필요합니다.');
+            return false;
+        }
+
+        async function signupAccount(event) {
+            event.preventDefault(); clearAuthError('signup-error');
+            if (!requireCloud('signup-error')) return;
+            const name = document.getElementById('signup-name').value.trim();
+            const email = document.getElementById('signup-email').value.trim().toLowerCase();
+            const password = document.getElementById('signup-password').value;
+            const confirm = document.getElementById('signup-confirm').value;
+            if (!name || !email) return showAuthError('signup-error', '이름과 이메일을 입력해 주세요.');
+            if (password.length < 8) return showAuthError('signup-error', '비밀번호는 8자 이상이어야 합니다.');
+            if (password !== confirm) return showAuthError('signup-error', '비밀번호 확인이 일치하지 않습니다.');
+            try {
+                const { data, error } = await cloud.auth.signUp({ email, password, options: { data: { display_name: name } } });
+                if (error) throw error;
+                if (data.session && data.user) {
+                    cosmosUser = data.user;
+                    await afterCloudLogin(name, email);
+                    showToast('회원가입 완료! 바로 로그인되었습니다.');
+                } else {
+                    showAuthError('signup-error', '계정은 생성됐지만 바로 로그인되지 않았습니다. Supabase에서 Authentication → Providers → Email → Confirm email을 끈 뒤 다시 시도하거나 로그인해 주세요.');
+                }
+                document.getElementById('signup-password').value = '';
+                document.getElementById('signup-confirm').value = '';
+            } catch (err) { showAuthError('signup-error', err.message || '회원가입에 실패했습니다.'); }
+        }
+
+        async function loginAccount(event) {
+            event.preventDefault(); clearAuthError('login-error');
+            if (!requireCloud('login-error')) return;
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            const password = document.getElementById('login-password').value;
+            try {
+                const { data, error } = await cloud.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                cosmosUser = data.user;
+                const name = data.user.user_metadata?.display_name || email.split('@')[0];
+                await afterCloudLogin(name, email);
+                document.getElementById('login-password').value = '';
+            } catch (err) { console.error('Login failed:', err); showAuthError('login-error', '로그인 실패: 이메일·비밀번호를 확인해 주세요. 회원가입 직후라면 Supabase의 Confirm email 설정이 꺼져 있는지도 확인해 주세요.'); }
+        }
+
+        async function afterCloudLogin(name, email) {
+            updateAccountUI({ name, email });
+            closeModal();
+            await loadCloudWorkspace();
+            showToast(`${name}님, 로그인되었습니다. 클라우드 작업을 불러왔습니다.`);
+        }
+
+        function workspacePayload() {
+            let songs = []; try { songs = JSON.parse(localStorage.getItem('cosmosMusicLibrary') || '[]'); } catch (_) {}
+            let settings = {}; try { settings = JSON.parse(localStorage.getItem('cosmos_music_settings') || '{}'); } catch (_) {}
+            return { graph_items: state.items || [], music_library: songs, music_settings: settings, saved_at: new Date().toISOString() };
+        }
+
+        async function saveCloudWorkspace(showMessage = false) {
+            if (!cloud || !cosmosUser) { if (showMessage) showToast('클라우드 저장을 하려면 먼저 로그인하세요.'); return; }
+            const payload = workspacePayload();
+            const { error } = await cloud.from('cosmos_workspaces').upsert({ user_id: cosmosUser.id, payload, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+            if (error) { console.error('Cloud save failed:', error); if (showMessage) showToast('클라우드 저장 실패: Supabase 테이블/RLS 설정을 확인하세요.'); return; }
+            if (showMessage) showToast('그래프와 음악 작업을 계정에 저장했습니다.');
+        }
+
+        function scheduleCloudSave() {
+            if (!cosmosUser || !cloud) return;
+            clearTimeout(cloudSaveTimer);
+            cloudSaveTimer = setTimeout(() => saveCloudWorkspace(false), 900);
+        }
+
+        async function loadCloudWorkspace() {
+            if (!cloud || !cosmosUser) return;
+            const { data, error } = await cloud.from('cosmos_workspaces').select('payload').eq('user_id', cosmosUser.id).maybeSingle();
+            if (error) { console.error('Cloud load failed:', error); showToast('저장 데이터를 불러오지 못했습니다. Supabase 테이블/RLS 설정을 확인하세요.'); return; }
+            if (!data?.payload) return;
+            const payload = data.payload;
+            if (Array.isArray(payload.graph_items)) { state.items = payload.graph_items; renderExpressionList(); render(); }
+            if (Array.isArray(payload.music_library)) { localStorage.setItem('cosmosMusicLibrary', JSON.stringify(payload.music_library)); refreshMusicLibrary(); }
+            if (payload.music_settings) localStorage.setItem('cosmos_music_settings', JSON.stringify(payload.music_settings));
+        }
+
+        function updateAccountUI(explicitSession = null) {
+            let session = explicitSession;
+            if (!session && cosmosUser) session = { name: cosmosUser.user_metadata?.display_name || cosmosUser.email?.split('@')[0], email: cosmosUser.email };
+            if (!session && !cloud) session = null;
+            const label = document.getElementById('account-label');
+            const loginBtn = document.getElementById('login-nav-btn');
+            const signupBtn = document.getElementById('signup-nav-btn');
+            const logoutBtn = document.getElementById('logout-nav-btn');
+            if (session && session.email) {
+                label.textContent = session.name || session.email;
+                label.classList.remove('hidden');
+                loginBtn.classList.add('hidden');
+                signupBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+            } else {
+                label.classList.add('hidden');
+                loginBtn.classList.remove('hidden');
+                signupBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+            }
+        }
+
+        function logoutAccount() {
+            if (cloud) cloud.auth.signOut().catch(console.error);
+            cosmosUser = null;
+            updateAccountUI(null);
+            showToast('로그아웃되었습니다.');
         }
 
         function showToast(msg) {
@@ -1813,8 +2131,14 @@ HTML = r"""<!DOCTYPE html>
          */
         window.onload = function() {
             resizeCanvas();
+            updateAccountUI();
+            if (cloud) cloud.auth.getSession().then(async ({ data }) => {
+                if (data.session?.user) { cosmosUser = data.session.user; await afterCloudLogin(cosmosUser.user_metadata?.display_name || cosmosUser.email.split('@')[0], cosmosUser.email); }
+            }).catch(console.error);
             // Initial Sine Graph matching screenshot
             addExpression('y = sin(x)');
+            renderAudioLayerVolumes();
+            refreshMusicLibrary();
         };
     </script>
 </body>
