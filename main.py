@@ -2441,6 +2441,3 @@ with st.container(key="cosmos-signup-route"):
         label="회원가입",
         query_params={"view": "signup"}
     )
-session_for_iframe = st.session_state.get("cosmos_supabase_session")
-HTML = HTML.replace("__COSMOS_STREAMLIT_SESSION__", json.dumps(session_for_iframe, ensure_ascii=False) if session_for_iframe else "null")
-components.html(HTML, height=1050, scrolling=False)
