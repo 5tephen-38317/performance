@@ -1,3 +1,4 @@
+import json
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -107,6 +108,54 @@ HTML = r"""<!DOCTYPE html>
             background-color: #1a62e0;
         }
 
+        /* Desmos-style bottom keypad: numeric pad + function drawer */
+        #keypad-tab-content.cosmos-keyboard-wrap {
+            width:100%; max-width:none; margin:0; padding:7px 10px 9px;
+            height:220px; display:flex; flex-direction:column; gap:7px;
+            background:#f1f1f1; box-sizing:border-box;
+        }
+        #keypad-tab-content.cosmos-keyboard-wrap.hidden { display:none !important; }
+        #audio-tab-content.hidden { display:none !important; }
+        #audio-tab-content:not(.hidden) { display:flex !important; }
+        #keypad-tab-content:not(.hidden) { display:flex !important; }
+        .keyboard-mode-bar { height:26px; min-height:26px; display:flex; align-items:center; justify-content:space-between; }
+        .keyboard-mode-switch { display:flex; align-items:center; gap:5px; }
+        .keyboard-mode-btn { min-width:48px; height:25px; padding:0 15px; border:1px solid #c8c8c8; border-radius:3px; background:#fff; color:#333; font-size:12px; font-weight:600; }
+        .keyboard-mode-btn.active { background:#555; border-color:#555; color:#fff; }
+        .keyboard-mode-hint { color:#777; font-size:10px; }
+        .keyboard-layout { flex:1; min-height:0; }
+        .keyboard-layout.hidden { display:none !important; }
+        .desmos-main-layout { display:flex; gap:8px; height:100%; min-height:0; }
+        .desmos-number-grid { width:56%; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); grid-template-rows:repeat(4,minmax(0,1fr)); gap:5px; }
+        .desmos-number-grid .key-btn, .desmos-function-grid .key-btn, .desmos-abc-grid .key-btn { min-width:0; min-height:0; height:100%; font-size:clamp(13px,1.2vw,17px); }
+        .key-btn { background:#fff; border:1px solid #c9c9c9; border-radius:4px; color:#333; box-shadow:0 1px 1px rgba(0,0,0,.08); }
+        .key-btn:hover { background:#e9e9e9; }
+        .key-btn:active { background:#ddd; transform:translateY(1px); }
+        .number-key { background:#fff !important; font-size:clamp(17px,1.5vw,21px) !important; font-weight:500 !important; }
+        .operator-key { background:#e5e5e5 !important; font-weight:600 !important; }
+        .desmos-function-side { flex:1; min-width:0; display:flex; flex-direction:column; gap:5px; }
+        .function-category-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; height:27px; flex:none; }
+        .function-category-btn { border:1px solid #c9c9c9; border-radius:3px; background:#e5e5e5; color:#444; font-size:11px; font-weight:600; }
+        .function-category-btn.active { background:#fff; border-color:#999; color:#222; }
+        .desmos-function-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr)); gap:5px; flex:1; min-height:0; }
+        .function-key { background:#fff !important; font-size:clamp(11px,1.05vw,14px) !important; }
+        .desmos-utility-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; height:30px; flex:none; }
+        .utility-key { background:#e3e3e3 !important; }
+        .enter-key { background:#555 !important; border-color:#444 !important; color:#fff !important; font-weight:700 !important; }
+        .desmos-abc-layout { display:flex; flex-direction:column; gap:5px; height:100%; }
+        .desmos-abc-grid { display:grid; grid-template-columns:repeat(9,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr)); gap:5px; flex:1; min-height:0; }
+        .abc-letter { background:#fff !important; font-size:clamp(13px,1.25vw,17px) !important; }
+        .abc-bottom-row { display:grid; grid-template-columns:1fr 1fr 1fr 4fr 1fr 1.5fr; gap:5px; height:31px; flex:none; }
+        @media (max-width:700px) {
+            #keypad-tab-content.cosmos-keyboard-wrap { height:205px; padding:5px; gap:4px; }
+            .desmos-main-layout { gap:4px; }
+            .desmos-number-grid, .desmos-function-grid, .desmos-abc-grid { gap:3px; }
+            .function-category-tabs { gap:2px; }
+            .function-category-btn { font-size:9px; }
+            .desmos-utility-row { gap:3px; height:26px; }
+            .desmos-number-grid .key-btn, .desmos-function-grid .key-btn { font-size:11px; }
+        }
+
         /* Cosmos Audio Trace Panel Button Styling */
         .audio-btn {
             background-color: #ffffff;
@@ -169,7 +218,7 @@ HTML = r"""<!DOCTYPE html>
     <header class="bg-[#222222] text-white h-12 px-3 flex items-center justify-between z-30 shrink-0 select-none">
         <!-- Left Title and Save -->
         <div class="flex items-center space-x-2">
-            <button onclick="showToast('폴더 목록을 불러왔습니다.')" class="p-1.5 hover:bg-[#3b3b3b] rounded text-slate-300 hover:text-white transition">
+            <button onclick="openModal('file-modal')" class="p-1.5 hover:bg-[#3b3b3b] rounded text-slate-300 hover:text-white transition">
                 <i class="fa-regular fa-folder text-base"></i>
             </button>
             <input id="graph-title-input" type="text" value="Cosmos 그래프" 
@@ -184,19 +233,18 @@ HTML = r"""<!DOCTYPE html>
             <span class="text-xl font-bold tracking-tight text-white font-serif italic">cosmos</span>
         </div>
 
-        <!-- Right User Actions -->
+        <!-- Right User Actions: 로그인/회원가입은 Cosmos 헤더 안에서 로고와 같은 높이로 표시 -->
         <div class="flex items-center space-x-1 sm:space-x-2">
-            <span id="account-label" class="hidden text-xs text-slate-200 px-2"></span>
-            <button id="login-nav-btn" onclick="openModal('login-modal')" class="text-xs font-medium px-3 py-1.5 rounded hover:bg-[#3b3b3b] transition">
+            <a id="login-nav-btn" href="#" onclick="return false;" class="text-xs font-medium px-3 py-1.5 rounded hover:bg-[#3b3b3b] text-slate-200 transition inline-flex items-center">
                 로그인
-            </button>
-            <button id="signup-nav-btn" onclick="openModal('signup-modal')" class="bg-[#2b72ee] hover:bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded transition shadow-sm">
+            </a>
+            <a id="signup-nav-btn" href="#" onclick="return false;" class="text-xs font-semibold px-3 py-1.5 rounded bg-[#2b72ee] hover:bg-blue-600 text-white transition inline-flex items-center">
                 회원가입
-            </button>
+            </a>
+            <span id="account-label" class="hidden text-xs text-slate-200 px-2"></span>
             <button id="logout-nav-btn" onclick="logoutAccount()" class="hidden text-xs font-medium px-3 py-1.5 rounded border border-slate-600 hover:bg-[#3b3b3b] transition">
                 로그아웃
             </button>
-            <div class="h-4 w-[1px] bg-slate-600 mx-1"></div>
             <button onclick="openModal('share-modal')" class="p-1.5 text-slate-300 hover:text-white hover:bg-[#3b3b3b] rounded transition" title="공유">
                 <i class="fa-solid fa-share-nodes text-sm"></i>
             </button>
@@ -317,75 +365,123 @@ HTML = r"""<!DOCTYPE html>
             </button>
         </div>
 
-        <!-- TAB 1: VIRTUAL MATH KEYBOARD -->
-        <div id="keypad-tab-content" class="p-2 max-w-5xl mx-auto w-full grid grid-cols-12 gap-1.5 h-44 sm:h-48 text-sm">
-            <!-- Col 1-4: Variables & Math Symbols -->
-            <div class="col-span-4 grid grid-cols-4 gap-1">
-                <button class="key-btn" onclick="insertKey('x')"><i>x</i></button>
-                <button class="key-btn" onclick="insertKey('y')"><i>y</i></button>
-                <button class="key-btn" onclick="insertKey('^2')"><i>a</i>²</button>
-                <button class="key-btn" onclick="insertKey('^')"><i>a</i><sup><i>b</i></sup></button>
-
-                <button class="key-btn" onclick="insertKey('(')">(</button>
-                <button class="key-btn" onclick="insertKey(')')">)</button>
-                <button class="key-btn" onclick="insertKey('<')">&lt;</button>
-                <button class="key-btn" onclick="insertKey('>')">&gt;</button>
-
-                <button class="key-btn" onclick="insertKey('|')">|<i>a</i>|</button>
-                <button class="key-btn" onclick="insertKey(',')">,</button>
-                <button class="key-btn" onclick="insertKey('<=')">≤</button>
-                <button class="key-btn" onclick="insertKey('>=')">≥</button>
-
-                <button class="key-btn key-btn-dark" onclick="insertKey('a')"><i>a</i></button>
-                <button class="key-btn key-btn-dark" onclick="insertKey('b')"><i>b</i></button>
-                <button class="key-btn" onclick="insertKey('sqrt(')">√</button>
-                <button class="key-btn" onclick="insertKey('pi')">π</button>
+        <!-- TAB 1: DESMOS-STYLE VIRTUAL KEYPAD -->
+        <div id="keypad-tab-content" class="cosmos-keyboard-wrap" style="display:flex">
+            <div class="keyboard-mode-bar">
+                <div class="keyboard-mode-switch">
+                    <button id="keyboard-mode-123" class="keyboard-mode-btn active" onclick="switchKeyboardMode('123')">123</button>
+                    <button id="keyboard-mode-abc" class="keyboard-mode-btn" onclick="switchKeyboardMode('abc')">ABC</button>
+                </div>
+                <span class="keyboard-mode-hint" id="keyboard-mode-hint">숫자 · 연산 · 함수</span>
             </div>
 
-            <!-- Col 5-8: Standard Numpad -->
-            <div class="col-span-4 grid grid-cols-4 gap-1">
-                <button class="key-btn font-bold bg-white" onclick="insertKey('7')">7</button>
-                <button class="key-btn font-bold bg-white" onclick="insertKey('8')">8</button>
-                <button class="key-btn font-bold bg-white" onclick="insertKey('9')">9</button>
-                <button class="key-btn key-btn-dark text-base" onclick="insertKey('/')">÷</button>
-
-                <button class="key-btn font-bold bg-white" onclick="insertKey('4')">4</button>
-                <button class="key-btn font-bold bg-white" onclick="insertKey('5')">5</button>
-                <button class="key-btn font-bold bg-white" onclick="insertKey('6')">6</button>
-                <button class="key-btn key-btn-dark text-base" onclick="insertKey('*')">×</button>
-
-                <button class="key-btn font-bold bg-white" onclick="insertKey('1')">1</button>
-                <button class="key-btn font-bold bg-white" onclick="insertKey('2')">2</button>
-                <button class="key-btn font-bold bg-white" onclick="insertKey('3')">3</button>
-                <button class="key-btn key-btn-dark text-base" onclick="insertKey('-')">-</button>
-
-                <button class="key-btn font-bold bg-white" onclick="insertKey('0')">0</button>
-                <button class="key-btn font-bold bg-white" onclick="insertKey('.')">.</button>
-                <button class="key-btn key-btn-dark text-base" onclick="insertKey('=')">=</button>
-                <button class="key-btn key-btn-dark text-base" onclick="insertKey('+')">+</button>
+            <div id="keyboard-123" class="keyboard-layout">
+                <div class="desmos-main-layout">
+                    <div class="desmos-number-grid">
+                        <button class="key-btn number-key" onclick="insertKey('7')">7</button>
+                        <button class="key-btn number-key" onclick="insertKey('8')">8</button>
+                        <button class="key-btn number-key" onclick="insertKey('9')">9</button>
+                        <button class="key-btn operator-key" onclick="insertKey('/')">÷</button>
+                        <button class="key-btn number-key" onclick="insertKey('4')">4</button>
+                        <button class="key-btn number-key" onclick="insertKey('5')">5</button>
+                        <button class="key-btn number-key" onclick="insertKey('6')">6</button>
+                        <button class="key-btn operator-key" onclick="insertKey('*')">×</button>
+                        <button class="key-btn number-key" onclick="insertKey('1')">1</button>
+                        <button class="key-btn number-key" onclick="insertKey('2')">2</button>
+                        <button class="key-btn number-key" onclick="insertKey('3')">3</button>
+                        <button class="key-btn operator-key" onclick="insertKey('-')">−</button>
+                        <button class="key-btn number-key" onclick="insertKey('0')">0</button>
+                        <button class="key-btn number-key" onclick="insertKey('.')">.</button>
+                        <button class="key-btn operator-key" onclick="insertKey('=')">=</button>
+                        <button class="key-btn operator-key" onclick="insertKey('+')">+</button>
+                    </div>
+                    <div class="desmos-function-side">
+                        <div class="function-category-tabs">
+                            <button class="function-category-btn active" data-function-category="trig" onclick="switchFunctionCategory('trig')">Trig</button>
+                            <button class="function-category-btn" data-function-category="power" onclick="switchFunctionCategory('power')">Power</button>
+                            <button class="function-category-btn" data-function-category="logs" onclick="switchFunctionCategory('logs')">Logs</button>
+                            <button class="function-category-btn" data-function-category="misc" onclick="switchFunctionCategory('misc')">Misc</button>
+                        </div>
+                        <div id="function-category-trig" class="desmos-function-grid">
+                            <button class="key-btn function-key" onclick="insertKey('sin()',4)">sin</button>
+                            <button class="key-btn function-key" onclick="insertKey('cos()',4)">cos</button>
+                            <button class="key-btn function-key" onclick="insertKey('tan()',4)">tan</button>
+                            <button class="key-btn function-key" onclick="insertKey('asin()',5)">sin⁻¹</button>
+                            <button class="key-btn function-key" onclick="insertKey('acos()',5)">cos⁻¹</button>
+                            <button class="key-btn function-key" onclick="insertKey('atan()',5)">tan⁻¹</button>
+                            <button class="key-btn function-key" onclick="insertKey('pi')">π</button>
+                            <button class="key-btn function-key" onclick="insertKey('^2')">x²</button>
+                            <button class="key-btn function-key" onclick="insertKey('^()',2)">xʸ</button>
+                            <button class="key-btn function-key" onclick="insertKey('sqrt()',5)">√</button>
+                            <button class="key-btn function-key" onclick="insertKey('()/()',1)">a/b</button>
+                            <button class="key-btn function-key" onclick="insertKey('abs()',4)">|x|</button>
+                        </div>
+                        <div id="function-category-power" class="desmos-function-grid hidden">
+                            <button class="key-btn function-key" onclick="insertKey('^2')">x²</button>
+                            <button class="key-btn function-key" onclick="insertKey('^()',2)">xʸ</button>
+                            <button class="key-btn function-key" onclick="insertKey('sqrt()',5)">√</button>
+                            <button class="key-btn function-key" onclick="insertKey('()/()',1)">a/b</button>
+                            <button class="key-btn function-key" onclick="insertKey('abs()',4)">|x|</button>
+                            <button class="key-btn function-key" onclick="insertKey('pi')">π</button>
+                            <button class="key-btn function-key" onclick="insertKey('(')">(</button>
+                            <button class="key-btn function-key" onclick="insertKey(')')">)</button>
+                            <button class="key-btn function-key" onclick="insertKey('x')">x</button>
+                            <button class="key-btn function-key" onclick="insertKey('y')">y</button>
+                            <button class="key-btn function-key" onclick="insertKey('a')">a</button>
+                            <button class="key-btn function-key" onclick="insertKey('b')">b</button>
+                        </div>
+                        <div id="function-category-logs" class="desmos-function-grid hidden">
+                            <button class="key-btn function-key" onclick="insertKey('ln()',3)">ln</button>
+                            <button class="key-btn function-key" onclick="insertKey('log()',4)">log</button>
+                            <button class="key-btn function-key" onclick="insertKey('e')">e</button>
+                            <button class="key-btn function-key" onclick="insertKey('exp()',4)">exp</button>
+                            <button class="key-btn function-key" onclick="insertKey('pi')">π</button>
+                            <button class="key-btn function-key" onclick="insertKey('^2')">x²</button>
+                            <button class="key-btn function-key" onclick="insertKey('^()',2)">xʸ</button>
+                            <button class="key-btn function-key" onclick="insertKey('sqrt()',5)">√</button>
+                            <button class="key-btn function-key" onclick="insertKey('abs()',4)">|x|</button>
+                            <button class="key-btn function-key" onclick="insertKey('mod')">mod</button>
+                            <button class="key-btn function-key" onclick="insertKey('(')">(</button>
+                            <button class="key-btn function-key" onclick="insertKey(')')">)</button>
+                        </div>
+                        <div id="function-category-misc" class="desmos-function-grid hidden">
+                            <button class="key-btn function-key" onclick="insertKey('ln()',3)">ln</button>
+                            <button class="key-btn function-key" onclick="insertKey('log()',4)">log</button>
+                            <button class="key-btn function-key" onclick="insertKey('e')">e</button>
+                            <button class="key-btn function-key" onclick="insertKey('pi')">π</button>
+                            <button class="key-btn function-key" onclick="insertKey('mod')">mod</button>
+                            <button class="key-btn function-key" onclick="insertKey('(')">(</button>
+                            <button class="key-btn function-key" onclick="insertKey(')')">)</button>
+                            <button class="key-btn function-key" onclick="insertKey(',')">,</button>
+                            <button class="key-btn function-key" onclick="insertKey('<=')">≤</button>
+                            <button class="key-btn function-key" onclick="insertKey('>=')">≥</button>
+                            <button class="key-btn function-key" onclick="insertKey('<')">&lt;</button>
+                            <button class="key-btn function-key" onclick="insertKey('>')">&gt;</button>
+                        </div>
+                        <div class="desmos-utility-row">
+                            <button class="key-btn utility-key" onclick="moveCursor(-1)" title="왼쪽"><i class="fa-solid fa-arrow-left"></i></button>
+                            <button class="key-btn utility-key" onclick="moveCursor(1)" title="오른쪽"><i class="fa-solid fa-arrow-right"></i></button>
+                            <button class="key-btn utility-key" onclick="handleBackspace()" title="삭제"><i class="fa-solid fa-delete-left"></i></button>
+                            <button class="key-btn enter-key" onclick="handleEnter()">↵</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Col 9-12: Functions & Actions -->
-            <div class="col-span-4 grid grid-cols-3 gap-1">
-                <button class="key-btn key-btn-dark" onclick="insertKey('sin(')">sin</button>
-                <button class="key-btn key-btn-dark" onclick="moveCursor(-1)"><i class="fa-solid fa-arrow-left text-xs"></i></button>
-                <button class="key-btn key-btn-dark" onclick="moveCursor(1)"><i class="fa-solid fa-arrow-right text-xs"></i></button>
-
-                <button class="key-btn" onclick="insertKey('cos(')">cos</button>
-                <button class="key-btn" onclick="insertKey('tan(')">tan</button>
-                <button class="key-btn key-btn-dark" onclick="handleBackspace()"><i class="fa-solid fa-delete-left text-sm"></i></button>
-
-                <button class="key-btn" onclick="insertKey('log(')">log</button>
-                <button class="key-btn" onclick="insertKey('ln(')">ln</button>
-                <button class="key-btn key-btn-blue row-span-2" onclick="handleEnter()">↵</button>
-
-                <button class="key-btn" onclick="insertKey('e')"><i>e</i></button>
-                <button class="key-btn" onclick="insertKey('abs(')">abs</button>
+            <div id="keyboard-abc" class="keyboard-layout desmos-abc-layout hidden">
+                <div class="desmos-abc-grid">
+                    <button class="key-btn abc-letter" onclick="insertKey('a')">a</button><button class="key-btn abc-letter" onclick="insertKey('b')">b</button><button class="key-btn abc-letter" onclick="insertKey('c')">c</button><button class="key-btn abc-letter" onclick="insertKey('d')">d</button><button class="key-btn abc-letter" onclick="insertKey('e')">e</button><button class="key-btn abc-letter" onclick="insertKey('f')">f</button><button class="key-btn abc-letter" onclick="insertKey('g')">g</button><button class="key-btn abc-letter" onclick="insertKey('h')">h</button><button class="key-btn abc-letter" onclick="insertKey('i')">i</button>
+                    <button class="key-btn abc-letter" onclick="insertKey('j')">j</button><button class="key-btn abc-letter" onclick="insertKey('k')">k</button><button class="key-btn abc-letter" onclick="insertKey('l')">l</button><button class="key-btn abc-letter" onclick="insertKey('m')">m</button><button class="key-btn abc-letter" onclick="insertKey('n')">n</button><button class="key-btn abc-letter" onclick="insertKey('o')">o</button><button class="key-btn abc-letter" onclick="insertKey('p')">p</button><button class="key-btn abc-letter" onclick="insertKey('q')">q</button><button class="key-btn abc-letter" onclick="insertKey('r')">r</button>
+                    <button class="key-btn abc-letter" onclick="insertKey('s')">s</button><button class="key-btn abc-letter" onclick="insertKey('t')">t</button><button class="key-btn abc-letter" onclick="insertKey('u')">u</button><button class="key-btn abc-letter" onclick="insertKey('v')">v</button><button class="key-btn abc-letter" onclick="insertKey('w')">w</button><button class="key-btn abc-letter" onclick="insertKey('x')">x</button><button class="key-btn abc-letter" onclick="insertKey('y')">y</button><button class="key-btn abc-letter" onclick="insertKey('z')">z</button><button class="key-btn abc-letter" onclick="insertKey('theta')">θ</button>
+                </div>
+                <div class="abc-bottom-row">
+                    <button class="key-btn utility-key" onclick="insertKey('(')">(</button><button class="key-btn utility-key" onclick="insertKey(')')">)</button><button class="key-btn utility-key" onclick="insertKey(',')">,</button><button class="key-btn" onclick="insertKey(' ')">space</button><button class="key-btn utility-key" onclick="handleBackspace()"><i class="fa-solid fa-delete-left"></i></button><button class="key-btn enter-key" onclick="handleEnter()">↵</button>
+                </div>
             </div>
         </div>
 
         <!-- TAB 2: COSMOS AUDIO TRACE PANEL -->
-        <div id="audio-tab-content" class="hidden p-3 w-full flex-col space-y-3 max-h-72 overflow-y-auto">
+        <div id="audio-tab-content" class="hidden p-3 w-full flex-col space-y-3 max-h-72 overflow-y-auto" style="display:none">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                 
                 <!-- Section 1: Audio Playback Controls -->
@@ -521,44 +617,17 @@ HTML = r"""<!DOCTYPE html>
     <!-- MODAL DIALOGS -->
     <div id="modal-backdrop" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         
-        <!-- Login Modal -->
-        <div id="login-modal" class="hidden bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 flex flex-col space-y-4" role="dialog" aria-modal="true" aria-labelledby="login-heading">
+        <!-- Saved Graphs / File Modal -->
+        <div id="file-modal" class="hidden bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 flex flex-col space-y-4">
             <div class="flex justify-between items-center">
-                <h3 id="login-heading" class="text-lg font-bold text-slate-800">Cosmos 로그인</h3>
-                <button onclick="closeModal()" aria-label="닫기" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+                <h3 class="text-lg font-bold text-slate-800">내 그래프 파일</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-xs text-slate-500">이 브라우저에서 가입한 계정으로 로그인합니다.</p>
-            <form onsubmit="loginAccount(event)" class="flex flex-col space-y-3">
-                <label class="text-xs font-semibold text-slate-600">이메일</label>
-                <input id="login-email" type="email" autocomplete="username" required placeholder="name@example.com" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                <label class="text-xs font-semibold text-slate-600">비밀번호</label>
-                <input id="login-password" type="password" autocomplete="current-password" required placeholder="비밀번호" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                <p id="login-error" class="hidden text-xs text-red-600" role="alert"></p>
-                <button type="submit" class="w-full bg-[#2b72ee] text-white py-2 rounded font-semibold text-sm hover:bg-blue-600 transition">로그인</button>
-            </form>
-            <button onclick="openModal('signup-modal')" class="text-xs text-blue-600 hover:underline">아직 계정이 없나요? 회원가입</button>
-        </div>
-
-        <!-- Signup Modal -->
-        <div id="signup-modal" class="hidden bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 flex flex-col space-y-4" role="dialog" aria-modal="true" aria-labelledby="signup-heading">
-            <div class="flex justify-between items-center">
-                <h3 id="signup-heading" class="text-lg font-bold text-slate-800">Cosmos 계정 만들기</h3>
-                <button onclick="closeModal()" aria-label="닫기" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            <p class="text-xs text-slate-500">저장 버튼으로 이 브라우저에 저장한 그래프를 불러오거나 삭제할 수 있습니다.</p>
+            <div id="saved-graphs-list" class="max-h-72 overflow-y-auto space-y-2">
+                <p class="text-sm text-slate-400 text-center py-6">저장된 그래프가 없습니다.</p>
             </div>
-            <p class="text-xs text-slate-500">데모 계정은 현재 사용 중인 브라우저에만 저장됩니다.</p>
-            <form onsubmit="signupAccount(event)" class="flex flex-col space-y-3">
-                <label class="text-xs font-semibold text-slate-600">이름</label>
-                <input id="signup-name" type="text" autocomplete="name" required maxlength="40" placeholder="이름" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                <label class="text-xs font-semibold text-slate-600">이메일</label>
-                <input id="signup-email" type="email" autocomplete="email" required placeholder="name@example.com" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                <label class="text-xs font-semibold text-slate-600">비밀번호 (8자 이상)</label>
-                <input id="signup-password" type="password" autocomplete="new-password" minlength="8" required placeholder="8자 이상 입력" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                <label class="text-xs font-semibold text-slate-600">비밀번호 확인</label>
-                <input id="signup-confirm" type="password" autocomplete="new-password" minlength="8" required placeholder="비밀번호 다시 입력" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                <p id="signup-error" class="hidden text-xs text-red-600" role="alert"></p>
-                <button type="submit" class="w-full bg-[#2b72ee] text-white py-2 rounded font-semibold text-sm hover:bg-blue-600 transition">회원가입</button>
-            </form>
-            <button onclick="openModal('login-modal')" class="text-xs text-blue-600 hover:underline">이미 계정이 있나요? 로그인</button>
+            <div class="flex justify-end"><button onclick="closeModal()" class="px-3 py-2 rounded bg-slate-100 text-slate-700 text-xs">닫기</button></div>
         </div>
 
         <!-- Share Modal -->
@@ -636,7 +705,7 @@ HTML = r"""<!DOCTYPE html>
             angleUnit: 'rad', // 'rad' or 'deg'
 
             items: [], // Array of expressions / notes / tables
-            variables: { a: 1, b: 2 }, // Active slider variables
+            variables: { a: 1, b: 1 }, // Active slider variables
             activeItemId: null,
             colorPopoverItemId: null,
             
@@ -1289,18 +1358,19 @@ HTML = r"""<!DOCTYPE html>
         /**
          * Virtual On-Screen Keypad Functions
          */
-        function insertKey(key) {
+        function insertKey(key, cursorOffset = null) {
             if (!state.activeItemId) return;
             const input = document.getElementById(`input-${state.activeItemId}`);
             if (!input) return;
 
-            const start = input.selectionStart;
-            const end = input.selectionEnd;
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? start;
             const val = input.value;
 
             input.value = val.substring(0, start) + key + val.substring(end);
+            const cursorPosition = start + (cursorOffset === null ? key.length : cursorOffset);
             input.focus();
-            input.setSelectionRange(start + key.length, start + key.length);
+            input.setSelectionRange(cursorPosition, cursorPosition);
 
             updateExpression(state.activeItemId, input.value);
         }
@@ -1784,25 +1854,57 @@ HTML = r"""<!DOCTYPE html>
             showToast('음성 설명 재생 중...');
         }
 
+        function switchKeyboardMode(mode) {
+            const showABC = mode === 'abc';
+            const abc = document.getElementById('keyboard-abc');
+            const math = document.getElementById('keyboard-123');
+            const abcButton = document.getElementById('keyboard-mode-abc');
+            const mathButton = document.getElementById('keyboard-mode-123');
+            const hint = document.getElementById('keyboard-mode-hint');
+            abc.classList.toggle('hidden', !showABC);
+            math.classList.toggle('hidden', showABC);
+            abcButton.classList.toggle('active', showABC);
+            mathButton.classList.toggle('active', !showABC);
+            hint.textContent = showABC ? '문자 입력' : '숫자 · 연산 · 함수';
+        }
+
+        function switchFunctionCategory(category) {
+            ['trig', 'power', 'logs', 'misc'].forEach(name => {
+                const panel = document.getElementById(`function-category-${name}`);
+                const button = document.querySelector(`[data-function-category="${name}"]`);
+                if (panel) panel.classList.toggle('hidden', name !== category);
+                if (button) button.classList.toggle('active', name === category);
+            });
+        }
+
         function switchBottomTab(tab) {
             const keypadContent = document.getElementById('keypad-tab-content');
             const audioContent = document.getElementById('audio-tab-content');
             const tabKeypad = document.getElementById('tab-btn-keypad');
             const tabAudio = document.getElementById('tab-btn-audio');
+            const showKeypad = tab !== 'audio';
 
-            if (tab === 'keypad') {
-                keypadContent.classList.remove('hidden');
-                audioContent.classList.add('hidden');
-                tabKeypad.className = 'px-3 py-1 font-semibold rounded bg-white text-slate-800 shadow-sm transition';
-                tabAudio.className = 'px-3 py-1 font-semibold rounded hover:bg-slate-200/80 text-slate-700 transition flex items-center space-x-1';
-            } else {
-                keypadContent.classList.add('hidden');
-                audioContent.classList.remove('hidden');
-                audioContent.classList.add('flex');
-                tabAudio.className = 'px-3 py-1 font-semibold rounded bg-white text-slate-800 shadow-sm transition flex items-center space-x-1';
-                tabKeypad.className = 'px-3 py-1 font-semibold rounded hover:bg-slate-200/80 text-slate-700 transition';
-            }
+            // Set display explicitly as well as the hidden class. This avoids
+            // CSS specificity conflicts between #keypad-tab-content and .hidden.
+            keypadContent.classList.toggle('hidden', !showKeypad);
+            audioContent.classList.toggle('hidden', showKeypad);
+            keypadContent.style.display = showKeypad ? 'flex' : 'none';
+            audioContent.style.display = showKeypad ? 'none' : 'flex';
+            keypadContent.setAttribute('aria-hidden', showKeypad ? 'false' : 'true');
+            audioContent.setAttribute('aria-hidden', showKeypad ? 'true' : 'false');
+
+            tabKeypad.className = showKeypad
+                ? 'px-3 py-1 font-semibold rounded bg-white text-slate-800 shadow-sm transition'
+                : 'px-3 py-1 font-semibold rounded hover:bg-slate-200/80 text-slate-700 transition';
+            tabAudio.className = !showKeypad
+                ? 'px-3 py-1 font-semibold rounded bg-white text-slate-800 shadow-sm transition flex items-center space-x-1'
+                : 'px-3 py-1 font-semibold rounded hover:bg-slate-200/80 text-slate-700 transition flex items-center space-x-1';
         }
+
+        // Start with the Desmos-style numeric keypad and keep audio trace separate.
+        switchKeyboardMode('123');
+        switchFunctionCategory('trig');
+        switchBottomTab('keypad');
 
         /**
          * Canvas Mouse Interactions (Pan, Zoom, Snap Pinning)
@@ -1907,10 +2009,164 @@ HTML = r"""<!DOCTYPE html>
             }
         }
 
+        function makeGraphPayload() {
+            const safeItems = (state.items || []).map(item => ({
+                id: item.id, type: item.type, rawText: item.rawText || '',
+                color: item.color, lineStyle: item.lineStyle || 'solid',
+                visible: item.visible !== false, rows: item.rows || [], text: item.text || ''
+            }));
+            return {
+                version: 1,
+                title: document.getElementById('graph-title-input')?.value || 'Cosmos 그래프',
+                items: safeItems,
+                variables: { ...state.variables },
+                view: { scale: state.scale, offsetX: state.offsetX, offsetY: state.offsetY,
+                    showGrid: state.showGrid, showNumbers: state.showNumbers, angleUnit: state.angleUnit }
+            };
+        }
+
         function saveGraphState() {
-            localStorage.setItem('cosmos_saved_graph', JSON.stringify(state.items));
-            saveCloudWorkspace(true);
-            showToast('그래프 저장 요청을 완료했습니다.');
+            try {
+                const payload = makeGraphPayload();
+                const saved = JSON.parse(localStorage.getItem('cosmos_saved_graphs') || '[]');
+                const entry = {
+                    id: 'graph_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+                    title: payload.title || '이름 없는 그래프',
+                    savedAt: new Date().toISOString(), payload
+                };
+                saved.unshift(entry);
+                localStorage.setItem('cosmos_saved_graphs', JSON.stringify(saved.slice(0, 40)));
+                localStorage.setItem('cosmos_saved_graph', JSON.stringify(payload));
+                if (cloud && cosmosUser) saveCloudWorkspace(false);
+                showToast(cloud && cosmosUser ? '그래프를 저장하고 계정에 동기화했습니다.' : '그래프를 이 브라우저에 저장했습니다.');
+            } catch (err) {
+                console.error('Local graph save failed:', err);
+                showToast('저장에 실패했습니다. 브라우저 저장 공간을 확인하세요.');
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+
+        function renderSavedGraphList() {
+            const host = document.getElementById('saved-graphs-list');
+            if (!host) return;
+            let saved = [];
+            try { saved = JSON.parse(localStorage.getItem('cosmos_saved_graphs') || '[]'); } catch (_) {}
+            if (!saved.length) {
+                host.innerHTML = '<p class="text-sm text-slate-400 text-center py-6">저장된 그래프가 없습니다. 그래프를 만든 뒤 저장 버튼을 눌러 주세요.</p>';
+                return;
+            }
+            host.innerHTML = saved.map(entry => {
+                const date = new Date(entry.savedAt || Date.now()).toLocaleString('ko-KR');
+                return `<div class="flex items-center gap-2 border border-slate-200 rounded-lg p-3">
+                    <div class="flex-1 min-w-0"><div class="text-sm font-semibold text-slate-800 truncate">${escapeHtml(entry.title || '이름 없는 그래프')}</div>
+                    <div class="text-[11px] text-slate-400">${escapeHtml(date)}</div></div>
+                    <button onclick="loadSavedGraph('${entry.id}')" class="px-3 py-1.5 rounded bg-blue-600 text-white text-xs">열기</button>
+                    <button onclick="deleteSavedGraph('${entry.id}')" class="px-2 py-1.5 rounded bg-slate-100 text-slate-600 text-xs">삭제</button>
+                </div>`;
+            }).join('');
+        }
+
+        function loadSavedGraph(id) {
+            let saved = [];
+            try { saved = JSON.parse(localStorage.getItem('cosmos_saved_graphs') || '[]'); } catch (_) {}
+            const entry = saved.find(item => item.id === id);
+            if (!entry) return showToast('저장된 그래프를 찾을 수 없습니다.');
+            restoreGraphPayload(entry.payload);
+            closeModal();
+            showToast('저장한 그래프를 불러왔습니다.');
+        }
+
+        function deleteSavedGraph(id) {
+            let saved = [];
+            try { saved = JSON.parse(localStorage.getItem('cosmos_saved_graphs') || '[]'); } catch (_) {}
+            localStorage.setItem('cosmos_saved_graphs', JSON.stringify(saved.filter(item => item.id !== id)));
+            renderSavedGraphList();
+            showToast('저장한 그래프를 삭제했습니다.');
+        }
+
+        function restoreGraphPayload(payload) {
+            if (!payload || !Array.isArray(payload.items)) throw new Error('Invalid graph payload');
+            state.variables = { a: 1, b: 1, ...(payload.variables || {}) };
+            state.items = payload.items.map(raw => {
+                const item = { ...raw, compiled: null, error: false, visible: raw.visible !== false };
+                if (item.type === 'expression' && item.rawText) {
+                    try {
+                        let expr = item.rawText;
+                        if (expr.includes('=')) expr = expr.slice(expr.indexOf('=') + 1).trim();
+                        item.compiled = math.compile(expr);
+                        item.compiled.evaluate({ x: 0, ...state.variables });
+                    } catch (err) { item.error = true; item.compiled = null; }
+                }
+                return item;
+            });
+            const view = payload.view || {};
+            if (Number.isFinite(view.scale)) state.scale = view.scale;
+            if (Number.isFinite(view.offsetX)) state.offsetX = view.offsetX;
+            if (Number.isFinite(view.offsetY)) state.offsetY = view.offsetY;
+            if (typeof view.showGrid === 'boolean') state.showGrid = view.showGrid;
+            if (typeof view.showNumbers === 'boolean') state.showNumbers = view.showNumbers;
+            if (view.angleUnit === 'rad' || view.angleUnit === 'deg') state.angleUnit = view.angleUnit;
+            const title = document.getElementById('graph-title-input');
+            if (title) title.value = payload.title || 'Cosmos 그래프';
+            const angleButton = document.getElementById('btn-lang-toggle');
+            if (angleButton) angleButton.textContent = state.angleUnit === 'rad' ? 'Rad' : 'Deg';
+            renderExpressionList(); render();
+        }
+
+        function encodeShareData(payload) {
+            return btoa(unescape(encodeURIComponent(JSON.stringify(payload))))
+                .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+        }
+
+        function decodeShareData(encoded) {
+            const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+            const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+            return JSON.parse(decodeURIComponent(escape(atob(padded))));
+        }
+
+        function getHostAppUrl() {
+            try {
+                const parentUrl = new URL(window.parent.location.href);
+                if (parentUrl.origin === window.location.origin || parentUrl.protocol.startsWith('http')) {
+                    parentUrl.hash = '';
+                    return parentUrl;
+                }
+            } catch (_) {}
+            try {
+                const ref = new URL(document.referrer);
+                if (ref.protocol === 'http:' || ref.protocol === 'https:') { ref.hash = ''; return ref; }
+            } catch (_) {}
+            const own = new URL(window.location.href); own.hash = ''; return own;
+        }
+
+        function generateShareUrl() {
+            try {
+                const url = getHostAppUrl();
+                url.hash = 'cosmos=' + encodeShareData(makeGraphPayload());
+                return url.toString();
+            } catch (err) {
+                console.error('Share URL generation failed:', err);
+                return '';
+            }
+        }
+
+        function restoreGraphFromShareLink() {
+            try {
+                let hash = window.location.hash || '';
+                try { if (window.parent.location.hash) hash = window.parent.location.hash; } catch (_) {}
+                const match = hash.match(/(?:^#|&)cosmos=([^&]+)/);
+                if (!match) return false;
+                restoreGraphPayload(decodeShareData(match[1]));
+                showToast('공유된 그래프를 불러왔습니다.');
+                return true;
+            } catch (err) {
+                console.error('Shared graph restore failed:', err);
+                showToast('공유 링크의 그래프 데이터를 읽지 못했습니다.');
+                return false;
+            }
         }
 
         /**
@@ -1918,14 +2174,14 @@ HTML = r"""<!DOCTYPE html>
          */
         function openModal(id) {
             document.getElementById('modal-backdrop').classList.remove('hidden');
-            ['login-modal', 'signup-modal', 'share-modal', 'settings-modal', 'help-modal'].forEach(m => {
+            ['file-modal', 'share-modal', 'settings-modal', 'help-modal'].forEach(m => {
                 document.getElementById(m).classList.add('hidden');
             });
             if (id === 'share-modal') {
                 const shareInput = document.getElementById('share-url-input');
-                shareInput.value = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
-                    ? window.location.href : '';
+                shareInput.value = generateShareUrl();
             }
+            if (id === 'file-modal') renderSavedGraphList();
             document.getElementById(id).classList.remove('hidden');
         }
 
@@ -1939,6 +2195,7 @@ HTML = r"""<!DOCTYPE html>
         const SUPABASE_ANON_KEY = 'sb_publishable_QhXwfPy9tfGK06BAWn24og_RE2chtR8';
         const cloudConfigured = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('YOUR_') && !SUPABASE_ANON_KEY.includes('YOUR_');
         const cloud = cloudConfigured && window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+        const STREAMLIT_AUTH_SESSION = __COSMOS_STREAMLIT_SESSION__;
         let cosmosUser = null;
         let cloudSaveTimer = null;
 
@@ -1956,46 +2213,6 @@ HTML = r"""<!DOCTYPE html>
             if (cloud) return true;
             showAuthError(id, '계정 동기화를 사용하려면 Supabase 프로젝트 URL과 anon key 설정이 필요합니다.');
             return false;
-        }
-
-        async function signupAccount(event) {
-            event.preventDefault(); clearAuthError('signup-error');
-            if (!requireCloud('signup-error')) return;
-            const name = document.getElementById('signup-name').value.trim();
-            const email = document.getElementById('signup-email').value.trim().toLowerCase();
-            const password = document.getElementById('signup-password').value;
-            const confirm = document.getElementById('signup-confirm').value;
-            if (!name || !email) return showAuthError('signup-error', '이름과 이메일을 입력해 주세요.');
-            if (password.length < 8) return showAuthError('signup-error', '비밀번호는 8자 이상이어야 합니다.');
-            if (password !== confirm) return showAuthError('signup-error', '비밀번호 확인이 일치하지 않습니다.');
-            try {
-                const { data, error } = await cloud.auth.signUp({ email, password, options: { data: { display_name: name } } });
-                if (error) throw error;
-                if (data.session && data.user) {
-                    cosmosUser = data.user;
-                    await afterCloudLogin(name, email);
-                    showToast('회원가입 완료! 바로 로그인되었습니다.');
-                } else {
-                    showAuthError('signup-error', '계정은 생성됐지만 바로 로그인되지 않았습니다. Supabase에서 Authentication → Providers → Email → Confirm email을 끈 뒤 다시 시도하거나 로그인해 주세요.');
-                }
-                document.getElementById('signup-password').value = '';
-                document.getElementById('signup-confirm').value = '';
-            } catch (err) { showAuthError('signup-error', err.message || '회원가입에 실패했습니다.'); }
-        }
-
-        async function loginAccount(event) {
-            event.preventDefault(); clearAuthError('login-error');
-            if (!requireCloud('login-error')) return;
-            const email = document.getElementById('login-email').value.trim().toLowerCase();
-            const password = document.getElementById('login-password').value;
-            try {
-                const { data, error } = await cloud.auth.signInWithPassword({ email, password });
-                if (error) throw error;
-                cosmosUser = data.user;
-                const name = data.user.user_metadata?.display_name || email.split('@')[0];
-                await afterCloudLogin(name, email);
-                document.getElementById('login-password').value = '';
-            } catch (err) { console.error('Login failed:', err); showAuthError('login-error', '로그인 실패: 이메일·비밀번호를 확인해 주세요. 회원가입 직후라면 Supabase의 Confirm email 설정이 꺼져 있는지도 확인해 주세요.'); }
         }
 
         async function afterCloudLogin(name, email) {
@@ -2041,19 +2258,13 @@ HTML = r"""<!DOCTYPE html>
             if (!session && cosmosUser) session = { name: cosmosUser.user_metadata?.display_name || cosmosUser.email?.split('@')[0], email: cosmosUser.email };
             if (!session && !cloud) session = null;
             const label = document.getElementById('account-label');
-            const loginBtn = document.getElementById('login-nav-btn');
-            const signupBtn = document.getElementById('signup-nav-btn');
             const logoutBtn = document.getElementById('logout-nav-btn');
             if (session && session.email) {
                 label.textContent = session.name || session.email;
                 label.classList.remove('hidden');
-                loginBtn.classList.add('hidden');
-                signupBtn.classList.add('hidden');
                 logoutBtn.classList.remove('hidden');
             } else {
                 label.classList.add('hidden');
-                loginBtn.classList.remove('hidden');
-                signupBtn.classList.remove('hidden');
                 logoutBtn.classList.add('hidden');
             }
         }
@@ -2072,21 +2283,21 @@ HTML = r"""<!DOCTYPE html>
             setTimeout(() => toast.classList.add('opacity-0'), 2500);
         }
 
-        function copyShareUrl() {
+        async function copyShareUrl() {
             const input = document.getElementById('share-url-input');
-            const currentUrl = window.location.href;
-            if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-                input.value = currentUrl;
-                input.select();
+            const currentUrl = generateShareUrl();
+            if (!currentUrl) { showToast('공유 링크를 만들지 못했습니다. 배포된 앱 주소를 확인하세요.'); return; }
+            input.value = currentUrl;
+            input.focus(); input.select();
+            try {
                 if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(currentUrl).then(() => showToast('Cosmos 주소를 복사했습니다.')).catch(() => {
-                        document.execCommand('copy'); showToast('주소 복사를 시도했습니다.');
-                    });
-                } else {
-                    document.execCommand('copy'); showToast('주소 복사를 시도했습니다.');
+                    await navigator.clipboard.writeText(currentUrl);
+                } else if (!document.execCommand('copy')) {
+                    throw new Error('Clipboard unavailable');
                 }
-            } else {
-                showToast('로컬 파일로 실행 중입니다. 공유하려면 HTML 파일 자체를 전달하세요.');
+                showToast('현재 그래프가 포함된 공유 링크를 복사했습니다.');
+            } catch (err) {
+                showToast('링크가 입력창에 표시되었습니다. 주소를 직접 복사해 주세요.');
             }
         }
 
@@ -2132,11 +2343,22 @@ HTML = r"""<!DOCTYPE html>
         window.onload = function() {
             resizeCanvas();
             updateAccountUI();
-            if (cloud) cloud.auth.getSession().then(async ({ data }) => {
-                if (data.session?.user) { cosmosUser = data.session.user; await afterCloudLogin(cosmosUser.user_metadata?.display_name || cosmosUser.email.split('@')[0], cosmosUser.email); }
-            }).catch(console.error);
-            // Initial Sine Graph matching screenshot
-            addExpression('y = sin(x)');
+            if (cloud && STREAMLIT_AUTH_SESSION && STREAMLIT_AUTH_SESSION.access_token && STREAMLIT_AUTH_SESSION.refresh_token) {
+                cloud.auth.setSession({ access_token: STREAMLIT_AUTH_SESSION.access_token, refresh_token: STREAMLIT_AUTH_SESSION.refresh_token })
+                    .then(async ({ data, error }) => {
+                        if (error) { console.error('Injected session restore failed:', error); return; }
+                        if (data.session?.user) {
+                            cosmosUser = data.session.user;
+                            await afterCloudLogin(cosmosUser.user_metadata?.display_name || cosmosUser.email.split('@')[0], cosmosUser.email);
+                        }
+                    }).catch(console.error);
+            } else if (cloud) {
+                cloud.auth.getSession().then(async ({ data }) => {
+                    if (data.session?.user) { cosmosUser = data.session.user; await afterCloudLogin(cosmosUser.user_metadata?.display_name || cosmosUser.email.split('@')[0], cosmosUser.email); }
+                }).catch(console.error);
+            }
+            // 첫 화면 그래프는 a와 b 두 슬라이더가 실제로 영향을 주도록 설정
+            if (!restoreGraphFromShareLink()) addExpression('y = a*sin(b*x)');
             renderAudioLayerVolumes();
             refreshMusicLibrary();
         };
@@ -2144,4 +2366,81 @@ HTML = r"""<!DOCTYPE html>
 </body>
 </html>"""
 
+# iframe 안의 일반 HTML 링크는 Streamlit 멀티페이지 라우팅을 안정적으로
+# 호출하지 못하므로, 실제 Streamlit 페이지 링크를 헤더 버튼 위치에 겹쳐 배치합니다.
+# Supabase session injection
+session_for_iframe = st.session_state.get("cosmos_supabase_session")
+
+HTML = HTML.replace(
+    "__COSMOS_STREAMLIT_SESSION__",
+    json.dumps(session_for_iframe, ensure_ascii=False)
+    if session_for_iframe else "null"
+)
+
+components.html(HTML, height=1050, scrolling=False)
+
+
+# 로그인 및 회원가입 페이지 이동 버튼
+st.markdown("""
+<style>
+    .st-key-cosmos-login-route,
+    .st-key-cosmos-signup-route {
+        position: fixed !important;
+        top: 7px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        z-index: 2147483647 !important;
+        opacity: 0 !important;
+        pointer-events: auto !important;
+    }
+
+    .st-key-cosmos-login-route {
+        right: 238px !important;
+        width: 62px !important;
+    }
+
+    .st-key-cosmos-signup-route {
+        right: 164px !important;
+        width: 76px !important;
+    }
+
+    .st-key-cosmos-login-route [data-testid="stPageLink"],
+    .st-key-cosmos-signup-route [data-testid="stPageLink"] {
+        width: 100% !important;
+        height: 34px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .st-key-cosmos-login-route a,
+    .st-key-cosmos-signup-route a {
+        display: flex !important;
+        width: 100% !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0 !important;
+        opacity: 0 !important;
+        cursor: pointer !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
+with st.container(key="cosmos-login-route"):
+    st.page_link(
+        "pages/login.py",
+        label="로그인",
+        query_params={"view": "login"}
+    )
+
+with st.container(key="cosmos-signup-route"):
+    st.page_link(
+        "pages/login.py",
+        label="회원가입",
+        query_params={"view": "signup"}
+    )
+session_for_iframe = st.session_state.get("cosmos_supabase_session")
+HTML = HTML.replace("__COSMOS_STREAMLIT_SESSION__", json.dumps(session_for_iframe, ensure_ascii=False) if session_for_iframe else "null")
 components.html(HTML, height=1050, scrolling=False)
