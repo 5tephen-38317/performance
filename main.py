@@ -235,12 +235,12 @@ HTML = r"""<!DOCTYPE html>
 
         <!-- Right User Actions: 로그인/회원가입은 Cosmos 헤더 안에서 로고와 같은 높이로 표시 -->
         <div class="flex items-center space-x-1 sm:space-x-2">
-            <a id="login-nav-btn" href="#" onclick="return false;" class="text-xs font-medium px-3 py-1.5 rounded hover:bg-[#3b3b3b] text-slate-200 transition inline-flex items-center">
-                로그인
-            </a>
-            <a id="signup-nav-btn" href="#" onclick="return false;" class="text-xs font-semibold px-3 py-1.5 rounded bg-[#2b72ee] hover:bg-blue-600 text-white transition inline-flex items-center">
-                회원가입
-            </a>
+            <a id="login-nav-btn" href="#" onclick="navigateToStreamlitPage('login'); return false;" class="text-xs font-medium px-3 py-1.5 rounded hover:bg-[#3b3b3b] text-slate-200 transition inline-flex items-center">
+    로그인
+</a>
+<a id="signup-nav-btn" href="#" onclick="navigateToStreamlitPage('signup'); return false;" class="text-xs font-semibold px-3 py-1.5 rounded bg-[#2b72ee] hover:bg-blue-600 text-white transition inline-flex items-center">
+    회원가입
+</a>
             <span id="account-label" class="hidden text-xs text-slate-200 px-2"></span>
             <button id="logout-nav-btn" onclick="logoutAccount()" class="hidden text-xs font-medium px-3 py-1.5 rounded border border-slate-600 hover:bg-[#3b3b3b] transition">
                 로그아웃
@@ -2336,7 +2336,35 @@ HTML = r"""<!DOCTYPE html>
             btnExpandSidebar.classList.add('hidden');
             setTimeout(resizeCanvas, 200);
         });
+/**
+ * Streamlit 로그인 및 회원가입 페이지 이동
+ */
+function navigateToStreamlitPage(view) {
+    const containerKey = view === 'signup'
+        ? 'cosmos-signup-route'
+        : 'cosmos-login-route';
 
+    try {
+        // 부모 Streamlit 화면에서 실제 페이지 이동 링크 찾기
+        const parentDocument = window.parent.document;
+
+        const routeLink = parentDocument.querySelector(
+            `.st-key-${containerKey} a[href]`
+        );
+
+        if (routeLink) {
+            routeLink.click();
+            return;
+        }
+
+        console.error('Streamlit page link not found:', containerKey);
+        showToast('페이지 이동 링크를 찾을 수 없습니다. main.py 설정을 확인하세요.');
+
+    } catch (error) {
+        console.error('Streamlit page navigation failed:', error);
+        showToast('페이지 이동에 실패했습니다. 브라우저 콘솔을 확인하세요.');
+    }
+}
         /**
          * Page Entry Point
          */
